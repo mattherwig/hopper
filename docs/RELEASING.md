@@ -28,6 +28,8 @@ All commands below run in `extension/`. Publish ships everything on disk in `ext
 cd extension && npm run publish
 ```
 
+Full procedure (TTY needed, GitHub device-code sign-in, draft PR to fill, `gh pr edit` workaround, CI and bot reviews): the `publish-store` skill in `.claude/skills/publish-store/SKILL.md`.
+
 Authenticates with GitHub, forks raycast/extensions, squashes, opens PR. Fill the PR template (description + screencast of Back/Forward in action + checklist). Review: first contact ~1 week (can be up to 15 business days). PRs auto-close after 21 days inactive — respond to review comments promptly. Merge = auto-published.
 
 ## Updates

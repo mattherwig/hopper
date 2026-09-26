@@ -34,7 +34,7 @@ Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the 
 | Production build | `cd extension && npm run build` |
 | All of the above | `cd extension && npm run check` |
 | Load into Raycast with hot reload | `cd extension && npm run dev` (run in background; does not survive the session, restart it) |
-| Publish / update on Store | `cd extension && npm run publish` (opens PR on raycast/extensions — confirm with user first) |
+| Publish / update on Store | `cd extension && npm run publish` (opens PR on raycast/extensions — confirm with user first; follow the `publish-store` skill) |
 
 ## Layout
 

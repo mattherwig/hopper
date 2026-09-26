@@ -23,7 +23,7 @@ What it does (`scripts/media/store_media.py`):
 - Opens History once to measure Raycast's window, and sets the recording area to that plus a margin.
 - Brings up the demo apps (see `DEMO_APPS`) and moves every framed app's window exactly onto the recording area, so the user's own windows behind are never recorded. Framed: Finder on /System/Applications, Preview on the icon, the owner's **Ghostty** window, TextEdit on a scratch note.
 - **Ghostty is the owner's live session: never quit or close it.** The script only uses it if already running, saves its window frame, and restores it afterwards (position before size, or macOS clips the width).
-- Parks the pointer outside the area, then starts `keycast.swift`, an accessory-app overlay (never takes focus, so it doesn't disturb the app history being demoed) that draws the keycaps HUD and the full-frame title cards. Keys come from `HOTKEYS` in `store_media.py` (the owner's bindings); commands are actually triggered by deeplink, as Raycast ignores synthetic hotkeys.
+- Parks the pointer outside the area, then starts `keycast.swift`, an accessory-app overlay (never takes focus, so it doesn't disturb the app history being demoed) that draws the keycaps HUD and the full-frame title cards. Keys come from `HOTKEYS` in `store_media.py` (the owner's bindings, also the README's suggested hotkeys: change both together and rerun); commands are actually triggered by deeplink, as Raycast ignores synthetic hotkeys.
 - Stops if Raycast's window is still up a second after the first run of a no-view command: that is the "Request to run" prompt.
 - Records the area with `screencapture -v -R`, converts with ffmpeg (15 fps, 960px wide, palette), cleans up the apps it launched.
 
