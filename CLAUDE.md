@@ -61,7 +61,7 @@ scripts/bench.swift                           end-to-end latency bench (see docs
 scripts/smoke.py                              end-to-end smoke test of every feature in Raycast (skill: smoke-test)
 scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
 README.md                                     GitHub landing page; points to extension/README.md
-site/index.html                               GitHub Pages landing page + playground (deployed by .github/workflows/pages.yml); demo.gif / icon are symlinks into extension/
+site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); demo.gif / icon are symlinks into extension/
 ```
 
 ## Invariants (don't break)
@@ -69,7 +69,7 @@ site/index.html                               GitHub Pages landing page + playgr
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`) are permanent: users' hotkeys bind to them.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
 - Keep `navigation.ts` and `history.ts` free of Raycast/Node imports so `npm test` works without Raycast.
-- `site/index.html` embeds a copy of `navigate()` from `navigation.ts` for its playground. Change one, change the other in the same commit. Changing commands, hotkeys, or behavior: update the page's copy (Commands, How it works, Setup) too.
+- `site/index.html` repeats the README's Commands, How it works, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `extension/assets/compiled_raycast_swift/` is build output and stays gitignored.

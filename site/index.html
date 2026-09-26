@@ -87,90 +87,11 @@ nav .links a:hover { color: var(--text); }
 .btn:hover { transform: translateY(-1px); }
 .note { font-size: 13px; color: var(--muted); margin-top: 14px; }
 
-/* Playground */
 section { padding: 40px 0; }
 .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
 h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10px; line-height: 1.15; }
 .lede { color: var(--muted); max-width: 60ch; margin: 0 0 28px; }
 
-.play {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
-  box-shadow: var(--shadow); overflow: hidden;
-}
-.screen {
-  position: relative; height: 290px; overflow: hidden;
-  background:
-    radial-gradient(1200px 400px at 20% -20%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
-    radial-gradient(900px 400px at 110% 120%, color-mix(in srgb, #6a5cff 22%, transparent), transparent 60%),
-    var(--surface-2);
-}
-.window {
-  position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
-  width: min(420px, 82%); height: 170px; border-radius: 12px; background: var(--surface);
-  box-shadow: 0 20px 50px rgba(0,0,0,.18); border: 1px solid var(--border);
-  display: flex; flex-direction: column; overflow: hidden;
-  transition: transform .25s ease, opacity .25s ease;
-}
-.window.swap { transform: translateX(-50%) scale(.96) translateY(6px); opacity: .3; }
-.titlebar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
-.titlebar i { width: 11px; height: 11px; border-radius: 50%; background: var(--border); display: block; }
-.titlebar span { margin-left: 10px; font-size: 13px; font-weight: 600; color: var(--muted); }
-.window .body { flex: 1; display: grid; place-items: center; gap: 4px; text-align: center; }
-.window .big { font-size: 46px; line-height: 1; }
-.window .name { font-weight: 700; font-size: 20px; }
-
-.toast {
-  position: absolute; top: 12px; z-index: 2; left: 50%; transform: translate(-50%, -8px); opacity: 0;
-  background: var(--text); color: var(--bg); padding: 6px 12px; border-radius: 999px;
-  font-size: 13px; font-weight: 600; transition: all .2s ease; pointer-events: none; white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
-
-.dock {
-  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 6px; padding: 6px; border-radius: 16px;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-}
-.dock button {
-  width: 40px; height: 40px; border-radius: 10px; border: 0; cursor: pointer;
-  font-size: 22px; display: grid; place-items: center; position: relative; background: var(--surface);
-  transition: transform .15s ease;
-}
-.dock button:hover { transform: translateY(-3px); }
-.dock button.front::after {
-  content: ""; position: absolute; bottom: -5px; left: 50%; width: 4px; height: 4px; margin-left: -2px;
-  border-radius: 50%; background: var(--text);
-}
-
-.controls {
-  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
-  padding: 16px; border-top: 1px solid var(--border);
-}
-.controls .btn { padding: 10px 16px; }
-.controls .btn kbd { font-size: 12px; }
-.controls .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
-
-.panels { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
-.panel { padding: 18px 20px 22px; }
-.panel + .panel { border-left: 1px solid var(--border); }
-.panel h3 { margin: 0 0 4px; font-size: 14px; }
-.panel p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
-.row { display: flex; gap: 8px; flex-wrap: wrap; min-height: 58px; }
-.chip {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  width: 58px; padding: 8px 0 6px; border-radius: 10px; border: 1px solid var(--border);
-  background: var(--surface); font-size: 11px; color: var(--muted); transition: all .2s ease;
-}
-.chip b { font-size: 20px; line-height: 1.1; }
-.chip.cur { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
-.chip.cur::before {
-  content: "you are here"; position: absolute; top: -9px; font-size: 9px; font-weight: 700;
-  background: var(--accent); color: #fff; padding: 1px 5px; border-radius: 4px; white-space: nowrap;
-}
-.chip.gone { opacity: .35; text-decoration: line-through; }
-.empty { font-size: 13px; color: var(--muted); align-self: center; font-style: italic; }
 
 /* Features */
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
@@ -203,14 +124,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 }
 @media (max-width: 600px) {
   nav .links a.hide-sm { display: none; }
-  .panels { grid-template-columns: 1fr; }
-  .panel + .panel { border-left: 0; border-top: 1px solid var(--border); }
   .grid { grid-template-columns: 1fr; }
-  .screen { height: 250px; }
-  .window { height: 130px; }
-  .window .big { font-size: 36px; }
-  .dock button { width: 34px; height: 34px; font-size: 19px; }
-  .controls .btn kbd { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -221,7 +135,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <nav>
     <a class="brand" href="#"><img src="extension-icon.png" alt="">Jumper</a>
     <div class="links">
-      <a href="#try">Try it</a>
+      <a href="#demo">Demo</a>
       <a class="hide-sm" href="#commands">Commands</a>
       <a href="https://github.com/mattherwig/jumper">GitHub</a>
     </div>
@@ -234,49 +148,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <p>Step back through your recently used apps, and forward again, exactly like history in a browser. A free Raycast extension.</p>
     <div class="cta">
       <a class="btn primary" id="install" href="https://www.raycast.com/matt_herwig/jumper">Get it for Raycast</a>
-      <a class="btn" href="#try">Try it in your browser ↓</a>
+      <a class="btn" href="#demo">See it in action ↓</a>
     </div>
     <div class="note">macOS · No permissions · No background process · MIT</div>
   </div>
-
-  <section id="try">
-    <div class="wrap">
-      <p class="eyebrow">Playground</p>
-      <h2>Cmd+Tab reshuffles. Jumper remembers.</h2>
-      <p class="lede">A pretend Mac. Click apps in the dock to switch like you normally would, then press Back a few times. Watch how Cmd+Tab's order changes on every jump while Jumper's history holds still.</p>
-
-      <div class="play">
-        <div class="screen">
-          <div class="toast" id="toast"></div>
-          <div class="window" id="window">
-            <div class="titlebar"><i></i><i></i><i></i><span id="wtitle"></span></div>
-            <div class="body"><div class="big" id="wicon"></div><div class="name" id="wname"></div></div>
-          </div>
-          <div class="dock" id="dock"></div>
-        </div>
-
-        <div class="controls">
-          <button class="btn" id="b-back">← Back <kbd>[</kbd></button>
-          <button class="btn" id="b-fwd">Forward → <kbd>]</kbd></button>
-          <button class="btn" id="b-toggle">⇄ Toggle <kbd>T</kbd></button>
-          <button class="btn" id="b-reset">Reset</button>
-        </div>
-
-        <div class="panels">
-          <div class="panel">
-            <h3>What Cmd+Tab shows</h3>
-            <p>macOS's most-recently-used order. Every switch moves the app to the front.</p>
-            <div class="row" id="mru"></div>
-          </div>
-          <div class="panel">
-            <h3>What Jumper walks</h3>
-            <p>Snapshot taken on your first Back. Stays put while you step through it.</p>
-            <div class="row" id="snap"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <section id="commands">
     <div class="wrap">
@@ -292,9 +167,9 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     </div>
   </section>
 
-  <section>
+  <section id="demo">
     <div class="wrap">
-      <p class="eyebrow">The real thing</p>
+      <p class="eyebrow">Demo</p>
       <h2>In Raycast</h2>
       <p class="lede">Back, Forward, Toggle, and History, recorded on a real Mac.</p>
       <div class="demo"><img src="demo.gif" alt="Jumper demo: Back, Forward, Toggle, and History in Raycast" width="960" height="625" loading="lazy"></div>
@@ -334,105 +209,5 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   </div>
 </footer>
 
-<script>
-// Mirror of extension/src/lib/navigation.ts (keep in sync).
-function navigate(direction, mru, prev) {
-  const current = mru[0];
-  if (!current) return { ok: false, reason: "no-apps" };
-  const continuing = direction !== "toggle" && prev !== undefined && prev.snapshot[prev.cursor] === current;
-  const { snapshot, cursor } = continuing ? prev : { snapshot: mru, cursor: 0 };
-  const running = new Set(mru);
-  const step = direction === "forward" ? -1 : 1;
-  let i = cursor + step;
-  while (i >= 0 && i < snapshot.length && !running.has(snapshot[i])) i += step;
-  if (i < 0) return { ok: false, reason: "no-forward" };
-  if (i >= snapshot.length) return { ok: false, reason: "no-back" };
-  return { ok: true, target: snapshot[i], state: { snapshot, cursor: i } };
-}
-
-const APPS = {
-  mail:     { name: "Mail",     icon: "✉️" },
-  editor:   { name: "Editor",   icon: "📝" },
-  browser:  { name: "Browser",  icon: "🌐" },
-  terminal: { name: "Terminal", icon: "⌨️" },
-  music:    { name: "Music",    icon: "🎵" },
-  chat:     { name: "Chat",     icon: "💬" },
-};
-const DOCK_ORDER = Object.keys(APPS);
-const START = ["editor", "browser", "terminal", "chat", "mail", "music"];
-
-let mru, nav;
-const $ = (id) => document.getElementById(id);
-const toastEl = $("toast");
-let toastTimer;
-
-function toast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1400);
-}
-
-function activate(id) {
-  mru = [id, ...mru.filter((a) => a !== id)];
-  const w = $("window");
-  w.classList.add("swap");
-  setTimeout(() => { render(); w.classList.remove("swap"); }, 120);
-}
-
-function chip(id, cls = "") {
-  const a = APPS[id];
-  return `<div class="chip ${cls}"><b>${a.icon}</b>${a.name}</div>`;
-}
-
-function render() {
-  const front = mru[0];
-  $("wtitle").textContent = APPS[front].name;
-  $("wicon").textContent = APPS[front].icon;
-  $("wname").textContent = APPS[front].name;
-
-  $("dock").innerHTML = DOCK_ORDER.map((id) =>
-    `<button title="${APPS[id].name}" aria-label="Switch to ${APPS[id].name}" data-id="${id}" class="${id === front ? "front" : ""}">${APPS[id].icon}</button>`
-  ).join("");
-
-  $("mru").innerHTML = mru.map((id, i) => chip(id, i === 0 ? "cur" : "")).join("");
-
-  const live = nav && nav.snapshot[nav.cursor] === front;
-  $("snap").innerHTML = live
-    ? nav.snapshot.map((id, i) => chip(id, i === nav.cursor ? "cur" : "")).join("")
-    : `<span class="empty">${nav ? "You switched manually, so history starts fresh on the next Back." : "Press Back to start walking."}</span>`;
-
-  $("b-fwd").disabled = !live || nav.cursor === 0;
-  $("b-back").disabled = live && nav.cursor >= nav.snapshot.length - 1;
-}
-
-const MESSAGES = { "no-back": "No older apps", "no-forward": "Already at the newest app", "no-apps": "No apps running" };
-
-function run(direction) {
-  const r = navigate(direction, mru, nav);
-  if (!r.ok) { toast(MESSAGES[r.reason]); return; }
-  nav = r.state;
-  toast({ back: "← Back", forward: "Forward →", toggle: "⇄ Toggle" }[direction] + " · " + APPS[r.target].name);
-  activate(r.target);
-}
-
-function reset() { mru = [...START]; nav = undefined; render(); }
-
-$("dock").addEventListener("click", (e) => {
-  const b = e.target.closest("button");
-  if (b && b.dataset.id !== mru[0]) activate(b.dataset.id);
-});
-$("b-back").onclick = () => run("back");
-$("b-fwd").onclick = () => run("forward");
-$("b-toggle").onclick = () => run("toggle");
-$("b-reset").onclick = reset;
-document.addEventListener("keydown", (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey || /INPUT|TEXTAREA/.test(e.target.tagName)) return;
-  const d = { "[": "back", "]": "forward", t: "toggle", T: "toggle" }[e.key];
-  if (d) { e.preventDefault(); run(d); }
-});
-
-reset();
-</script>
 </body>
 </html>

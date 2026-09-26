@@ -9,8 +9,6 @@
  *   what we last jumped to, so the snapshot is discarded and the next Back starts fresh. This mirrors a
  *   browser dropping its forward stack when you navigate somewhere new.
  * - Toggle is a Back that always starts fresh, so repeating it flips between the two most recent apps.
- *
- * site/index.html has a copy of navigate() for the landing-page playground: update it when this changes.
  */
 
 export type Direction = "back" | "forward" | "toggle";
