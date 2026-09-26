@@ -46,6 +46,9 @@ src/lib/run-navigation.ts           glue: read MRU, LocalStorage state, navigate
 src/lib/macos.ts                    getRecentApps() (calls Swift) + activateApp() via Raycast open()
 swift/Sources/JumperNative/         native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
 scripts/bench.swift                 end-to-end latency bench (see docs/PERFORMANCE.md)
+scripts/media/                      Store media generator: store_media.py drives Raycast (skills below)
+metadata/                           Store screenshots, 2000x1250 (skill: store-screenshots)
+media/demo.gif                      README demo, shown on the Store page (skill: demo-gif)
 test/*.test.ts                      node:test, run via --experimental-strip-types
 ```
 

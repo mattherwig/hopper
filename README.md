@@ -1,5 +1,7 @@
 # Jumper
 
+![Jumper demo: Back, Forward, Toggle, and History](media/demo.gif)
+
 A browser-style Back button for your Mac's apps.
 
 Cmd+Tab only knows "most recent" and reshuffles every time you switch, so getting back to the app you were in three switches ago is guesswork. Jumper lets you step back through your recently used apps, and forward again, exactly like history in Safari or VS Code.
