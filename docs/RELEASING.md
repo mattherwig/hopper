@@ -14,6 +14,7 @@ Source: https://developers.raycast.com/basics/prepare-an-extension-for-store and
 All commands below run in `extension/`. Publish ships everything on disk in `extension/` (ADR-012): check nothing dev-only or stray (e.g. `.DS_Store`, `swift/.build/`) is in there first.
 
 - [ ] `cd extension && npm run check` passes (tests + `ray lint` + `ray build`).
+- [ ] Test the **distribution** build (the PR checklist asks for it). `npm run build` is plain `ray build`, which defaults to `-e dev`; the real one is `-e dist`. `ray build` writes into Raycast's installed copy (`~/.config/raycast/extensions/jumper`), so: stop `ray develop` (its watcher would overwrite it), `cd extension && npx ray build -e dist`, then test in Raycast. Restart `npm run dev` afterwards.
 - [ ] Manually test built extension: bind hotkeys (suggest ⌃⌥[ / ⌃⌥]), walk back 3 apps, forward 3, switch manually mid-walk, quit an app mid-walk, test with apps on other Spaces and hidden apps.
 - [ ] `extension/metadata/` folder: 3–6 PNG screenshots, 2000×1250 — **required** because `history` is a `view` command. Capture with Raycast "Window Capture" (hotkey in Raycast settings) → "Save to Metadata" while running `npm run dev`, or rerun the `store-screenshots` skill. Ideas: history list; command search showing both hotkey commands; HUD "No earlier app in history".
 - [ ] Icon looks good in light + dark Raycast themes (`extension/assets/extension-icon.png`, 512×512 PNG; optional `extension-icon@dark.png`).
