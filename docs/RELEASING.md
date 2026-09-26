@@ -14,7 +14,7 @@ Source: https://developers.raycast.com/basics/prepare-an-extension-for-store and
 - [ ] `npm run check` passes (tests + `ray lint` + `ray build`).
 - [ ] Manually test built extension: bind hotkeys (suggest ⌃⌥[ / ⌃⌥]), walk back 3 apps, forward 3, switch manually mid-walk, quit an app mid-walk, test with apps on other Spaces and hidden apps.
 - [ ] `metadata/` folder: 3–6 PNG screenshots, 2000×1250 — **required** because `show-app-history` is a `view` command. Capture with Raycast "Window Capture" (hotkey in Raycast settings) → "Save to Metadata" while running `npm run dev`. Ideas: history list; command search showing both hotkey commands; HUD "No earlier app in history".
-- [ ] Icon looks good in light + dark Raycast themes (`assets/extension-icon.png`, regenerate via `swift scripts/make-icon.swift`, or replace with one from https://icon.ray.so).
+- [ ] Icon looks good in light + dark Raycast themes (`assets/extension-icon.png`, 512×512 PNG; optional `extension-icon@dark.png`).
 - [ ] README.md explains hotkey setup (Store shows it).
 - [ ] CHANGELOG.md top entry `## [Title] - {PR_MERGE_DATE}` (literal placeholder; Raycast fills it).
 - [ ] `package-lock.json` committed.

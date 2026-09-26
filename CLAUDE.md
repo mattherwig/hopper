@@ -46,7 +46,6 @@ src/lib/macos.ts                    getRecentApps() (calls Swift) + activateApp(
 swift/Sources/JumperNative/         native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
 scripts/bench.swift                 end-to-end latency bench (see docs/PERFORMANCE.md)
 test/*.test.ts                      node:test, run via --experimental-strip-types
-scripts/make-icon.swift             regenerates assets/extension-icon.png
 ```
 
 ## Invariants (don't break)
