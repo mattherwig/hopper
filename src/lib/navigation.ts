@@ -8,9 +8,10 @@
  * - If the user switches app by any other means (click, Cmd+Tab), the frontmost app no longer matches
  *   what we last jumped to, so the snapshot is discarded and the next Back starts fresh. This mirrors a
  *   browser dropping its forward stack when you navigate somewhere new.
+ * - Toggle is a Back that always starts fresh, so repeating it flips between the two most recent apps.
  */
 
-export type Direction = "back" | "forward";
+export type Direction = "back" | "forward" | "toggle";
 
 export interface NavState {
   /** Bundle IDs, most recent first, captured on the first Back of a walk. */
@@ -30,11 +31,11 @@ export function navigate(direction: Direction, mru: string[], prev?: NavState): 
   const current = mru[0];
   if (!current) return { ok: false, reason: "no-apps" };
 
-  const continuing = prev !== undefined && prev.snapshot[prev.cursor] === current;
+  const continuing = direction !== "toggle" && prev !== undefined && prev.snapshot[prev.cursor] === current;
   const { snapshot, cursor } = continuing ? prev : { snapshot: mru, cursor: 0 };
 
   const running = new Set(mru);
-  const step = direction === "back" ? 1 : -1;
+  const step = direction === "forward" ? -1 : 1;
   let i = cursor + step;
   // Skip apps that quit since the snapshot was taken.
   while (i >= 0 && i < snapshot.length && !running.has(snapshot[i])) i += step;

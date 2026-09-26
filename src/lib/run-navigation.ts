@@ -21,7 +21,7 @@ function timer() {
   };
 }
 
-/** Shared body of the Jump Back / Jump Forward no-view commands. */
+/** Shared body of the Jump Back / Jump Forward / Toggle Last App no-view commands. */
 export async function runNavigation(direction: Direction): Promise<void> {
   const lap = timer();
   try {

@@ -43,6 +43,13 @@
       "mode": "no-view"
     },
     {
+      "name": "toggle-last-app",
+      "title": "Toggle Last App",
+      "subtitle": "Jumper",
+      "description": "Switch to the app you used before this one. Run again to switch back. Best bound to a hotkey.",
+      "mode": "no-view"
+    },
+    {
       "name": "show-app-history",
       "title": "Show App History",
       "subtitle": "Jumper",

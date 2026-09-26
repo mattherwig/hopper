@@ -15,4 +15,6 @@ Done:
 
 - Show App History actions: Remove from History (hidden until used again, inferred from MRU order) and Exclude from History (#4; permanent, undo from the Excluded section). Stored in LocalStorage, not preferences, since commands can't write preferences. Unit-tested; not yet dogfooded in Raycast.
 
+- Toggle Last App command (#5, ADR-010): flips between the two most recent apps. Unit-tested, builds; not yet E2E-verified in Raycast.
+
 Next: `gh issue list`. Publishing (#1) is **on hold** by owner choice; the issue is ready to execute when resumed.

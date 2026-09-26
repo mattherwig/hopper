@@ -67,3 +67,32 @@ test("edge cases", () => {
   assert.deepEqual(navigate("back", ["A"]), { ok: false, reason: "no-back" });
   assert.deepEqual(navigate("forward", ["A", "B"]), { ok: false, reason: "no-forward" });
 });
+
+test("toggle flips between the two most recent apps", () => {
+  let mru = ["A", "B", "C"];
+  let state: NavState | undefined;
+  const visited: string[] = [];
+  for (let n = 0; n < 3; n++) {
+    const r = navigate("toggle", mru, state);
+    assert.ok(r.ok);
+    visited.push(r.target);
+    state = r.state;
+    mru = activate(mru, r.target);
+  }
+  assert.deepEqual(visited, ["B", "A", "B"]);
+});
+
+test("toggle ignores an ongoing back walk", () => {
+  const state: NavState = { snapshot: ["A", "B", "C"], cursor: 2 };
+  const r = navigate("toggle", ["C", "A", "B"], state);
+  assert.ok(r.ok);
+  assert.equal(r.target, "A");
+});
+
+test("back continues from a toggle", () => {
+  const t = navigate("toggle", ["A", "B", "C"]);
+  assert.ok(t.ok);
+  const r = navigate("back", ["B", "A", "C"], t.state);
+  assert.ok(r.ok);
+  assert.equal(r.target, "C");
+});

@@ -63,3 +63,9 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 **Context.** Selecting an app in Show App History did nothing. Debug logging showed `closeMainWindow({ popToRootType: Immediate })` unmounts the view command and ends its process, so the `open()` after it never ran. ADR-004's order (close, then activate) only holds for no-view commands.
 
 **Decision.** The list action calls `activateApp(app)` first, then `closeMainWindow()`. Verified by deeplink (temporary `launchContext` hook firing the same handler): picking the 3rd entry switched to it, so the switch isn't just Raycast restoring the previous app on hide.
+
+## ADR-010: Toggle Last App = Back that always starts fresh (2026-09-26)
+
+**Context.** Owner wanted a one-key flip between two apps (#5). Jump Back walks deeper on repeat (ADR-003), so pressing it twice goes A→B→C, not A→B→A.
+
+**Decision.** New `toggle` direction in `navigate()`: ignores saved state, snapshots the current MRU, targets index 1. Because activating moves the target to the MRU front, repeating it flips between the two most recent apps. It still saves `nav-state`, so a Jump Back after a toggle keeps walking deeper. Command name `toggle-last-app` (permanent once published).
