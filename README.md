@@ -18,7 +18,9 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 Back, Forward, and Toggle are meant to be used with hotkeys:
 
 1. Open Raycast Settings → Extensions → Jumper.
-2. Assign a hotkey to each command, for example `⌃⌥[` for Back, `⌃⌥]` for Forward, and `⌃⌥\` for Toggle.
+2. Assign a hotkey to each command, for example `⇧⌘[` for Back, `⇧⌘]` for Forward, and a double tap of `⌘` for Toggle (the keys shown in the demo).
+
+`⇧⌘[` and `⇧⌘]` also switch tabs in browsers, Terminal, and many editors; a Raycast hotkey takes priority, so pick something like `⌃⌥[` / `⌃⌥]` if you rely on those.
 
 No permissions and no background process needed. The extension reads the order macOS already keeps for Cmd+Tab.
 
