@@ -1,5 +1,5 @@
 # Deploys the landing page in site/ to GitHub Pages.
-# Images are copied from extension/ at build time so the repo keeps one copy of each.
+# site/demo.gif and site/extension-icon.png are symlinks into extension/; cp -L copies the real files.
 name: Pages
 
 on:
@@ -28,8 +28,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir _site
-          cp site/* _site/
-          cp extension/assets/extension-icon.png extension/media/demo.gif _site/
+          cp -L site/* _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
       - id: deployment
