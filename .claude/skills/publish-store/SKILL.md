@@ -16,7 +16,7 @@ Everything here is outward-facing: **confirm with the owner before running publi
 
 1. `extension/CHANGELOG.md` top entry is `## [Title] - {PR_MERGE_DATE}` (keep the placeholder literally; Raycast fills it on merge).
 2. `cd extension && npm run check` passes.
-3. Test the **distribution** build (the PR checklist asks for it): `npm run build` is plain `ray build` = `-e dev`. Stop `ray develop`, `cd extension && npx ray build -e dist` (it writes into Raycast's installed copy), exercise all commands via deeplinks, then restart `npm run dev`.
+3. Test the **distribution** build (the PR checklist asks for it): `python3 scripts/smoke.py --dist` (the `smoke-test` skill; warn the owner first, it takes over the screen). `npm run build` alone is plain `ray build` = `-e dev`, not the distribution build.
 4. If `extension/metadata/` changed: run Raycast's image checker locally (see the `store-screenshots` skill). CI fails on screenshot padding.
 5. Remove stray files that would ship: `rm -rf extension/swift/.build` (every `ray build`/`npm run check` recreates it) and `find extension -name .DS_Store -not -path "*/node_modules/*" -delete`.
 6. Commit and push to github.com/mattherwig/jumper first, so the PR matches the repo.
