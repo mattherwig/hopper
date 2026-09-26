@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm run test)",
+      "Bash(npm run lint)",
+      "Bash(npm run fix-lint)",
+      "Bash(npm run build)",
+      "Bash(npm run check)"
+    ],
+    "ask": [
+      "Bash(npm run publish)",
+      "Bash(npx @raycast/api@latest publish)"
+    ]
+  }
+}
