@@ -18,8 +18,10 @@ export default function Command() {
               <Action
                 title="Switch to App"
                 onAction={async () => {
-                  await closeMainWindow({ popToRootType: PopToRootType.Immediate });
+                  // Activate first: closing the window with Immediate unmounts this view and kills the
+                  // command before open() runs (ADR-009).
                   await activateApp(app);
+                  await closeMainWindow({ popToRootType: PopToRootType.Immediate });
                 }}
               />
               <Action.ShowInFinder path={app.path} />

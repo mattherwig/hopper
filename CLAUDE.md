@@ -55,7 +55,7 @@ scripts/make-icon.swift             regenerates assets/extension-icon.png
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `assets/compiled_raycast_swift/` is build output and stays gitignored.
 - Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `swift/` to see them. The first build on a machine fetches swift-syntax (a few minutes).
-- `closeMainWindow()` must run before activating, or Raycast restores focus and undoes the jump. See ADR-004.
+- No-view commands: `closeMainWindow()` must run before activating, or Raycast restores focus and undoes the jump (ADR-004). View command (list): the reverse — activate first, since closing unmounts the view and kills the command (ADR-009).
 - Max 12 `keywords` in package.json (`ray lint` enforces).
 - Store rules: MIT, US English, Title Case titles, `CHANGELOG.md` top entry `## [Title] - {PR_MERGE_DATE}`.
 

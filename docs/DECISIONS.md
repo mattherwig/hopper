@@ -30,7 +30,7 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Context.** E2E test via deeplink: the first Back in a burst did nothing. Raycast came forward, we switched apps, then Raycast hid and restored focus to the previous app.
 
-**Decision.** Call `closeMainWindow({ popToRootType: Immediate })` at the start of the no-view commands and before switching from the list view.
+**Decision.** Call `closeMainWindow({ popToRootType: Immediate })` at the start of the no-view commands. (The list view does the reverse; see ADR-009.)
 
 ## ADR-005: Name "Jumper" (2026-09-26)
 
@@ -58,3 +58,8 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Consequences.** Builders need Xcode 16.3+ (Swift 6). The bridge spawns the helper once per call, so keep exported functions few and coarse. The bridge rejects Windows (see issue #7). `RecentApps.swift` has no macro imports, so it can be checked with plain `swiftc` (see docs/PERFORMANCE.md).
 
+## ADR-009: In Show App History, activate before closing the window (2026-09-26)
+
+**Context.** Selecting an app in Show App History did nothing. Debug logging showed `closeMainWindow({ popToRootType: Immediate })` unmounts the view command and ends its process, so the `open()` after it never ran. ADR-004's order (close, then activate) only holds for no-view commands.
+
+**Decision.** The list action calls `activateApp(app)` first, then `closeMainWindow()`. Verified by deeplink (temporary `launchContext` hook firing the same handler): picking the 3rd entry switched to it, so the switch isn't just Raycast restoring the previous app on hide.
