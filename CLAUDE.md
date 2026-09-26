@@ -58,6 +58,7 @@ extension/                                    the Raycast extension; everything 
   test/*.test.ts                              node:test, run via --experimental-strip-types
 docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
+scripts/smoke.py                              end-to-end smoke test of every feature in Raycast (skill: smoke-test)
 scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
 README.md                                     GitHub landing page; points to extension/README.md
 ```
