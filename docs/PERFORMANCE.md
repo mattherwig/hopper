@@ -19,12 +19,22 @@ This switches the user's frontmost app repeatedly — warn them first.
 | Stage | v1 | Now |
 |---|---|---|
 | Deeplink dispatch (`open` + URL routing + Raycast starts command) | ~170ms | ~170ms (not ours; real hotkeys skip `open`/URL routing) |
-| Read MRU | ~72ms (osascript JXA) | ~50ms JXA → **<10ms native Swift** (ADR-008; e2e numbers pending Xcode upgrade) |
+| Read MRU | ~72ms (osascript JXA) | ~50ms JXA → **~23ms native Swift** (ADR-008) |
 | Activate app | ~65ms (`open -b` spawn) | ~25ms (Raycast `open(appPath)`, no spawn) |
 | closeMainWindow + LocalStorage | ~5ms | ~0 (parallel with read) |
-| **Our code total** | **~140ms** | **~75ms** |
+| **Our code total** | **~140ms** | **~48ms** |
 
 ## Remaining options (not done)
 
 - **Fast path for repeated presses**: use `getFrontmostApplication()` (Raycast IPC) to validate the snapshot and skip the MRU read. Rejected for now: can't cheaply tell if the target app quit (Raycast `open` would relaunch it), and the most common action (first Back) needs a fresh MRU anyway.
 - Remaining cost is mostly Raycast dispatch (hotkey → command start), which we can't change.
+
+## Swift helper vs JXA (2026-09-26, macOS 27.0, Xcode 27, same machine, 6 runs each)
+
+| | JXA (`main` @ 592dbc2) | Swift (`swift-helper`) |
+|---|---|---|
+| Read MRU (`PERF read`) | ~48ms | ~23ms |
+| Our code total (`PERF activated`) | ~71ms | ~48ms |
+
+The raw native read is <10ms; the Raycast Swift bridge adds ~15ms (Node `spawn` + `chmod` + JSON). Net saving ~25ms/press, not the ~43ms the standalone prototype suggested.
+
