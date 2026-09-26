@@ -13,4 +13,4 @@ Done:
 - Raycast author confirmed: `matt_herwig`. Owner has hotkeys bound and is dogfooding.
 - Public repo: https://github.com/mattherwig/jumper. Tasks tracked as Issues.
 
-Next: `gh issue list` (publish issue is the critical path).
+Next: `gh issue list`. Publishing (#1) is **on hold** by owner choice; the issue is ready to execute when resumed.
