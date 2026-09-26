@@ -1,11 +1,15 @@
 ---
 name: smoke-test
-description: End-to-end smoke test of every Jumper feature in the real Raycast app (Back, Forward, Toggle, History, Remove/Exclude/Include, quit and manual-switch handling), on the dev or distribution build. Use after changing behavior, before any publish, after macOS or Raycast updates, or when asked to smoke test / verify the extension works.
+description: End-to-end smoke test of every Jumper feature in the real Raycast app (Back, Forward, Toggle, History, Remove/Exclude/Include, quit and manual-switch handling), on the dev or distribution build. Run only when the owner asks for it or agrees to it (it takes their screen for 2–3 minutes); suggest it, with the reason, after user-facing behavior changes or macOS/Raycast updates.
 ---
 
 # Smoke test
 
 `scripts/smoke.py` drives the installed extension by deeplink and checks which app ends up frontmost after each step. 30 checks, ~2 minutes (~2½ with `--dist`). Unit tests (`cd extension && npm test`) cover the pure logic; this covers the real thing: the Swift helper's app order, LocalStorage state, activation through Raycast, and the History UI.
+
+## When to run
+
+Only on request, or after the owner agrees to a suggestion. It's slow and takes over their screen. Worth suggesting when user-facing behavior changed (navigation rules, History actions, the Swift helper, activation) or after a macOS/Raycast update; not for refactors, docs, or media. `cd extension && npm test` is the cheap check for logic changes.
 
 ## Before running
 
