@@ -1,6 +1,7 @@
 import { closeMainWindow, environment, LocalStorage, PopToRootType, showHUD } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import { activateApp, getRecentApps } from "./macos";
+import { loadHistory } from "./load-history";
+import { activateApp } from "./macos";
 import { navigate, type Direction, type NavState } from "./navigation";
 
 const STATE_KEY = "nav-state";
@@ -28,7 +29,7 @@ export async function runNavigation(direction: Direction): Promise<void> {
       // Hide Raycast before switching; otherwise, when launched from the Raycast window or a deeplink,
       // Raycast hands focus back to the previous app after we switch, undoing the jump.
       closeMainWindow({ popToRootType: PopToRootType.Immediate }),
-      getRecentApps(),
+      loadHistory(),
       LocalStorage.getItem<string>(STATE_KEY),
     ]);
     lap("read");

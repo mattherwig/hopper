@@ -17,6 +17,8 @@ Jump Back and Jump Forward are meant to be used with hotkeys:
 1. Open Raycast Settings → Extensions → Jumper.
 2. Assign a hotkey to each command, for example `⌃⌥[` and `⌃⌥]`.
 
+To keep apps out of history entirely, list them in **Excluded Apps** (same settings page), by name or bundle ID, separated by commas. Example: `Finder, com.apple.Preview`.
+
 No permissions and no background process needed. The extension reads the order macOS already keeps for Cmd+Tab.
 
 ## How it works

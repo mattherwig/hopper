@@ -1,9 +1,10 @@
 import { Action, ActionPanel, closeMainWindow, List, PopToRootType } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
-import { activateApp, getRecentApps } from "./lib/macos";
+import { loadHistory } from "./lib/load-history";
+import { activateApp } from "./lib/macos";
 
 export default function Command() {
-  const { data: apps = [], isLoading } = usePromise(getRecentApps);
+  const { data: apps = [], isLoading } = usePromise(loadHistory);
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Filter recent apps">

@@ -50,6 +50,16 @@
       "mode": "view"
     }
   ],
+  "preferences": [
+    {
+      "name": "excludedApps",
+      "title": "Excluded Apps",
+      "description": "Apps to always skip in history, by name or bundle ID, separated by commas. Example: Finder, com.apple.Preview",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "Finder, com.apple.Preview"
+    }
+  ],
   "dependencies": {
     "@raycast/api": "^2.5.2",
     "@raycast/utils": "^2.3.2"
