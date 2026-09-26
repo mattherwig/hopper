@@ -27,3 +27,4 @@ No permissions and no background process needed. The extension reads the order m
 - Pressing Back again goes further; **Jump Forward** retraces.
 - Switching apps any other way (click, Cmd+Tab) starts a fresh history, just like visiting a new page in a browser clears the forward history.
 - Apps you quit are skipped.
+- In **Show App History**, **Remove from History** (`⌃X`) hides an app, for example one you closed all windows of but didn't quit. It comes back once you use it again.
