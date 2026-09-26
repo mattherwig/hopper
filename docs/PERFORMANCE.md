@@ -14,6 +14,8 @@
 
 This switches the user's frontmost app repeatedly — warn them first.
 
+Warm up first: the first deeplink after (re)starting `npm run dev` or re-registering the extension takes ~2s (cold start). Run one throwaway command before measuring.
+
 ## Baseline (2026-09-26, macOS 26.5, Apple Silicon)
 
 | Stage | v1 | Now |

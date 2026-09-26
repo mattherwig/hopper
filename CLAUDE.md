@@ -30,7 +30,7 @@ Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the 
 | Lint (manifest, icon, ESLint, Prettier) | `npm run lint` / `npm run fix-lint` |
 | Production build | `npm run build` |
 | All of the above | `npm run check` |
-| Load into Raycast with hot reload | `npm run dev` (run in background) |
+| Load into Raycast with hot reload | `npm run dev` (run in background; does not survive the session, restart it) |
 | Publish / update on Store | `npm run publish` (opens PR on raycast/extensions — confirm with user first) |
 
 ## Layout
@@ -54,7 +54,7 @@ scripts/make-icon.swift             regenerates assets/extension-icon.png
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `assets/compiled_raycast_swift/` is build output and stays gitignored.
-- Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `swift/` to see them.
+- Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `swift/` to see them. The first build on a machine fetches swift-syntax (a few minutes).
 - `closeMainWindow()` must run before activating, or Raycast restores focus and undoes the jump. See ADR-004.
 - Max 12 `keywords` in package.json (`ray lint` enforces).
 - Store rules: MIT, US English, Title Case titles, `CHANGELOG.md` top entry `## [Title] - {PR_MERGE_DATE}`.
@@ -69,6 +69,11 @@ osascript -l JavaScript -e 'ObjC.import("AppKit"); $.NSWorkspace.sharedWorkspace
 ```
 
 `console.log` output from commands appears in the `ray develop` terminal. This switches the user's frontmost app — warn them first.
+
+## Gotchas
+
+- Check latest Raycast package versions with `npm view @raycast/api version` / `npm view @raycast/utils version`; `npm outdated` has shown a bogus 1.x "Latest" for `@raycast/api`.
+- Never `xcode-select` to an Xcode that doesn't run on the current macOS: it breaks `git`/`clang` system-wide until reset (`sudo xcode-select -s /Library/Developer/CommandLineTools`).
 
 ## Raycast docs for agents
 

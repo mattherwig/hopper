@@ -7,7 +7,7 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 Done:
 - Commands: Jump Back to Previous App, Jump Forward to Next App, Show App History.
 - Pure navigation logic + 6 unit tests passing; `ray lint` + `ray build` clean.
-- E2E verified via deeplinks on macOS 26.5 (Back ×2, Forward ×2 land on correct apps).
+- E2E verified via deeplinks on macOS 26.5 and again on macOS 27.0 / Xcode 27 with the Swift helper.
 - Perf: in-command time 140ms → ~48ms. App list now read by a native Swift helper (ADR-008, #2), measured on macOS 27 / Xcode 27.
 - Icon generated (`scripts/make-icon.swift`).
 - Raycast author confirmed: `matt_herwig`. Owner has hotkeys bound and is dogfooding.
