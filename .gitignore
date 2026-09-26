@@ -5,3 +5,4 @@ raycast-env.d.ts
 .DS_Store
 *.log
 .claude/settings.local.json
+assets/compiled_raycast_swift/
