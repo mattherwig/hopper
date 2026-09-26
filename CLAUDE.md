@@ -29,7 +29,7 @@ Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the 
 | Task | Command |
 |---|---|
 | Install deps | `cd extension && npm ci` |
-| Unit tests (pure logic, no Raycast) | `cd extension && npm test` |
+| Unit tests (pure logic, no Raycast; type-checks `test/` first) | `cd extension && npm test` |
 | Lint (manifest, icon, ESLint, Prettier) | `cd extension && npm run lint` / `npm run fix-lint` |
 | Production build | `cd extension && npm run build` |
 | All of the above | `cd extension && npm run check` |
