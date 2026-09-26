@@ -40,3 +40,17 @@ test("removal is forgotten when the app quits", () => {
 test("removing an app not in history is a no-op", () => {
   assert.deepEqual(removeApp([notes], "com.apple.Safari", {}), {});
 });
+
+test("app removed while current is hidden once you leave it", () => {
+  let removals = removeApp([notes, safari, finder], "com.apple.Notes", {});
+  assert.deepEqual(removals, { "com.apple.Notes": null });
+  // Still frontmost: kept first (navigation needs it), removal stays pending.
+  let r = applyRemovals([notes, safari, finder], removals);
+  assert.deepEqual(r, { apps: [notes, safari, finder], removals });
+  // Left for Safari: hidden, and Safari recorded as ahead of it.
+  r = applyRemovals([safari, notes, finder], r.removals);
+  assert.deepEqual(r, { apps: [safari, finder], removals: { "com.apple.Notes": ["com.apple.Safari"] } });
+  removals = r.removals;
+  // Used again: back.
+  assert.deepEqual(applyRemovals([notes, safari, finder], removals).removals, {});
+});

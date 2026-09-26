@@ -14,16 +14,28 @@ async function write(key: string, value: unknown): Promise<void> {
   await LocalStorage.setItem(key, JSON.stringify(value));
 }
 
-/** Running apps, most recent first, without apps removed from or excluded from history. */
-export async function loadHistory(): Promise<RunningApp[]> {
+/**
+ * Running apps, most recent first, without apps removed from or excluded from history. The frontmost app is always
+ * first; `currentHidden` says whether it's itself removed or excluded (navigation keeps it, the list hides it).
+ */
+export async function loadHistoryState(): Promise<{ apps: RunningApp[]; currentHidden: boolean }> {
   const [recent, removals, excluded] = await Promise.all([
     getRecentApps(),
     read<Removals>(REMOVALS_KEY, {}),
     loadExcludedApps(),
   ]);
   const result = applyRemovals(recent, removals);
-  if (Object.keys(result.removals).length !== Object.keys(removals).length) await write(REMOVALS_KEY, result.removals);
-  return excludeApps(result.apps, new Set(excluded.map((a) => a.bundleId)));
+  if (JSON.stringify(result.removals) !== JSON.stringify(removals)) await write(REMOVALS_KEY, result.removals);
+  const excludedIds = new Set(excluded.map((a) => a.bundleId));
+  const current = recent[0]?.bundleId;
+  return {
+    apps: excludeApps(result.apps, excludedIds),
+    currentHidden: current !== undefined && (current in result.removals || excludedIds.has(current)),
+  };
+}
+
+export async function loadHistory(): Promise<RunningApp[]> {
+  return (await loadHistoryState()).apps;
 }
 
 /** Hides `app` from history until it's used again. `history` is the list as shown, most recent first. */
