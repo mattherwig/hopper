@@ -40,6 +40,13 @@ Read each PNG and check:
 - No personal data: only the demo apps in the list (if the screen is taller and a user app appears at the bottom, add another neutral app to the start of `DEMO_APPS`), no names. `jumper-4.png` lists matching files from `~/Projects/jumper` below the commands; the owner accepted that.
 - Chess shows in Recent in `jumper-1.png` (proves the previous run's exclusion was undone). If Chess stays excluded after a failed run: open History, find it in Excluded, Include in History.
 - Sizes: `sips -g pixelWidth -g pixelHeight extension/metadata/*.png` → 2000×1250.
+- **Raycast CI's image check passes** (it failed the first submission). Their CI requires ~12.5% padding on every side (8–17%), top/bottom and left/right within 4%, and the same background on every image. Run their checker locally:
+  ```bash
+  V="$TMPDIR/raycast-img-check"; python3 -m venv "$V" && "$V/bin/pip" -q install numpy pillow
+  for f in check_raycast_images.py check_metadata_images.py; do gh api "repos/raycast/extensions/contents/scripts/$f" --jq .content | base64 -d > "$V/$f"; done
+  "$V/bin/python" "$V/check_raycast_images.py" extension/metadata/*.png
+  ```
+  `compose.swift` handles this: shadowless capture (`screencapture -o`), cropped to visible pixels (the ⌘K panel adds transparent margin), 75% of the width, centered, with a symmetric drawn shadow.
 
 Then `cd extension && npm run check`, commit `extension/metadata/`.
 

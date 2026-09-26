@@ -196,7 +196,7 @@ class DemoApps:
 def capture(path: Path) -> None:
     wid = raycast_window()[0]  # type: ignore[index]
     raw = TMP / "window.png"
-    subprocess.run(["screencapture", "-x", "-l", str(wid), str(raw)], check=True)
+    subprocess.run(["screencapture", "-x", "-o", "-l", str(wid), str(raw)], check=True)
     subprocess.run(["swift", str(HERE / "compose.swift"), str(raw), str(path)], check=True)
     print(f"wrote {path.relative_to(ROOT)}")
 
