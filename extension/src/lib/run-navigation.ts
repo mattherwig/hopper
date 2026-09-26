@@ -45,8 +45,10 @@ export async function runNavigation(direction: Direction): Promise<void> {
       return;
     }
 
+    // navigate() only returns IDs from `apps`, so a miss is a bug: fail loudly rather than save state without switching.
     const target = apps.find((a) => a.bundleId === result.target);
-    if (target) await activateApp(target);
+    if (!target) throw new Error(`Target ${result.target} is not in history`);
+    await activateApp(target);
     lap("activated");
     await writeJson(STATE_KEY, result.state);
   } catch (error) {
