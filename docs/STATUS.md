@@ -2,6 +2,11 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-26 — GitHub Pages landing page (branch `site/github-pages`)
+
+- `site/index.html`: hero, demo GIF, commands, how it works, setup. (An interactive in-browser playground was prototyped and dropped: the GIF shows the real thing.) Deployed by `.github/workflows/pages.yml` on push to `main`; Pages source set to GitHub Actions.
+- Store button points at the not-yet-live listing: follow-up in #8.
+
 ## 2026-09-26 — v1 submitted to the Raycast Store (#1)
 
 Done:
