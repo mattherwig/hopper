@@ -8,3 +8,4 @@ extension/dist/
 extension/raycast-env.d.ts
 extension/.raycast-swift-build/
 extension/assets/compiled_raycast_swift/
+__pycache__/
