@@ -1,6 +1,6 @@
 // End-to-end latency bench: triggers a command via deeplink and measures until the frontmost app changes.
-// Build: swiftc -O -o /tmp/aff-bench scripts/bench.swift
-// Run (with `npm run dev` active): /tmp/aff-bench back forward back forward
+// Build (from the repo root): swiftc -O -o /tmp/aff-bench scripts/bench.swift
+// Run (with `npm run dev` active in extension/): /tmp/aff-bench back forward back forward
 // Prints trigger epoch ms to stderr (compare with "PERF start" in the dev log to get dispatch latency).
 import AppKit
 

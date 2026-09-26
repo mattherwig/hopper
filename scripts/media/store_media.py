@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Generate Raycast Store media for Jumper by driving Raycast on this Mac.
 
-  python3 scripts/media/store_media.py screenshots   -> metadata/jumper-1.png ... (2000x1250)
-  python3 scripts/media/store_media.py gif           -> media/demo.gif
+  python3 scripts/media/store_media.py screenshots   -> extension/metadata/jumper-1.png ... (2000x1250)
+  python3 scripts/media/store_media.py gif           -> extension/media/demo.gif
 
-Needs: `npm run dev` running, Accessibility + Screen Recording permission for the calling app,
+Needs: `npm run dev` running (in extension/), Accessibility + Screen Recording permission for the calling app,
 ffmpeg (gif only). Takes over the screen while running: hands off keyboard and mouse.
 See .claude/skills/store-screenshots and .claude/skills/demo-gif for the full procedure.
 """
@@ -18,7 +18,8 @@ import tempfile
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[2]  # repo root
+EXT = ROOT / "extension"  # the Raycast extension (what ships to the Store)
 HERE = Path(__file__).resolve().parent
 DEEPLINK = "raycast://extensions/matt_herwig/jumper/"
 TMP = Path(tempfile.mkdtemp(prefix="jumper-media-"))
@@ -37,7 +38,7 @@ DEMO_APPS = [
     ("Font Book", ["open", "-a", "Font Book"], False),
     ("Chess", ["open", "-a", "Chess"], False),
     ("Finder", None, True),  # opens a window on /System/Applications (Apple apps only), see setup_apps
-    ("Preview", ["open", "-a", "Preview", str(ROOT / "assets/extension-icon.png")], True),
+    ("Preview", ["open", "-a", "Preview", str(EXT / "assets/extension-icon.png")], True),
     ("Ghostty", None, True),  # the owner's own session: used only if already running, never quit
     ("TextEdit", None, True),  # opens a scratch note, see setup_apps
 ]
@@ -201,7 +202,7 @@ def capture(path: Path) -> None:
 
 
 def screenshots() -> None:
-    out = ROOT / "metadata"
+    out = EXT / "metadata"
     out.mkdir(exist_ok=True)
     for old in out.glob("jumper-*.png"):
         old.unlink()
@@ -284,7 +285,7 @@ def gif() -> None:
     ]
     with DemoApps(frame):
         keycast = subprocess.Popen(
-            ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(ROOT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
+            ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(EXT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
         )
 
         def overlay(message: dict) -> None:
@@ -323,7 +324,7 @@ def gif() -> None:
         keycast.stdin.close()
         keycast.wait()
 
-        out = ROOT / "media"
+        out = EXT / "media"
         out.mkdir(exist_ok=True)
         subprocess.run(
             [
@@ -334,7 +335,7 @@ def gif() -> None:
             ],
             check=True,
         )
-        print(f"wrote media/demo.gif ({(out / 'demo.gif').stat().st_size // 1024} KB)")
+        print(f"wrote extension/media/demo.gif ({(out / 'demo.gif').stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":

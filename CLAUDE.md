@@ -22,52 +22,62 @@ Work is tracked in GitHub Issues on https://github.com/mattherwig/jumper (the ta
 
 ## Commands
 
-Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the native helper; `xcode-select -p` must point at it). Run `source ~/.nvm/nvm.sh && nvm use` first (`.nvmrc`).
+Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the native helper; `xcode-select -p` must point at it). Run `source ~/.nvm/nvm.sh && nvm use` first (`.nvmrc`, at the root and in `extension/`).
+
+**Repo split (ADR-012):** the shippable extension lives in `extension/`; dev-only material (`docs/`, `scripts/`, `.claude/`, this file) stays at the repo root. All npm commands run in `extension/`. `npm run publish` must run from `extension/` and ships **everything on disk in it** (no ignore file; only `node_modules`, `raycast-env.d.ts`, `.raycast-swift-build`, `.swiftpm`, `compiled_raycast_swift`, and a few others are skipped), so never put dev-only files in `extension/`.
 
 | Task | Command |
 |---|---|
-| Unit tests (pure logic, no Raycast) | `npm test` |
-| Lint (manifest, icon, ESLint, Prettier) | `npm run lint` / `npm run fix-lint` |
-| Production build | `npm run build` |
-| All of the above | `npm run check` |
-| Load into Raycast with hot reload | `npm run dev` (run in background; does not survive the session, restart it) |
-| Publish / update on Store | `npm run publish` (opens PR on raycast/extensions — confirm with user first) |
+| Install deps | `cd extension && npm ci` |
+| Unit tests (pure logic, no Raycast) | `cd extension && npm test` |
+| Lint (manifest, icon, ESLint, Prettier) | `cd extension && npm run lint` / `npm run fix-lint` |
+| Production build | `cd extension && npm run build` |
+| All of the above | `cd extension && npm run check` |
+| Load into Raycast with hot reload | `cd extension && npm run dev` (run in background; does not survive the session, restart it) |
+| Publish / update on Store | `cd extension && npm run publish` (opens PR on raycast/extensions — confirm with user first) |
 
 ## Layout
 
 ```
-src/back.ts, src/forward.ts,
-src/toggle.ts                       no-view commands (thin; call runNavigation)
-src/history.tsx                     view command: List of running apps by recency
-src/lib/navigation.ts               PURE back/forward state machine — all logic lives here, unit-tested
-src/lib/history.ts                  PURE filters on the app list (exclude, remove), unit-tested
-src/lib/load-history.ts             glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
-src/lib/run-navigation.ts           glue: read MRU, LocalStorage state, navigate(), activate
-src/lib/macos.ts                    getRecentApps() (calls Swift) + activateApp() via Raycast open()
-swift/Sources/JumperNative/         native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
-scripts/bench.swift                 end-to-end latency bench (see docs/PERFORMANCE.md)
-scripts/media/                      Store media generator: store_media.py drives Raycast (skills below)
-metadata/                           Store screenshots, 2000x1250 (skill: store-screenshots)
-media/demo.gif                      README demo, shown on the Store page (skill: demo-gif)
-test/*.test.ts                      node:test, run via --experimental-strip-types
+extension/                                    the Raycast extension; everything here ships to the Store
+  package.json, package-lock.json            manifest (commands, keywords) + deps
+  README.md, CHANGELOG.md, LICENSE           shown on / required by the Store
+  src/back.ts, src/forward.ts,
+  src/toggle.ts                               no-view commands (thin; call runNavigation)
+  src/history.tsx                             view command: List of running apps by recency
+  src/lib/navigation.ts                       PURE back/forward state machine — all logic lives here, unit-tested
+  src/lib/history.ts                          PURE filters on the app list (exclude, remove), unit-tested
+  src/lib/load-history.ts                     glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
+  src/lib/run-navigation.ts                   glue: read MRU, LocalStorage state, navigate(), activate
+  src/lib/macos.ts                            getRecentApps() (calls Swift) + activateApp() via Raycast open()
+  swift/Sources/JumperNative/                 native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
+  assets/extension-icon.png                   Store icon, 512x512
+  metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
+  media/demo.gif                              README demo, shown on the Store page (skill: demo-gif)
+  test/*.test.ts                              node:test, run via --experimental-strip-types
+docs/                                         dev docs (not shipped)
+scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
+scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
+README.md                                     GitHub landing page; points to extension/README.md
 ```
 
 ## Invariants (don't break)
 
-- Command `name`s in package.json (`back`, `forward`, `toggle`, `history`) are permanent: users' hotkeys bind to them.
-- Adding, renaming, or changing a user-facing command or action: update `README.md` (Commands, Setup, How it works; the Store shows it), `CHANGELOG.md`, the package.json `description`, and the Layout table here, all in the same commit.
+- Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`) are permanent: users' hotkeys bind to them.
+- Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
 - Keep `navigation.ts` and `history.ts` free of Raycast/Node imports so `npm test` works without Raycast.
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
-- No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `assets/compiled_raycast_swift/` is build output and stays gitignored.
-- Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `swift/` to see them. The first build on a machine fetches swift-syntax (a few minutes).
+- No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `extension/assets/compiled_raycast_swift/` is build output and stays gitignored.
+- Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `extension/swift/` to see them. The first build on a machine fetches swift-syntax (a few minutes).
 - No-view commands: `closeMainWindow()` must run before activating, or Raycast restores focus and undoes the jump (ADR-004). View command (list): the reverse — activate first, since closing unmounts the view and kills the command (ADR-009).
+- Nothing dev-only in `extension/`: publish copies the whole folder into raycast/extensions (ADR-012).
 - Max 12 `keywords` in package.json (`ray lint` enforces).
 - Store rules: MIT, US English, Title Case titles, `CHANGELOG.md` top entry `## [Title] - {PR_MERGE_DATE}`.
 
 ## Verifying end to end (no hotkey needed)
 
-With `npm run dev` running, trigger commands via deeplink and inspect frontmost app:
+With `npm run dev` running (in `extension/`), trigger commands via deeplink and inspect frontmost app:
 
 ```bash
 open -g "raycast://extensions/matt_herwig/jumper/back"

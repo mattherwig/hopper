@@ -6,11 +6,22 @@
       "Bash(npm run lint)",
       "Bash(npm run fix-lint)",
       "Bash(npm run build)",
-      "Bash(npm run check)"
+      "Bash(npm run check)",
+      "Bash(cd extension && npm test)",
+      "Bash(cd extension && npm run test)",
+      "Bash(cd extension && npm run lint)",
+      "Bash(cd extension && npm run fix-lint)",
+      "Bash(cd extension && npm run build)",
+      "Bash(cd extension && npm run check)"
     ],
     "ask": [
       "Bash(npm run publish)",
-      "Bash(npx @raycast/api@latest publish)"
+      "Bash(npx @raycast/api@latest publish)",
+      "Bash(cd extension && npm run publish)",
+      "Bash(cd extension && npx @raycast/api@latest publish)",
+      "Bash(*npm run publish*)",
+      "Bash(*ray publish*)",
+      "Bash(*@raycast/api@latest publish*)"
     ]
   }
 }

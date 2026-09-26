@@ -2,15 +2,15 @@
 
 ## How to profile
 
-1. `npm run dev` (in background, log to a file).
-2. In-command step timings: dev builds log `PERF start <epoch>`, `PERF read <ms>`, `PERF activated <ms>` (see `timer()` in `src/lib/run-navigation.ts`; silent in production).
+1. `cd extension && npm run dev` (in background, log to a file).
+2. In-command step timings: dev builds log `PERF start <epoch>`, `PERF read <ms>`, `PERF activated <ms>` (see `timer()` in `extension/src/lib/run-navigation.ts`; silent in production).
 3. End-to-end (trigger → frontmost app changed):
    ```bash
-   swiftc -O -o /tmp/aff-bench scripts/bench.swift
+   swiftc -O -o /tmp/aff-bench scripts/bench.swift   # from the repo root
    /tmp/aff-bench back back forward forward 2>/tmp/aff-t0.log
    ```
    Dispatch latency = `PERF start` epoch − `T0` epoch from stderr.
-4. Micro-bench the native read without Raycast: compile `swift/Sources/JumperNative/RecentApps.swift` with a tiny `main.swift` that prints `readRecentApps()` as JSON (`swiftc -O -o /tmp/recent RecentApps.swift main.swift`), then time it.
+4. Micro-bench the native read without Raycast: compile `extension/swift/Sources/JumperNative/RecentApps.swift` with a tiny `main.swift` that prints `readRecentApps()` as JSON (`swiftc -O -o /tmp/recent RecentApps.swift main.swift`), then time it.
 
 This switches the user's frontmost app repeatedly — warn them first.
 

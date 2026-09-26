@@ -77,3 +77,11 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 **Decision.** Titles `Back`, `Forward`, `Toggle`, `History`; command `name`s match (`back`, `forward`, `toggle`, `history`), as do the source files. Descriptions distinguish Back (walks deeper) from Toggle (flips between two). Search terms like "previous app", "last app", "jump" live in keywords. Supersedes the command naming in ADR-005 and ADR-010.
 
 **Consequences.** Short titles are generic in Raycast root search; the "Jumper" subtitle and keywords disambiguate. Names are permanent once published. Existing dev hotkeys must be rebound.
+
+## ADR-012: Extension lives in extension/, dev material at repo root (2026-09-26)
+
+**Context.** `npm run publish` (Raycast CLI) copies the entire extension directory from disk into the raycast/extensions monorepo. There is no ignore file; it only skips `.git`, `.github`, `node_modules`, `raycast-env.d.ts`, `.direnv`, `.raycast-swift-build`, `.swiftpm`, `compiled_raycast_swift`, `compiled_raycast_rust`. With the extension at the repo root, the first publish PR (raycast/extensions#31608) shipped `docs/`, `CLAUDE.md`, `AGENTS.md`, and `scripts/`.
+
+**Decision.** Everything that ships (package.json + lock, `src/`, `swift/`, `assets/`, `metadata/`, `media/`, `test/`, README, CHANGELOG, LICENSE, tsconfig/eslint/prettier config, `.nvmrc`) lives in `extension/`, and publish runs from there. Dev-only material stays at the root: `docs/`, `scripts/`, `.claude/`, `CLAUDE.md`/`AGENTS.md`, a short GitHub README pointing to `extension/README.md`. LICENSE and `.nvmrc` exist in both places (GitHub repo license; `nvm use` works at either level).
+
+**Consequences.** All npm commands run in `extension/` (`cd extension && npm run check`). Anything on disk in `extension/` ships, including untracked files (stray `.DS_Store`, `swift/.build/` from a manual `swift build`), so check before publishing. `scripts/media/store_media.py` writes into `extension/metadata/` and `extension/media/`. Source paths in earlier ADRs (`src/…`, `swift/…`) are relative to `extension/`.
