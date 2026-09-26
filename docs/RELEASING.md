@@ -7,6 +7,7 @@ Source: https://developers.raycast.com/basics/prepare-an-extension-for-store and
 - [x] Raycast username = `author` in package.json: `matt_herwig` (confirmed by owner). Deeplinks in CLAUDE.md and scripts/bench.swift use it too. Note: a second profile `raycast.com/mattherwig` also exists; make sure Raycast is signed in as `matt_herwig` before publishing.
 - [ ] GitHub account (the publish command forks `raycast/extensions` and opens a PR from it).
 - [ ] Node ≥ 22.22 (`nvm use`).
+- [ ] Xcode 16.3+ installed and selected (`xcode-select -p`), needed to build the Swift helper.
 
 ## Pre-submit checklist
 

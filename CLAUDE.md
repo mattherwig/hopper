@@ -22,7 +22,7 @@ Work is tracked in GitHub Issues on https://github.com/mattherwig/jumper (the ta
 
 ## Commands
 
-Requires Node ≥ 22.22 (Raycast 2.x CLI). Run `source ~/.nvm/nvm.sh && nvm use` first (`.nvmrc`).
+Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the native helper; `xcode-select -p` must point at it). Run `source ~/.nvm/nvm.sh && nvm use` first (`.nvmrc`).
 
 | Task | Command |
 |---|---|
@@ -40,7 +40,8 @@ src/go-back.ts, src/go-forward.ts   no-view commands (thin; call runNavigation)
 src/show-app-history.tsx            view command: List of running apps by recency
 src/lib/navigation.ts               PURE back/forward state machine — all logic lives here, unit-tested
 src/lib/run-navigation.ts           glue: read MRU, LocalStorage state, navigate(), activate
-src/lib/macos.ts                    JXA script (MRU order) + activation via Raycast open()
+src/lib/macos.ts                    getRecentApps() (calls Swift) + activateApp() via Raycast open()
+swift/Sources/JumperNative/         native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
 scripts/bench.swift                 end-to-end latency bench (see docs/PERFORMANCE.md)
 test/navigation.test.ts             node:test, run via --experimental-strip-types
 scripts/make-icon.swift             regenerates assets/extension-icon.png
@@ -51,7 +52,8 @@ scripts/make-icon.swift             regenerates assets/extension-icon.png
 - Command `name`s in package.json (`go-back`, `go-forward`, `show-app-history`) are permanent: users' hotkeys bind to them.
 - Keep `navigation.ts` free of Raycast/Node imports so `npm test` works without Raycast.
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
-- Don't add top-level `ObjC.import` to the JXA script — costs ~25ms per press. Profile any change on the hot path: `docs/PERFORMANCE.md`.
+- Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
+- No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008).
 - `closeMainWindow()` must run before activating, or Raycast restores focus and undoes the jump. See ADR-004.
 - Max 12 `keywords` in package.json (`ray lint` enforces).
 - Store rules: MIT, US English, Title Case titles, `CHANGELOG.md` top entry `## [Title] - {PR_MERGE_DATE}`.
