@@ -39,8 +39,8 @@ Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the 
 src/go-back.ts, src/go-forward.ts   no-view commands (thin; call runNavigation)
 src/show-app-history.tsx            view command: List of running apps by recency
 src/lib/navigation.ts               PURE back/forward state machine — all logic lives here, unit-tested
-src/lib/history.ts                  PURE filters on the app list (Excluded Apps, Remove from History), unit-tested
-src/lib/load-history.ts             glue: getRecentApps() + filters + removals in LocalStorage; both commands read history through loadHistory()
+src/lib/history.ts                  PURE filters on the app list (exclude, remove), unit-tested
+src/lib/load-history.ts             glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
 src/lib/run-navigation.ts           glue: read MRU, LocalStorage state, navigate(), activate
 src/lib/macos.ts                    getRecentApps() (calls Swift) + activateApp() via Raycast open()
 swift/Sources/JumperNative/         native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)

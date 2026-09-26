@@ -17,8 +17,6 @@ Jump Back and Jump Forward are meant to be used with hotkeys:
 1. Open Raycast Settings → Extensions → Jumper.
 2. Assign a hotkey to each command, for example `⌃⌥[` and `⌃⌥]`.
 
-To keep apps out of history entirely, list them in **Excluded Apps** (same settings page), by name or bundle ID, separated by commas. Example: `Finder, com.apple.Preview`.
-
 No permissions and no background process needed. The extension reads the order macOS already keeps for Cmd+Tab.
 
 ## How it works
@@ -28,3 +26,4 @@ No permissions and no background process needed. The extension reads the order m
 - Switching apps any other way (click, Cmd+Tab) starts a fresh history, just like visiting a new page in a browser clears the forward history.
 - Apps you quit are skipped.
 - In **Show App History**, **Remove from History** (`⌃X`) hides an app, for example one you closed all windows of but didn't quit. It comes back once you use it again.
+- **Exclude from History** (`⌃⇧X`) hides an app for good. Excluded apps are listed at the bottom of Show App History; **Include in History** brings one back.

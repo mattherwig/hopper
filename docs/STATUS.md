@@ -13,6 +13,6 @@ Done:
 - Raycast author confirmed: `matt_herwig`. Owner has hotkeys bound and is dogfooding.
 - Public repo: https://github.com/mattherwig/jumper. Tasks tracked as Issues.
 
-- Excluded Apps preference (#4) and Remove from History action in Show App History (hidden until used again, inferred from MRU order). Unit-tested; not yet dogfooded in Raycast.
+- Show App History actions: Remove from History (hidden until used again, inferred from MRU order) and Exclude from History (#4; permanent, undo from the Excluded section). Stored in LocalStorage, not preferences, since commands can't write preferences. Unit-tested; not yet dogfooded in Raycast.
 
 Next: `gh issue list`. Publishing (#1) is **on hold** by owner choice; the issue is ready to execute when resumed.
