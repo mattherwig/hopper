@@ -36,7 +36,8 @@ Requires Node ≥ 22.22 (Raycast 2.x CLI) and **Xcode 16.3+** (Swift 6, for the 
 ## Layout
 
 ```
-src/go-back.ts, src/go-forward.ts   no-view commands (thin; call runNavigation)
+src/go-back.ts, src/go-forward.ts,
+src/toggle-last-app.ts              no-view commands (thin; call runNavigation)
 src/show-app-history.tsx            view command: List of running apps by recency
 src/lib/navigation.ts               PURE back/forward state machine — all logic lives here, unit-tested
 src/lib/history.ts                  PURE filters on the app list (exclude, remove), unit-tested
@@ -50,7 +51,8 @@ test/*.test.ts                      node:test, run via --experimental-strip-type
 
 ## Invariants (don't break)
 
-- Command `name`s in package.json (`go-back`, `go-forward`, `show-app-history`) are permanent: users' hotkeys bind to them.
+- Command `name`s in package.json (`go-back`, `go-forward`, `toggle-last-app`, `show-app-history`) are permanent: users' hotkeys bind to them.
+- Adding, renaming, or changing a user-facing command or action: update `README.md` (Commands, Setup, How it works; the Store shows it), `CHANGELOG.md`, the package.json `description`, and the Layout table here, all in the same commit.
 - Keep `navigation.ts` and `history.ts` free of Raycast/Node imports so `npm test` works without Raycast.
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.

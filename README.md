@@ -8,14 +8,15 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 
 - **Jump Back to Previous App**: switch to the app you used before this one. Run it again to keep going back.
 - **Jump Forward to Next App**: retrace a Jump Back step.
+- **Toggle Last App**: flip between your two most recent apps. Run it again to switch back.
 - **Show App History**: list running apps from most to least recently used and jump to any of them.
 
 ## Setup
 
-Jump Back and Jump Forward are meant to be used with hotkeys:
+Jump Back, Jump Forward, and Toggle Last App are meant to be used with hotkeys:
 
 1. Open Raycast Settings → Extensions → Jumper.
-2. Assign a hotkey to each command, for example `⌃⌥[` and `⌃⌥]`.
+2. Assign a hotkey to each command, for example `⌃⌥[` for Jump Back, `⌃⌥]` for Jump Forward, and `⌃⌥\` for Toggle Last App.
 
 No permissions and no background process needed. The extension reads the order macOS already keeps for Cmd+Tab.
 
