@@ -49,6 +49,7 @@ extension/                                    the Raycast extension; everything 
   src/lib/history.ts                          PURE filters on the app list (exclude, remove), unit-tested
   src/lib/load-history.ts                     glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
   src/lib/run-navigation.ts                   glue: read MRU, LocalStorage state, navigate(), activate
+  src/lib/storage.ts                          LocalStorage JSON read/write; unreadable values fall back to defaults
   src/lib/macos.ts                            getRecentApps() (calls Swift) + activateApp() via Raycast open()
   swift/Sources/JumperNative/                 native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
   assets/extension-icon.png                   Store icon, 512x512

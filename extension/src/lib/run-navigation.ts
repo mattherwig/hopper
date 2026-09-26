@@ -1,8 +1,9 @@
-import { closeMainWindow, environment, LocalStorage, PopToRootType, showHUD } from "@raycast/api";
+import { closeMainWindow, environment, PopToRootType, showHUD } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
 import { loadHistory } from "./load-history";
 import { activateApp } from "./macos";
 import { navigate, type Direction, type NavState } from "./navigation";
+import { readJson, writeJson } from "./storage";
 
 const STATE_KEY = "nav-state";
 
@@ -25,15 +26,14 @@ function timer() {
 export async function runNavigation(direction: Direction): Promise<void> {
   const lap = timer();
   try {
-    const [, apps, raw] = await Promise.all([
+    const [, apps, prev] = await Promise.all([
       // Hide Raycast before switching; otherwise, when launched from the Raycast window or a deeplink,
       // Raycast hands focus back to the previous app after we switch, undoing the jump.
       closeMainWindow({ popToRootType: PopToRootType.Immediate }),
       loadHistory(),
-      LocalStorage.getItem<string>(STATE_KEY),
+      readJson<NavState | undefined>(STATE_KEY, undefined),
     ]);
     lap("read");
-    const prev = raw ? (JSON.parse(raw) as NavState) : undefined;
 
     const result = navigate(
       direction,
@@ -48,7 +48,7 @@ export async function runNavigation(direction: Direction): Promise<void> {
     const target = apps.find((a) => a.bundleId === result.target);
     if (target) await activateApp(target);
     lap("activated");
-    await LocalStorage.setItem(STATE_KEY, JSON.stringify(result.state));
+    await writeJson(STATE_KEY, result.state);
   } catch (error) {
     await showFailureToast(error, { title: "Could not switch app" });
   }
