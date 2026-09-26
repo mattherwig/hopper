@@ -6,25 +6,25 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 
 ## Commands
 
-- **Jump Back to Previous App**: switch to the app you used before this one. Run it again to keep going back.
-- **Jump Forward to Next App**: retrace a Jump Back step.
-- **Toggle Last App**: flip between your two most recent apps. Run it again to switch back.
-- **Show App History**: list running apps from most to least recently used and jump to any of them.
+- **Back**: switch to the app you used before this one. Run it again to keep going back.
+- **Forward**: retrace a Back step.
+- **Toggle**: flip between your two most recent apps. Run it again to switch back.
+- **History**: list running apps from most to least recently used and jump to any of them.
 
 ## Setup
 
-Jump Back, Jump Forward, and Toggle Last App are meant to be used with hotkeys:
+Back, Forward, and Toggle are meant to be used with hotkeys:
 
 1. Open Raycast Settings → Extensions → Jumper.
-2. Assign a hotkey to each command, for example `⌃⌥[` for Jump Back, `⌃⌥]` for Jump Forward, and `⌃⌥\` for Toggle Last App.
+2. Assign a hotkey to each command, for example `⌃⌥[` for Back, `⌃⌥]` for Forward, and `⌃⌥\` for Toggle.
 
 No permissions and no background process needed. The extension reads the order macOS already keeps for Cmd+Tab.
 
 ## How it works
 
-- The first **Jump Back** remembers your current app order and moves one step back.
-- Pressing Back again goes further; **Jump Forward** retraces.
+- The first **Back** remembers your current app order and moves one step back.
+- Pressing Back again goes further; **Forward** retraces.
 - Switching apps any other way (click, Cmd+Tab) starts a fresh history, just like visiting a new page in a browser clears the forward history.
 - Apps you quit are skipped.
-- In **Show App History**, **Remove from History** (`⌃X`) hides an app (including the one you're in, once you leave it), for example one you closed all windows of but didn't quit. It comes back once you use it again.
-- **Exclude from History** (`⌃⇧X`) hides an app for good. Excluded apps are listed at the bottom of Show App History; **Include in History** brings one back.
+- In **History**, **Remove from History** (`⌃X`) hides an app (including the one you're in, once you leave it), for example one you closed all windows of but didn't quit. It comes back once you use it again.
+- **Exclude from History** (`⌃⇧X`) hides an app for good. Excluded apps are listed at the bottom of History; **Include in History** brings one back.

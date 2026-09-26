@@ -7,7 +7,7 @@
 3. End-to-end (trigger → frontmost app changed):
    ```bash
    swiftc -O -o /tmp/aff-bench scripts/bench.swift
-   /tmp/aff-bench go-back go-back go-forward go-forward 2>/tmp/aff-t0.log
+   /tmp/aff-bench back back forward forward 2>/tmp/aff-t0.log
    ```
    Dispatch latency = `PERF start` epoch − `T0` epoch from stderr.
 4. Micro-bench the native read without Raycast: compile `swift/Sources/JumperNative/RecentApps.swift` with a tiny `main.swift` that prints `readRecentApps()` as JSON (`swiftc -O -o /tmp/recent RecentApps.swift main.swift`), then time it.

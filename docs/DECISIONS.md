@@ -36,7 +36,7 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Context.** Store search matches title, description, and keywords. Checked raycast/extensions (3,322 extensions): no `jumper`. Neighbors: Jump (websites/folders), Quick Jump (team links), SpaceJump (macOS Spaces switcher, closest risk of confusion).
 
-**Decision.** Title `Jumper`, slug `jumper`. The title is brandable; command titles carry the searchable words ("Jump Back to Previous App", "Jump Forward to Next App", "Show App History"), and description/keywords carry "app switcher", "previous app", "alt tab" (what people actually search, see `docs/RESEARCH.md`). Command `name`s are `go-back` / `go-forward` / `show-app-history` (internal IDs; never rename after publish).
+**Decision.** Title `Jumper`, slug `jumper`. The title is brandable; command titles carry the searchable words ("Jump Back to Previous App", "Jump Forward to Next App", "Show App History"), and description/keywords carry "app switcher", "previous app", "alt tab" (what people actually search, see `docs/RESEARCH.md`). Command `name`s are `go-back` / `go-forward` / `show-app-history` (internal IDs; never rename after publish). Command titles and names superseded by ADR-011.
 
 **Consequences.** The title alone doesn't say "apps"; discoverability leans on command titles, description, and keywords. Revisit if Store search performs poorly.
 
@@ -58,14 +58,22 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Consequences.** Builders need Xcode 16.3+ (Swift 6). The bridge spawns the helper once per call, so keep exported functions few and coarse. The bridge rejects Windows (see issue #7). `RecentApps.swift` has no macro imports, so it can be checked with plain `swiftc` (see docs/PERFORMANCE.md).
 
-## ADR-009: In Show App History, activate before closing the window (2026-09-26)
+## ADR-009: In History, activate before closing the window (2026-09-26)
 
-**Context.** Selecting an app in Show App History did nothing. Debug logging showed `closeMainWindow({ popToRootType: Immediate })` unmounts the view command and ends its process, so the `open()` after it never ran. ADR-004's order (close, then activate) only holds for no-view commands.
+**Context.** Selecting an app in History did nothing. Debug logging showed `closeMainWindow({ popToRootType: Immediate })` unmounts the view command and ends its process, so the `open()` after it never ran. ADR-004's order (close, then activate) only holds for no-view commands.
 
 **Decision.** The list action calls `activateApp(app)` first, then `closeMainWindow()`. Verified by deeplink (temporary `launchContext` hook firing the same handler): picking the 3rd entry switched to it, so the switch isn't just Raycast restoring the previous app on hide.
 
-## ADR-010: Toggle Last App = Back that always starts fresh (2026-09-26)
+## ADR-010: Toggle = Back that always starts fresh (2026-09-26)
 
-**Context.** Owner wanted a one-key flip between two apps (#5). Jump Back walks deeper on repeat (ADR-003), so pressing it twice goes A→B→C, not A→B→A.
+**Context.** Owner wanted a one-key flip between two apps (#5). Back walks deeper on repeat (ADR-003), so pressing it twice goes A→B→C, not A→B→A.
 
-**Decision.** New `toggle` direction in `navigate()`: ignores saved state, snapshots the current MRU, targets index 1. Because activating moves the target to the MRU front, repeating it flips between the two most recent apps. It still saves `nav-state`, so a Jump Back after a toggle keeps walking deeper. Command name `toggle-last-app` (permanent once published).
+**Decision.** New `toggle` direction in `navigate()`: ignores saved state, snapshots the current MRU, targets index 1. Because activating moves the target to the MRU front, repeating it flips between the two most recent apps. It still saves `nav-state`, so a Back after a toggle keeps walking deeper. Command name `toggle` (permanent once published).
+
+## ADR-011: Short command titles and names (2026-09-26)
+
+**Context.** Titles like "Jump Back to Previous App" were redundant ("back" = "previous", "Jump" repeats the extension name that Raycast shows as the subtitle), and Back and Toggle had near-identical descriptions. Not yet published, so renaming IDs breaks no users.
+
+**Decision.** Titles `Back`, `Forward`, `Toggle`, `History`; command `name`s match (`back`, `forward`, `toggle`, `history`), as do the source files. Descriptions distinguish Back (walks deeper) from Toggle (flips between two). Search terms like "previous app", "last app", "jump" live in keywords. Supersedes the command naming in ADR-005 and ADR-010.
+
+**Consequences.** Short titles are generic in Raycast root search; the "Jumper" subtitle and keywords disambiguate. Names are permanent once published. Existing dev hotkeys must be rebound.

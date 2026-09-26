@@ -20,40 +20,40 @@
     "last app",
     "recent apps",
     "app history",
-    "back",
-    "forward",
+    "jump",
+    "go back",
     "alt tab",
     "cmd tab",
-    "toggle",
+    "last used app",
     "window switcher"
   ],
   "commands": [
     {
-      "name": "go-back",
-      "title": "Jump Back to Previous App",
+      "name": "back",
+      "title": "Back",
       "subtitle": "Jumper",
-      "description": "Switch to the app you used before this one. Run again to keep going back. Best bound to a hotkey.",
+      "description": "Switch to the app you used before this one, like a browser's Back button. Run again to keep going back. Best bound to a hotkey.",
       "mode": "no-view"
     },
     {
-      "name": "go-forward",
-      "title": "Jump Forward to Next App",
+      "name": "forward",
+      "title": "Forward",
       "subtitle": "Jumper",
-      "description": "Retrace a Jump Back step. Best bound to a hotkey.",
+      "description": "Undo a Back step. Best bound to a hotkey.",
       "mode": "no-view"
     },
     {
-      "name": "toggle-last-app",
-      "title": "Toggle Last App",
+      "name": "toggle",
+      "title": "Toggle",
       "subtitle": "Jumper",
-      "description": "Switch to the app you used before this one. Run again to switch back. Best bound to a hotkey.",
+      "description": "Flip between your two most recent apps. Run again to flip back. Best bound to a hotkey.",
       "mode": "no-view"
     },
     {
-      "name": "show-app-history",
-      "title": "Show App History",
+      "name": "history",
+      "title": "History",
       "subtitle": "Jumper",
-      "description": "List running apps from most to least recently used and jump to any of them.",
+      "description": "List running apps from most to least recently used and switch to any of them.",
       "mode": "view"
     }
   ],
