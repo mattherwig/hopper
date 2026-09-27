@@ -7,8 +7,10 @@ struct RunningProcess: Codable {
   let ppid: Int
   /// Controlling terminal without "/dev/" (e.g. "ttys003"), or "" for none.
   let tty: String
-  /// Executable name (kernel `p_comm`, at most 16 characters), or for script interpreters (node, bun, python)
-  /// the file name of the script they run, so `codex` or `gemini` installed through npm are recognized.
+  /// For processes with a terminal: the file name the program was started as (argv[0]: `claude`, where the
+  /// executable itself is a versioned file like `2.1.283`), or for script interpreters (node, bun, python) the
+  /// script's, so `codex` or `gemini` installed through npm are recognized. Otherwise the kernel's name
+  /// (`p_comm`, at most 16 characters).
   let name: String
   /// Start time, milliseconds since 1970: with the pid it identifies a process (pids get reused).
   let startedAt: Double
@@ -41,7 +43,7 @@ func readProcesses() -> [RunningProcess] {
       pid: pid,
       ppid: Int(proc.kp_eproc.e_ppid),
       tty: tty,
-      name: interpreters.contains(command) ? (scriptName(pid: pid) ?? command) : command,
+      name: tty.isEmpty ? command : (commandName(pid: pid, executable: command) ?? command),
       startedAt: Double(start.tv_sec) * 1000 + Double(start.tv_usec) / 1000,
       cwd: tty.isEmpty ? "" : (workingDirectory(pid: pid) ?? "")
     )
@@ -62,9 +64,10 @@ private func ttyName(_ device: dev_t) -> String {
   return text == "??" ? "" : text
 }
 
-/// File name of the script an interpreter runs: the first argument not starting with "-". Only that name
-/// leaves this function; other arguments can hold secrets and are never returned.
-private func scriptName(pid: Int) -> String? {
+/// File name of argv[0] (without a login shell's leading "-"), or for interpreters of the script they run: the
+/// first argument not starting with "-". Only that file name leaves this function; other arguments can hold
+/// secrets and are never returned.
+private func commandName(pid: Int, executable: String) -> String? {
   var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, Int32(pid)]
   var size = 0
   guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > 0 else { return nil }
@@ -82,6 +85,9 @@ private func scriptName(pid: Int) -> String? {
     args.append(String(decoding: buffer[start..<index], as: UTF8.self))
     index += 1
   }
-  guard let script = args.dropFirst().first(where: { !$0.hasPrefix("-") }) else { return nil }
-  return script.split(separator: "/").last.map(String.init)
+  let fileName = { (path: String) in path.split(separator: "/").last.map(String.init) }
+  if interpreters.contains(executable) {
+    return args.dropFirst().first(where: { !$0.hasPrefix("-") }).flatMap(fileName)
+  }
+  return args.first.flatMap(fileName).map { $0.hasPrefix("-") ? String($0.dropFirst()) : $0 }
 }

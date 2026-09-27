@@ -7,6 +7,9 @@ import type { Process } from "../../platform/model";
 
 /** Process name → product. Names must be specific enough not to catch other programs. */
 export const AGENT_CLIS: Record<string, string> = {
+  // Claude Code sessions are described by claude.ts once they register; before that (e.g. waiting on the
+  // "trust this folder?" prompt) they're only a process.
+  claude: "Claude Code",
   codex: "Codex",
   "cursor-agent": "Cursor Agent",
   gemini: "Gemini CLI",

@@ -60,7 +60,7 @@ extension/                                    the Raycast extension; everything 
     load.ts                                   read all apps' tabs in parallel, order them, route selection (and pane selection) to the source
     history.ts, reopen.ts                     Recently Closed (ADR-019)
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
-    sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript; terminals report panes with tty);
+    sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
                                               herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-022);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)

@@ -1,9 +1,9 @@
 // PURE: from where an agent runs (its Host) to where to jump (a Location): the app, and the tab and pane in it.
 //
 // A terminal agent is a process: its parent chain leads to the app that owns its terminal, and its tty is one of
-// that app's panes (tabs/model.ts Pane). An agent inside herdr runs in herdr's server, not in an app: herdr
-// focuses the pane itself, and the terminal running a herdr client comes forward. Terminals without panes
-// (Ghostty, or any app on the windows fallback) are still located to the app.
+// that app's panes (tabs/model.ts Pane), or in Ghostty (no ttys) the only pane in its folder. An agent inside
+// herdr runs in herdr's server, not in an app: herdr focuses the pane itself, and the terminal running a herdr
+// client comes forward. Terminals without panes (any app on the windows fallback) are still located to the app.
 
 import type { App, Process } from "../platform/model";
 import { appOfProcess, herdrClient, inHerdr } from "../platform/processes";
@@ -15,6 +15,7 @@ export { appOfProcess, inHerdr };
 interface Terminal {
   app: App;
   tty: string;
+  cwd: string;
 }
 
 /** The app and tty an agent's host runs in, for hosts that are terminal processes (directly or through herdr). */
@@ -26,7 +27,7 @@ function terminalOf(agent: Agent, byPid: Map<number, Process>, processes: Proces
         ? herdrClient(processes)
         : undefined;
   const app = proc && appOfProcess(proc.pid, byPid, apps);
-  return app && proc ? { app, tty: proc.tty } : undefined;
+  return app && proc ? { app, tty: proc.tty, cwd: proc.cwd } : undefined;
 }
 
 /**
@@ -62,7 +63,7 @@ function locationOf(agent: Agent, terminal: Terminal | undefined, tabs: Tab[], a
     return app && { app, label: host.label ?? app.name, url: host.url };
   }
   if (!terminal) return undefined;
-  const match = terminal.tty ? findPane(tabs, terminal.app, terminal.tty) : undefined;
+  const match = findPane(tabs, terminal);
   const place = match ? `${terminal.app.name} › ${match.tab.title}` : terminal.app.name;
   return {
     app: terminal.app,
@@ -72,11 +73,15 @@ function locationOf(agent: Agent, terminal: Terminal | undefined, tabs: Tab[], a
   };
 }
 
-function findPane(tabs: Tab[], app: App, tty: string): { tab: Tab; paneId: string } | undefined {
-  for (const tab of tabs) {
-    if (tab.app.bundleId !== app.bundleId) continue;
-    const pane = tab.panes?.find((p) => p.tty === tty);
-    if (pane) return { tab, paneId: pane.id };
-  }
-  return undefined;
+/**
+ * The pane on the process's tty; else, in terminals that don't report ttys (Ghostty), the one pane of the app
+ * in the process's folder, if only one is.
+ */
+function findPane(tabs: Tab[], { app, tty, cwd }: Terminal): { tab: Tab; paneId: string } | undefined {
+  const own = tabs.filter((t) => t.app.bundleId === app.bundleId);
+  const panes = own.flatMap((tab) => (tab.panes ?? []).map((pane) => ({ tab, pane })));
+  const exact = tty ? panes.find(({ pane }) => pane.tty === tty) : undefined;
+  const byFolder = cwd ? panes.filter(({ pane }) => !pane.tty && pane.cwd === cwd) : [];
+  const match = exact ?? (byFolder.length === 1 ? byFolder[0] : undefined);
+  return match && { tab: match.tab, paneId: match.pane.id };
 }

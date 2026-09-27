@@ -51,7 +51,8 @@ Agents and Next Agent read the agents' own status files and local APIs, and need
 | App | Lists |
 |---|---|
 | Chrome, Brave, Edge, Vivaldi, Chromium, Safari | Tabs (never incognito or private windows) |
-| cmux | Workspaces (and their terminals, for agents) |
+| cmux | Workspaces; a workspace with several terminals lists each by name |
+| Ghostty (1.3+) | Tabs (with their splits, for agents) |
 | herdr | Workspaces and tabs, under the terminal running herdr |
 | iTerm, Terminal | Tabs (and iTerm's split panes, for agents) |
 | Claude | Code sessions (all projects, most recent first, even with the sidebar hidden); Chat and Cowork conversations from the sidebar, plus ones you've opened recently when the sidebar is hidden (opened by link) |
@@ -76,7 +77,7 @@ Apps are ordered by recent use; within an app, active tabs come first. herdr isn
 
 **Done** means an agent finished a turn since you last looked at it: in its own app (Claude records when you last opened a session), or by jumping to it from Jumper. Agents Jumper sees for the first time count as seen, so ones that were already sitting idle don't all show as done. **Needs You** is an agent stopped on a prompt: a permission request or a question.
 
-Jumping goes to where the agent runs: the exact iTerm split, cmux terminal, or Terminal tab of a terminal agent; the pane in herdr (and the terminal running herdr); the session in the Claude app; the agent's folder in Cursor (Cursor has no link to a single agent); the browser tab of a web agent. In terminals without scripting (Ghostty), Jumper brings the app forward. **Copy Resume Command** copies `claude --resume <id>` or `codex resume <id>`. Filter by project with the dropdown: an agent's project is the git repository it works in (worktrees count as their main repository). Search shows an agent's status next to the tab it runs in (a Claude Code session, a terminal or herdr tab), and lists agents that aren't in a tab (Cursor, the Codex app) in an **Agents** section.
+Jumping goes to where the agent runs: the exact iTerm split, cmux terminal, or Terminal tab of a terminal agent; the pane in herdr (and the terminal running herdr); the session in the Claude app; the agent's folder in Cursor (Cursor has no link to a single agent); the browser tab of a web agent. In Ghostty, which doesn't report which terminal a process runs in, Jumper picks the terminal in the agent's folder if only one is (else brings Ghostty forward), and finds herdr's terminal exactly by having herdr briefly set its title. **Copy Resume Command** copies `claude --resume <id>` or `codex resume <id>`. Filter by project with the dropdown: an agent's project is the git repository it works in (worktrees count as their main repository). Search shows an agent's status next to the tab it runs in (a Claude Code session, a terminal or herdr tab), and lists agents that aren't in a tab (Cursor, the Codex app) in an **Agents** section.
 
 ## Support
 

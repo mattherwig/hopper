@@ -158,3 +158,24 @@ test("jumping selects the pane, opens links, focuses herdr, and marks the agent 
   assert.deepEqual(await platform.loadJson("agents:seen", {}), { a: 42, b: 43 });
   await assert.rejects(jumpToAgent(agent("nowhere"), platform, 1), /Can't tell where/);
 });
+
+test("locate: in a terminal without ttys (Ghostty), the one pane in the agent's folder, never a guess between two", async () => {
+  const withCwd = processes.map((p) => (p.pid === 22 ? { ...p, cwd: "/p/app" } : p));
+  const ghosttyTab = (key: string, panes: { id: string; cwd?: string }[]): Tab => ({
+    ...tab(key, []),
+    app: ghostty,
+    source: "ghostty",
+    panes,
+  });
+  const codex = agent("codex", { host: { kind: "process", pid: 22, tty: "ttys009" } });
+  const one = await locate([codex], [ghostty], withCwd, async () => [
+    ghosttyTab("a", [{ id: "A", cwd: "/p/app" }]),
+    ghosttyTab("b", [{ id: "B", cwd: "/p/other" }]),
+  ]);
+  assert.deepEqual([one[0].location?.tab?.key, one[0].location?.paneId], ["a", "A"]);
+  const two = await locate([codex], [ghostty], withCwd, async () => [
+    ghosttyTab("a", [{ id: "A", cwd: "/p/app" }]),
+    ghosttyTab("b", [{ id: "B", cwd: "/p/app" }]),
+  ]);
+  assert.deepEqual([two[0].location?.label, two[0].location?.tab], ["Ghostty", undefined]);
+});

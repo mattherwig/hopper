@@ -6,6 +6,7 @@
 // clients there. The agent level reads the same snapshot for herdr's agents (agents/sources/herdr.ts; ADR-022).
 
 import { appOfProcess, herdrClient } from "../../platform/processes";
+import { focusTerminalNamed, GHOSTTY } from "./ghostty";
 import type { App, Platform, Tab, TabSource } from "../model";
 
 const CONFIG_DIR = ".config/herdr";
@@ -116,6 +117,25 @@ async function focus(platform: Platform, socket: string, method: string, params:
   if (response?.error) throw new Error(response.error.message ?? `herdr couldn't ${method}`);
 }
 
+/**
+ * Bring forward the terminal running herdr's client, where the terminal can't be found by tty (Ghostty): herdr
+ * sets its terminal's title to a one-off marker (its own API, `client.window_title.set`), Ghostty's terminal with
+ * that title is focused, and the title is cleared. The same way the Raycast Store's Herdr extension does it.
+ */
+export async function revealClient(platform: Platform, socket: string, app: App): Promise<void> {
+  if (app.bundleId !== GHOSTTY) return;
+  const marker = `jumper-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const request = (method: string, params: object) =>
+    platform.socketRequest(socket, { id: "jumper", method, params }).catch(() => undefined);
+  try {
+    const set = (await request("client.window_title.set", { title: marker })) as { result?: { changed?: boolean } };
+    if (set?.result?.changed === false) return;
+    await focusTerminalNamed(platform, marker).catch(() => false);
+  } finally {
+    await request("client.window_title.clear", {});
+  }
+}
+
 /** Focus a pane: herdr's clients switch to its workspace, tab and pane. */
 export const focusPane = (platform: Platform, socket: string, paneId: string) =>
   focus(platform, socket, "pane.focus", { pane_id: paneId });
@@ -133,5 +153,8 @@ export const herdr: TabSource<Ref> = {
     if (!app) return [];
     return snapshots.flatMap(({ socket, snapshot }) => fromSnapshot(app, socket, snapshot, client.tty));
   },
-  select: (tab, platform) => focus(platform, tab.ref.socket, "tab.focus", { tab_id: tab.ref.tabId }),
+  select: async (tab, platform) => {
+    await focus(platform, tab.ref.socket, "tab.focus", { tab_id: tab.ref.tabId });
+    if (!tab.within) await revealClient(platform, tab.ref.socket, tab.app);
+  },
 };

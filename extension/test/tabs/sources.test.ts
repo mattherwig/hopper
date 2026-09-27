@@ -38,7 +38,10 @@ test("Safari: remembers window, position, and URL", () => {
 });
 
 test("cmux: workspaces with the working directory as detail", () => {
-  const [tab] = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}jumper${F}true${F}/Users/matt/Projects/jumper${R}`);
+  const [tab] = cmux.parse(
+    app("com.cmuxterm.app"),
+    `W1${F}T1${F}jumper${F}true${F}/Users/matt/Projects/jumper${F}P1${R}`,
+  );
   assert.deepEqual(
     [tab.kind, tab.title, tab.detail, tab.ref],
     ["workspace", "jumper", "~/Projects/jumper", { windowId: "W1", tabId: "T1" }],
@@ -112,22 +115,55 @@ test("Safari: fails closed when a private window can't be placed, or Accessibili
   assert.deepEqual([...safari.privateWindowIds([], [])], []);
 });
 
-test("cmux: terminals are panes, with ttys from cmux's session file", () => {
-  const ttys = cmux.parseTtys(
+test("cmux: a workspace with several terminals lists each by name; terminals are panes with their tty", () => {
+  const panels = cmux.parsePanels(
     JSON.stringify({
-      windows: [{ tabManager: { workspaces: [{ panels: [{ id: "P1", ttyName: "ttys003" }, { id: "P2" }] }] } }],
+      windows: [
+        {
+          tabManager: {
+            workspaces: [
+              {
+                panels: [
+                  { id: "P1", ttyName: "ttys003", customTitle: "fix-bug-1", title: "zsh" },
+                  { id: "P2", ttyName: "ttys020", title: "fix-bug-2" },
+                ],
+              },
+            ],
+          },
+        },
+      ],
     }),
   );
-  const [tab] = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}jumper${F}true${F}/p${F}P1,P2${R}`, ttys);
-  assert.deepEqual(tab.panes, [{ id: "P1", tty: "ttys003" }]);
-  assert.equal(cmux.parseTtys("{").size, 0);
+  const tabs = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}fix-bug${F}true${F}/p${F}P1,P2${F}P2${R}`, panels);
+  assert.deepEqual(
+    tabs.map((t) => [t.key, t.title, t.detail, t.active, t.ref, t.panes]),
+    [
+      [
+        "com.cmuxterm.app:T1:P1",
+        "fix-bug-1",
+        "fix-bug",
+        false,
+        { windowId: "W1", tabId: "T1", terminalId: "P1" },
+        [{ id: "P1", tty: "ttys003" }],
+      ],
+      [
+        "com.cmuxterm.app:T1:P2",
+        "fix-bug-2",
+        "fix-bug",
+        true,
+        { windowId: "W1", tabId: "T1", terminalId: "P2" },
+        [{ id: "P2", tty: "ttys020" }],
+      ],
+    ],
+  );
+  assert.equal(cmux.parsePanels("{").size, 0);
 });
 
-test("cmux: selecting a pane focuses its terminal", async () => {
+test("cmux: selecting a terminal (or a pane) focuses it", async () => {
   const platform = fakePlatform({ runAppleScript: async () => "ok" });
-  const [tab] = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}jumper${F}true${F}/p${F}P1${R}`);
-  await cmux.cmux.selectPane!(tab, "P1", platform);
-  assert.match(platform.scripts[0], /if \(id of term\) is "P1" then[\s\S]*focus term/);
+  const tabs = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}fix-bug${F}true${F}/p${F}P1,P2${F}P1${R}`);
+  await cmux.cmux.select(tabs[1], platform);
+  assert.match(platform.scripts[0], /if \(id of term\) is "P2" then[\s\S]*focus term/);
 });
 
 test("iTerm: every split session is a pane with its tty", () => {

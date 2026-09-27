@@ -8,6 +8,7 @@ import { inHerdr, locate } from "./locate";
 import type { Agent, AgentContext, LocatedAgent } from "./model";
 import { AGENT_SOURCES } from "./registry";
 import { focusPane } from "./sources/herdr";
+import { revealClient } from "../tabs/sources/herdr";
 import { webAgents } from "./sources/web";
 import { applySeen, SEEN_KEY, sortAgents, type SeenMap } from "./status";
 
@@ -104,7 +105,10 @@ export function mergeAgents(agents: Agent[], runsInHerdr: (pid: number) => boole
 export async function jumpToAgent(agent: LocatedAgent, platform: Platform, now: number): Promise<App> {
   const location = agent.location;
   if (!location) throw new Error(`Can't tell where this ${agent.product} runs`);
-  if (location.herdr) await focusPane(platform, location.herdr.socket, location.herdr.paneId);
+  if (location.herdr) {
+    await focusPane(platform, location.herdr.socket, location.herdr.paneId);
+    if (!location.tab) await revealClient(platform, location.herdr.socket, location.app);
+  }
   if (location.url) await platform.openUrl(location.url, location.app.path);
   if (location.tab) await selectTab(location.tab, platform, location.paneId);
   const seen = await platform.loadJson<SeenMap>(SEEN_KEY, {});

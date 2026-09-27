@@ -58,7 +58,13 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
     tabs.find((t) => t.title === "Workspace 2")!,
     platform,
   );
-  assert.equal(requests.at(-1), 'tab.focus {"tab_id":"w2:t1"}');
+  // Ghostty doesn't report ttys: herdr titles its terminal with a marker, Ghostty's terminal with it is focused.
+  const [focusTab, setTitle, clearTitle] = requests.slice(-3);
+  assert.equal(focusTab, 'tab.focus {"tab_id":"w2:t1"}');
+  const marker = /"title":"(jumper-[^"]+)"/.exec(setTitle)?.[1];
+  assert.ok(marker && setTitle.startsWith("client.window_title.set"));
+  assert.equal(clearTitle, "client.window_title.clear {}");
+  assert.ok(platform.scripts.some((s) => s.includes(`(name of term as text) is "${marker}"`)));
 });
 
 test("herdr not running or no client in a known terminal: nothing listed", async () => {

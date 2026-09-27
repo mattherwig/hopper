@@ -4,6 +4,7 @@ import type { App, TabSource } from "./model";
 import { chromium } from "./sources/chromium";
 import { claude } from "./sources/claude";
 import { cmux } from "./sources/cmux";
+import { ghostty } from "./sources/ghostty";
 import { herdr } from "./sources/herdr";
 import { iterm } from "./sources/iterm";
 import { muse } from "./sources/muse";
@@ -12,7 +13,7 @@ import { safari } from "./sources/safari";
 import { terminal } from "./sources/terminal";
 import { windows } from "./sources/windows";
 
-export const SOURCES: readonly TabSource[] = [chromium, safari, cmux, iterm, terminal, claude, muse, notion];
+export const SOURCES: readonly TabSource[] = [chromium, safari, cmux, ghostty, iterm, terminal, claude, muse, notion];
 
 /** Sources of places inside other apps (TabSource.discover), read alongside every list. */
 export const DISCOVERED: readonly TabSource[] = [herdr];

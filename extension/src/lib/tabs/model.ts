@@ -47,10 +47,12 @@ export interface Tab<Ref = unknown> {
 }
 
 export interface Pane {
-  /** The source's id for the pane (iTerm session id, cmux terminal id, a Terminal tab's tty). */
+  /** The source's id for the pane (iTerm session id, cmux or Ghostty terminal id, a Terminal tab's tty). */
   id: string;
-  /** e.g. "ttys003". */
-  tty: string;
+  /** e.g. "ttys003". Exact: every process in the pane has it. */
+  tty?: string;
+  /** Working folder, for terminals that don't report a tty (Ghostty): locates an agent only if it's unambiguous. */
+  cwd?: string;
 }
 
 export interface TabSource<Ref = unknown> {
