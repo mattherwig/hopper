@@ -1,9 +1,10 @@
 // Claude desktop. Code sessions come from Claude's own session files and open with the claude:// deep link
 // that Claude's Dock menu and Spotlight entries use, so they're listed whether or not the sidebar is visible
-// (ADR-014). Chat-mode conversations aren't stored locally: they're read from the sidebar when it shows them.
+// (ADR-014). Chat and Cowork conversations aren't stored locally: they're read from the sidebar, and each one's
+// id is learned from the page URL while it's open, so it can then open by deep link, sidebar or not (ADR-016).
 
 import { tildify } from "../applescript";
-import type { App, Platform, Tab, TabSource } from "../model";
+import type { App, Platform, Tab, TabSource, WebPage } from "../model";
 import { openSidebarEntry, readSidebar, type SidebarRef, type SidebarSpec } from "./sidebar";
 import { windows } from "./windows";
 
@@ -25,7 +26,22 @@ const SIDEBAR: SidebarSpec = {
   activeSuffix: ", rename session",
 };
 
-type Ref = { sessionId: string } | SidebarRef;
+/** A conversation's path on claude.ai, opened in the app as claude://claude.ai/<path>. */
+type ConversationRef = { path: string };
+type Ref = { sessionId: string } | ConversationRef | SidebarRef;
+
+/** Conversations whose id was seen, by title; most recently seen first. */
+export interface KnownConversation {
+  title: string;
+  path: string;
+  seenAt: number;
+}
+
+const KNOWN_KEY = "claude-conversations";
+const MAX_KNOWN = 200;
+/** How many known conversations to list when the sidebar shows none (hidden, or in Code mode). */
+const MAX_LISTED = 20;
+const CONVERSATION_URL = /^https:\/\/claude\.ai\/(chat\/[0-9a-f-]{36}|cowork\/cse_[A-Za-z0-9]+)(?:[/?#]|$)/;
 
 export interface CodeSession {
   sessionId: string;
@@ -68,6 +84,27 @@ export function fromSessions(app: App, sessions: CodeSession[], activeTitle?: st
     }));
 }
 
+/** The conversation open in Claude, from its page ("<title> - Claude" at claude.ai/chat/<uuid>). */
+export function openConversation(page: WebPage | undefined): Omit<KnownConversation, "seenAt"> | undefined {
+  const path = page && CONVERSATION_URL.exec(page.url)?.[1];
+  const title = page?.title.replace(/ - Claude$/, "").trim();
+  return path && title ? { title, path } : undefined;
+}
+
+/** `known` with `seen` first (replacing entries with its title or path), capped. */
+export function remember(
+  known: KnownConversation[],
+  seen: Omit<KnownConversation, "seenAt">,
+  now: number,
+): KnownConversation[] {
+  const rest = known.filter((k) => k.title !== seen.title && k.path !== seen.path);
+  return [{ ...seen, seenAt: now }, ...rest].slice(0, MAX_KNOWN);
+}
+
+function conversationTab(app: App, title: string, path: string, active: boolean): Tab<Ref> {
+  return { key: `${app.bundleId}:row:${title}`, app, source: claude.id, kind: "session", title, active, ref: { path } };
+}
+
 async function readSessions(platform: Platform): Promise<CodeSession[]> {
   const files = await platform.readFiles(`${platform.homeDir()}/${SESSIONS_DIR}`, SESSION_FILE, 3);
   return files.flatMap((f) => parseSession(f.text) ?? []);
@@ -77,19 +114,46 @@ export const claude: TabSource<Ref> = {
   id: "claude",
   bundleIds: [BUNDLE_ID],
   list: async (app, platform) => {
-    const [sessions, sidebar] = await Promise.all([readSessions(platform), readSidebar(app, SIDEBAR, platform)]);
+    const [sessions, sidebar, page, stored] = await Promise.all([
+      readSessions(platform),
+      readSidebar(app, SIDEBAR, platform),
+      platform.webPage(app.bundleId),
+      platform.loadJson<KnownConversation[]>(KNOWN_KEY, []),
+    ]);
+    const current = openConversation(page);
+    const known = current ? remember(stored, current, Date.now()) : stored;
+    if (current) await platform.saveJson(KNOWN_KEY, known);
     const active =
-      sidebar.find((t) => t.active)?.title ?? (await platform.labelWithSuffix(app.bundleId, SIDEBAR.activeSuffix!));
+      sidebar.find((t) => t.active)?.title ??
+      current?.title ??
+      (await platform.labelWithSuffix(app.bundleId, SIDEBAR.activeSuffix!));
     const code = fromSessions(app, sessions, active);
-    // In Code mode the sidebar repeats the sessions; in Chat mode it adds conversations the files don't have.
+    // In Code mode the sidebar repeats the sessions; in Chat mode it adds conversations the files don't have,
+    // opened by deep link when their id is known.
     const titles = new Set(code.map((t) => t.title));
-    const extra = sidebar.filter((t) => !titles.has(t.title)) as Tab<Ref>[];
-    const tabs = [...code, ...extra];
+    const paths = new Map(known.map((k) => [k.title, k.path]));
+    const extra = sidebar
+      .filter((t) => !titles.has(t.title))
+      .map((t): Tab<Ref> => {
+        const path = paths.get(t.title);
+        return path ? { ...t, ref: { path } } : t;
+      });
+    // No conversations in the sidebar (hidden, or Code mode): list the ones seen lately.
+    const recent =
+      extra.length > 0
+        ? []
+        : known
+            .filter((k) => !titles.has(k.title))
+            .slice(0, MAX_LISTED)
+            .map((k) => conversationTab(app, k.title, k.path, k.title === active));
+    const tabs = [...code, ...extra, ...recent];
     return tabs.length > 0 ? tabs : ((await windows.list(app, platform)) as Tab[] as Tab<Ref>[]);
   },
   select: async (tab, platform) => {
     if ("sessionId" in tab.ref) {
       await platform.openUrl(`claude://code/continue?session=${encodeURIComponent(tab.ref.sessionId)}`);
+    } else if ("path" in tab.ref) {
+      await platform.openUrl(`claude://claude.ai/${tab.ref.path}`);
     } else {
       await openSidebarEntry(tab as Tab<SidebarRef>, SIDEBAR, platform);
     }

@@ -76,3 +76,25 @@ test("rowName without a pattern is the title", () => {
     1,
   );
 });
+
+test("Muse: the reveal button is passed with the query, and names the open chat", async () => {
+  let query: unknown;
+  let suffix = "";
+  const platform = fakePlatform({
+    sidebarRows: async (_id, q) => {
+      query = q;
+      return [row("Main chat"), row("Couch research"), row("Bed frame research")];
+    },
+    labelWithSuffix: async (_id, s) => {
+      suffix = s;
+      return "Bed frame research";
+    },
+  });
+  const tabs = await muse.list(museApp, platform);
+  assert.equal((query as SidebarSpec).reveal, "Open chat and side chats");
+  assert.equal(suffix, " Open chat and side chats");
+  assert.deepEqual(
+    tabs.filter((t) => t.active).map((t) => t.title),
+    ["Bed frame research"],
+  );
+});

@@ -24,18 +24,23 @@ import RaycastSwiftMacros
   raiseWindow(bundleId: bundleId, index: index, title: title, tab: tab)
 }
 
-@raycast func sidebarRows(bundleId: String, container: String, rowRole: String) -> [SidebarRow] {
-  readSidebarRows(bundleId: bundleId, container: container, rowRole: rowRole)
+@raycast func sidebarRows(bundleId: String, container: String, rowRole: String, reveal: String) -> [SidebarRow] {
+  readSidebarRows(bundleId: bundleId, container: container, rowRole: rowRole, reveal: reveal)
 }
 
 @raycast func openSidebar(
-  bundleId: String, container: String, rowRole: String, name: String, namePattern: String, keyboard: Bool
+  bundleId: String, container: String, rowRole: String, name: String, namePattern: String, keyboard: Bool,
+  reveal: String
 ) -> Bool {
   openSidebarRow(
     bundleId: bundleId, container: container, rowRole: rowRole, name: name, namePattern: namePattern,
-    keyboard: keyboard)
+    keyboard: keyboard, reveal: reveal)
 }
 
 @raycast func labelWithSuffix(bundleId: String, suffix: String) -> String? {
   readLabel(bundleId: bundleId, suffix: suffix)
+}
+
+@raycast func webPage(bundleId: String) -> WebPage? {
+  readWebPage(bundleId: bundleId)
 }

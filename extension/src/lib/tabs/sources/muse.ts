@@ -1,5 +1,7 @@
-// Muse (Meta): "Main chat" and the side chats in its "Side chats" navigation. A hovered row's title gains
-// "<date> More thread actions", and rows ignore AXPress, so they're opened by keyboard.
+// Muse (Meta): "Main chat" and the side chats in its "Side chats" navigation. Muse 4.1 hides that list behind a
+// "<open chat> Open chat and side chats" button, pressed through Accessibility to reveal it (ADR-016); the same
+// button names the open chat. Older versions add "<date> More thread actions" to a hovered row's title. Rows
+// ignore AXPress, so they're opened by keyboard.
 
 import { sidebarSource } from "./sidebar";
 
@@ -14,5 +16,7 @@ export const muse = sidebarSource({
   format: "plain",
   namePattern: String.raw`^(.+?)(?:\s+(?:${DATE}))?\s+More thread actions$`,
   keyboard: true,
+  reveal: "Open chat and side chats",
+  activeSuffix: " Open chat and side chats",
   skip: ["Side chats", "New side chat"],
 });

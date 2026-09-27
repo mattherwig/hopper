@@ -10,8 +10,10 @@ import {
   labelWithSuffix,
   openSidebar,
   sidebarRows,
+  webPage,
 } from "swift:../../../swift";
 import type { AppWindows, Platform, SidebarRow } from "../tabs/model";
+import { readJson, writeJson } from "./storage";
 
 /** An app that stops responding must not hold up the whole list. */
 const APPLESCRIPT_TIMEOUT = 4000;
@@ -25,10 +27,22 @@ export const macosTabPlatform: Platform = {
   accessibilityTrusted: () => accessibilityTrusted(),
   windows: async (bundleIds) => (await appWindows(bundleIds)) as AppWindows[],
   raiseWindow: (bundleId, index, title, tab) => focusWindow(bundleId, index, title, tab ?? null),
-  sidebarRows: async (bundleId, query) => (await sidebarRows(bundleId, query.container, query.rowRole)) as SidebarRow[],
+  sidebarRows: async (bundleId, query) =>
+    (await sidebarRows(bundleId, query.container, query.rowRole, query.reveal ?? "")) as SidebarRow[],
   openSidebarRow: (bundleId, query, name) =>
-    openSidebar(bundleId, query.container, query.rowRole, name, query.namePattern ?? "", query.keyboard ?? false),
+    openSidebar(
+      bundleId,
+      query.container,
+      query.rowRole,
+      name,
+      query.namePattern ?? "",
+      query.keyboard ?? false,
+      query.reveal ?? "",
+    ),
   labelWithSuffix: async (bundleId, suffix) => (await labelWithSuffix(bundleId, suffix)) ?? undefined,
+  webPage: async (bundleId) => (await webPage(bundleId)) ?? undefined,
+  loadJson: (key, fallback) => readJson(`tabs:${key}`, fallback),
+  saveJson: (key, value) => writeJson(`tabs:${key}`, value),
   homeDir: () => homedir(),
   readFiles: async (dir, name, depth) => {
     const paths = await findFiles(dir, name, depth);

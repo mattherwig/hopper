@@ -6,6 +6,8 @@
 - Tabs in Current App command: the same for the frontmost app.
 - Tabs search tolerates typos ("caude" finds Claude) and lists an app's own tabs before tabs that mention its name.
 - Claude Code sessions are listed from Claude's session files (all projects, most recent first, sidebar hidden or not) and open via Claude's deep link.
+- Claude Chat and Cowork conversations you've opened open via Claude's deep link, and stay listed with the sidebar hidden.
+- Muse side chats are listed and opened even when Muse's side chats panel is closed (Muse 4.1).
 
 ## [Initial Version] - {PR_MERGE_DATE}
 

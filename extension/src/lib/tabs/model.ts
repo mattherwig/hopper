@@ -66,8 +66,13 @@ export interface Platform {
   sidebarRows(bundleId: string, query: SidebarQuery): Promise<SidebarRow[]>;
   /** Open the row called `name` (matched as in SidebarQuery.namePattern). False if not found. */
   openSidebarRow(bundleId: string, query: SidebarQuery, name: string): Promise<boolean>;
-  /** Description of the first element whose description ends with `suffix`, minus the suffix. */
+  /** Description or title of the first element whose description or title ends with `suffix`, minus the suffix. */
   labelWithSuffix(bundleId: string, suffix: string): Promise<string | undefined>;
+  /** Title and URL of the first web view in the app's windows showing an http(s) page. */
+  webPage(bundleId: string): Promise<WebPage | undefined>;
+  /** JSON value a source saved under `key` (namespaced per source by the caller), or `fallback`. */
+  loadJson<T>(key: string, fallback: T): Promise<T>;
+  saveJson(key: string, value: unknown): Promise<void>;
   /** The user's home folder, for sources that read an app's own data files. */
   homeDir(): string;
   /** Text of the files under `dir` (up to `depth` levels down) whose name matches `name`. [] if `dir` is missing. */
@@ -102,6 +107,17 @@ export interface SidebarQuery {
   namePattern?: string;
   /** Open rows by focusing them and sending Return, for apps that ignore AXPress (Muse). */
   keyboard?: boolean;
+  /**
+   * Title suffix of a button that shows the list when it's hidden (Muse: "<chat> Open chat and side chats").
+   * Listing presses it, reads, and presses it again; opening a row presses it and leaves the list to the app.
+   */
+  reveal?: string;
+}
+
+export interface WebPage {
+  /** Document title, e.g. "Trip ideas - Claude". */
+  title: string;
+  url: string;
 }
 
 export interface SidebarRow {
