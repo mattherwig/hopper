@@ -1,6 +1,6 @@
 // Codex. Its sessions (threads) run in a shared local app-server daemon that the Codex CLI starts and connects to;
 // the daemon knows each open thread's status, including waiting on an approval or on user input. It speaks
-// JSON-RPC over a WebSocket on ~/.codex/app-server-control/app-server-control.sock (ADR-021). Only threads the
+// JSON-RPC over a WebSocket on ~/.codex/app-server-control/app-server-control.sock (ADR-022). Only threads the
 // daemon has loaded (open in a client, or still running) are listed; Jumper never loads, resumes or subscribes.
 //
 // A terminal session isn't tied to its thread by the daemon: the Codex process in a terminal whose working folder

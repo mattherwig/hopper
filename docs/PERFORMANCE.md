@@ -40,3 +40,7 @@ Warm up first: the first deeplink after (re)starting `npm run dev` or re-registe
 
 The raw native read is <10ms; the Raycast Swift bridge adds ~15ms (Node `spawn` + `chmod` + JSON). Net saving ~25ms/press, not the ~43ms the standalone prototype suggested.
 
+
+## Activate via Accessibility (2026-09-27, macOS 27.0, ADR-021)
+
+`PERF activated − PERF read` with `frontApp()` (Accessibility `AXFrontmost`, Swift helper): **~55–65ms** (range 42–76ms over 8 toggles), vs ~25ms for Raycast `open()` alone. The extra ~30–40ms is one helper spawn (~15ms through the bridge) plus the AX call, which blocks until the target app has activated. No side-by-side `open()` run on the same day; the ~25ms is the baseline above. Candidate speedup: private SkyLight `_SLPSSetFrontProcessWithOptions` (#25).

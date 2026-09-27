@@ -1,6 +1,6 @@
 // PURE: projects, the grouping across apps. A project is a git repository: places and agents whose folder is in
 // it belong to it, and a linked worktree (agents often make them) belongs to its main checkout, with the branch
-// as the worktree's name. Nothing with no folder in a repository is guessed into one (ADR-021).
+// as the worktree's name. Nothing with no folder in a repository is guessed into one (ADR-022).
 
 import type { GitRepo } from "../platform/model";
 

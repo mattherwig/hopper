@@ -3,7 +3,7 @@
 // herdr, found through the client process's parent chain; in terminals that report panes (iTerm, cmux, Terminal)
 // the client's tty also finds the terminal tab holding herdr, which is selected with it (Tab.within). One `session.snapshot` request on herdr's local socket
 // (one per named session) returns every workspace, tab, pane and agent; `tab.focus` / `pane.focus` switch herdr's
-// clients there. The agent level reads the same snapshot for herdr's agents (agents/sources/herdr.ts; ADR-022).
+// clients there. The agent level reads the same snapshot for herdr's agents (agents/sources/herdr.ts; ADR-023).
 
 import { appOfProcess, herdrClient } from "../../platform/processes";
 import { focusTerminalNamed, GHOSTTY } from "./ghostty";

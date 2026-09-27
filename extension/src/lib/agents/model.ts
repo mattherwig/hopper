@@ -1,6 +1,6 @@
 // PURE: types for the agent level. An agent is an AI agent (a Claude Code session, a Cursor agent, a Codex CLI...)
 // with a status, and a *host*: where it runs. It isn't a place of its own; jumping to it goes to its host: a
-// terminal pane, a herdr pane, a desktop app's deep link, a browser tab (ADR-021).
+// terminal pane, a herdr pane, a desktop app's deep link, a browser tab (ADR-022).
 //
 // A *source* knows one family of agents (sources/, listed in registry.ts). Sources report what the agent's own
 // files, processes, or APIs say; locate.ts then ties each host to the app and tab it's in, and status.ts turns

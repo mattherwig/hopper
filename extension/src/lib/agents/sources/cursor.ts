@@ -1,7 +1,7 @@
 // Cursor agents (composers), from Cursor's own state database: its header list has each agent's folder and the
 // flags Cursor's UI uses (blocking pending actions, unread messages); each agent's record has its run status
 // (generating / completed / aborted). Cursor has no public link to a local agent, so jumping opens the agent's
-// folder with Cursor, which brings that window forward (ADR-021). Only read while Cursor runs: its agents
+// folder with Cursor, which brings that window forward (ADR-022). Only read while Cursor runs: its agents
 // don't run otherwise.
 
 import type { Agent, AgentContext, AgentSource, AgentStatus } from "../model";

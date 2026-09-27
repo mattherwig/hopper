@@ -9,12 +9,17 @@ import RaycastSwiftMacros
   readRecentApps()
 }
 
-/// Processes of the current user (agent level: liveness, tty, parent chain).
+/// Cmd+Tab-style activation; false means the caller falls back to Raycast `open()`.
+@raycast func frontApp(bundleId: String) -> Bool {
+  bringToFront(bundleId: bundleId)
+}
+
+/// Every process (agent level: liveness, tty, parent chain).
 @raycast func processes() -> [RunningProcess] {
   readProcesses()
 }
 
-// MARK: Tab level (Accessibility; wrapped by src/lib/platform/tabs.ts)
+// MARK: Tab level (Accessibility; wrapped by src/lib/platform/os.ts)
 
 @raycast func accessibilityTrusted() -> Bool {
   axTrusted()

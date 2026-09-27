@@ -1,6 +1,6 @@
 // Claude Code, wherever it runs: a terminal, the Claude app's Code tab (which runs the same CLI), an IDE, `--bg`.
 // Every running session writes ~/.claude/sessions/<pid>.json with its session id, folder and status
-// (busy / shell / idle / waiting + what it waits for), the list `claude agents` itself reads (ADR-021).
+// (busy / shell / idle / waiting + what it waits for), the list `claude agents` itself reads (ADR-022).
 // Sessions started by the Claude app also have the app's session file (ADR-014): its title, when it was last
 // focused, and a post-turn summary that says whether the last turn ended asking for input.
 

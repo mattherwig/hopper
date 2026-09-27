@@ -45,7 +45,7 @@ extension/                                    the Raycast extension; everything 
   src/back.ts, src/forward.ts,
   src/toggle.ts                               no-view commands (thin; call runNavigation)
   src/history.tsx                             view command: List of running apps by recency
-  src/tabs.tsx, src/app-tabs.tsx              Search / Search Current App (names `tabs` / `app-tabs`, ADR-022), thin; render SearchList
+  src/tabs.tsx, src/app-tabs.tsx              Search / Search Current App (names `tabs` / `app-tabs`, ADR-023), thin; render SearchList
   src/agents.tsx, src/next-agent.ts           Agents (view, thin; renders AgentList) and Next Agent (no-view: jump to the longest-waiting agent)
   src/components/                             shared UI: search-list.tsx (Search: tabs and agents, grouped by app), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
@@ -61,10 +61,10 @@ extension/                                    the Raycast extension; everything 
     history.ts, reopen.ts                     Recently Closed (ADR-019)
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
     sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
-                                              herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-022);
+                                              herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-023);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
-  src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-021)
+  src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-022)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
     registry.ts                               the agent sources — add new agent products here
     sources/                                  claude (~/.claude/sessions + Claude app files), codex (app-server daemon), cursor (state.vscdb),
@@ -77,10 +77,10 @@ extension/                                    the Raycast extension; everything 
     model.ts                                  PURE: the Platform interface (OS capabilities) and App; fake in test/fake-platform.ts
     os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
-    macos.ts                                  getRecentApps() (calls Swift, apps with pid) + activateApp() via Raycast open()
+    macos.ts                                  getRecentApps() (calls Swift, apps with pid) + activateApp() (Cmd+Tab-style via Accessibility, open() as fallback)
     processes.ts                              PURE: process-tree helpers (app of a process, herdr client)
     agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Search
-  swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift (app level);
+  swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift, Activate.swift (app level);
                                               AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level); Processes.swift (agent level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
@@ -100,10 +100,10 @@ site/index.html                               GitHub Pages landing page (deploye
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`, `agents`, `next-agent`) are permanent once published: users' hotkeys bind to them.
 - Incognito / private browser windows never reach the tab list (ADR-018): filter them in the source, not the UI.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
-- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, and `platform/model.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-021).
-- Agent sources read agents' own state read-only: never install hooks, write their config, or call anything that starts, resumes, loads, or sends input to a session (ADR-021).
+- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, and `platform/model.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-022).
+- Agent sources read agents' own state read-only: never install hooks, write their config, or call anything that starts, resumes, loads, or sends input to a session (ADR-022).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.
-- Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
+- Activate apps through `activateApp()`: Accessibility `AXFrontmost` via the Swift helper, falling back to Raycast `open(app.path)` (ADR-021; `open()` alone sends a reopen event that can show the wrong window). Never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `extension/assets/compiled_raycast_swift/` is build output and stays gitignored.
 - Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `extension/swift/` to see them. The first build on a machine fetches swift-syntax (a few minutes).

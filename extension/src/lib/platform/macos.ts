@@ -1,5 +1,5 @@
 import { open } from "@raycast/api";
-import { recentApps } from "swift:../../../swift";
+import { frontApp, recentApps } from "swift:../../../swift";
 import type { App } from "./model";
 
 /** Bundle IDs never treated as history entries. Raycast itself is frontmost while its window is open. */
@@ -15,10 +15,14 @@ export async function getRecentApps(): Promise<App[]> {
 }
 
 /**
- * Bring an app to the front by asking Raycast (already running, allowed to activate apps) to open its bundle.
- * Avoids spawning `open -b` (~60ms). `NSRunningApplication.activate` from a background process is ignored on
- * macOS 14+, see ADR-002 in https://github.com/mattherwig/jumper/blob/main/docs/DECISIONS.md. Like a Dock click, it also unhides the app.
+ * Bring an app to the front like Cmd+Tab, via Accessibility in the Swift helper. Raycast `open()` would send the app
+ * a "reopen" event, and some apps answer it by showing their main window over the one the user was on (TV opens its
+ * home screen over a fullscreen show). `NSRunningApplication.activate` from a background process is ignored on
+ * macOS 14+ (ADR-002). The helper declines when there's no Accessibility permission or the app's main window is
+ * minimized or missing; then `open()` restores or creates one like a Dock click (ADR-007). See ADR-021 in
+ * https://github.com/mattherwig/jumper/blob/main/docs/DECISIONS.md.
  */
 export async function activateApp(app: App): Promise<void> {
+  if (await frontApp(app.bundleId)) return;
   await open(app.path);
 }

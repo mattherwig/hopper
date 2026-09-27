@@ -1,6 +1,6 @@
 // Agents in herdr's panes, with herdr's own status (it detects agents through hooks or screen manifests). Same
 // snapshot as the herdr places (tabs/sources/herdr.ts, which owns the protocol); jumping focuses the pane over
-// herdr's socket, then the terminal running herdr comes forward (locate.ts; ADR-021, ADR-022).
+// herdr's socket, then the terminal running herdr comes forward (locate.ts; ADR-022, ADR-023).
 
 import type { Agent, AgentContext, AgentSource, AgentStatus } from "../model";
 import { herdrPlaceKey, readSnapshots, workspaceName, type Snapshot } from "../../tabs/sources/herdr";
