@@ -224,7 +224,7 @@ def tabs(s: Smoke) -> None:
     s.tab_search(title(3), "Safari", "exact title", current, 3)
     s.tab_search("textedt", "TextEdit", "app name with a typo ('textedt')")
     query = typo(title(2))
-    s.tab_search(query, "Safari", f"title with a typo ('{query}')", current, 2)
+    s.tab_search(query, "Safari", f"title with a typo ('{query[:12]}…')", current, 2)
 
 
 def typo(text: str) -> str:

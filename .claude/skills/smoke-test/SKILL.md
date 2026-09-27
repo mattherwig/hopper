@@ -13,7 +13,7 @@ description: End-to-end smoke test of Jumper in the real Raycast app, in suites 
 | `history` | History list, Remove, Exclude/Include | 11 | ~50s |
 | `tabs` | Tabs: search (exact, typo, app name) and jump to a Safari tab / app | 3 | ~20s |
 
-Plus ~20s setup (demo apps). Suites run in that order.
+Plus ~25s setup (demo apps): `--only tabs` measured 48s total. Suites run in that order.
 
 ## When to run
 
