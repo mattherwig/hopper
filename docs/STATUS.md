@@ -2,6 +2,15 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-26 — Tab level on `feature/tabs` (ADR-013)
+
+Done:
+- Tabs + Tabs in Current App commands: Chromium browsers, Safari, cmux, iTerm, Terminal (AppleScript), Claude + Muse sidebars and any app's windows / native tabs (Accessibility).
+- `src/lib` regrouped by level (`apps/`, `tabs/`, `platform/`). 43 unit tests, sources tested against a fake Platform.
+- AppleScript for every source compile-checked against the real dictionaries and run live (read-only); Claude and Muse read and open verified from a standalone helper build. Prototype jumps tested by owner for cmux, iTerm, Terminal, Muse.
+
+Not done: jumps not re-tested in Raycast on this branch; Messages (needs its window open to probe); Cursor (descoped, needs a spike); tab Back/Forward (needs a switch recorder); README demo GIF / Store screenshots don't show the new commands.
+
 ## 2026-09-26 — v1 submitted to the Raycast Store (#1)
 
 Done:

@@ -45,19 +45,31 @@ extension/                                    the Raycast extension; everything 
   src/back.ts, src/forward.ts,
   src/toggle.ts                               no-view commands (thin; call runNavigation)
   src/history.tsx                             view command: List of running apps by recency
+  src/tabs.tsx, src/app-tabs.tsx              view commands: tab-level list (all apps / current app), thin; render TabList
+  src/components/                             shared UI: tab-list.tsx (the tab-level List), switch-action.tsx (switch, then close Raycast)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
     navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
     history.ts                                PURE filters on the app list (exclude, remove), unit-tested
     load-history.ts                           glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
     run-navigation.ts                         glue: read MRU, LocalStorage state, navigate(), activate
+  src/lib/tabs/                               tab level (Tabs, Tabs in Current App) — PURE, sources get OS access via a Platform
+    model.ts                                  Tab, TabSource, Platform types; how to add an app or an action
+    registry.ts                               which source handles which app (windows is the fallback) — add new apps here
+    load.ts                                   read all apps' tabs in parallel, order them, route selection to the source
+    applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
+    sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript);
+                                              windows (Accessibility fallback); sidebar.ts + claude, muse (Accessibility sidebars)
   src/lib/platform/                           macOS / Raycast glue shared by every level
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
     macos.ts                                  getRecentApps() (calls Swift) + activateApp() via Raycast open()
-  swift/Sources/JumperNative/                 native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
+    tabs.ts                                   the tab level's Platform on macOS: runAppleScript + Swift Accessibility calls
+  swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift (app level);
+                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
   media/demo.gif                              README demo, shown on the Store page (skill: demo-gif)
-  test/<level>/*.test.ts                      node:test, run via --experimental-strip-types; mirrors src/lib/
+  test/<level>/*.test.ts                      node:test, run via --experimental-strip-types; mirrors src/lib/. test/tabs/fake-platform.ts fakes the OS
+  test/setup.mjs                              lets Node resolve extensionless imports ("./model") to .ts in tests
 docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
 scripts/smoke.py                              end-to-end smoke test of every feature in Raycast (skill: smoke-test)
@@ -67,9 +79,9 @@ README.md                                     GitHub landing page; points to ext
 
 ## Invariants (don't break)
 
-- Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`) are permanent: users' hotkeys bind to them.
+- Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`) are permanent once published: users' hotkeys bind to them.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
-- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`) free of Raycast/Node imports so `npm test` works without Raycast.
+- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`) free of Raycast/Node imports so `npm test` works without Raycast. Tab sources reach the OS only through `Platform` (ADR-013).
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `extension/assets/compiled_raycast_swift/` is build output and stays gitignored.

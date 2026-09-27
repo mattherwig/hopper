@@ -85,3 +85,17 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 **Decision.** Everything that ships (package.json + lock, `src/`, `swift/`, `assets/`, `metadata/`, `media/`, `test/`, README, CHANGELOG, LICENSE, tsconfig/eslint/prettier config, `.nvmrc`) lives in `extension/`, and publish runs from there. Dev-only material stays at the root: `docs/`, `scripts/`, `.claude/`, `CLAUDE.md`/`AGENTS.md`, a short GitHub README pointing to `extension/README.md`. LICENSE and `.nvmrc` exist in both places (GitHub repo license; `nvm use` works at either level).
 
 **Consequences.** All npm commands run in `extension/` (`cd extension && npm run check`). Anything on disk in `extension/` ships, including untracked files (stray `.DS_Store`, `swift/.build/` from a manual `swift build`), so check before publishing. `scripts/media/store_media.py` writes into `extension/metadata/` and `extension/media/`. Source paths in earlier ADRs (`src/…`, `swift/…`) are relative to `extension/`.
+
+## ADR-013: Tab level as pluggable sources behind a Platform (2026-09-26)
+
+**Context.** Owner wanted to go below apps: browser tabs, terminal tabs, chat sessions (prototype on `prototype/chrome-tabs`). Each app exposes this differently: AppleScript dictionaries (Chromium, Safari, cmux, iTerm, Terminal), only Accessibility (Claude, Muse), or nothing but windows. More apps and more per-tab actions (e.g. close) are expected, and some apps won't be supportable.
+
+**Decision.** `src/lib/tabs/` holds a `TabSource` per app family (`sources/*.ts`), mapped by bundle ID in `registry.ts`, with the Accessibility windows source as the fallback for every other app. Sources are pure: all OS access goes through a `Platform` interface (`model.ts`), implemented by `src/lib/platform/tabs.ts` (Raycast `runAppleScript` + Swift helper) and faked in tests. Sidebar apps are data (`SidebarSpec`) on one generic source. New per-tab actions become optional `TabSource` methods, shown only for sources that implement them. Commands `tabs` and `app-tabs` share one `TabList`.
+
+Mechanics learned in the prototype:
+- Chromium AppleScript reads properties in bulk per window (`title of tabs of win`): 1s → 0.18s for 25 tabs.
+- Tabs are found again at selection time (Chrome tab id, cmux/iTerm ids, Terminal tty, Safari URL), so a cached or stale list can't jump to the wrong tab; a vanished tab throws `TabGoneError`.
+- Electron apps (Claude) expose web content to AX only after setting `AXManualAccessibility`; the first read needs ~0.4s to build the tree.
+- Muse ignores AXPress (reports success, doesn't navigate). Rows are opened by setting AXFocused and posting Return to the app's pid; the helper must stay alive ~150ms after posting or the event is dropped. Muse also appends "<date> More thread actions" to a hovered row's title, so rows are matched by a name pattern, not raw title.
+
+**Consequences.** Tab commands need Automation (per scripted app) and Accessibility permissions; failures are listed per app, not fatal. Sidebar sources depend on the apps' UI structure and can break on app updates (they fall back to windows). Node tests import extensionless paths, so `npm test` loads `test/setup.mjs` to resolve `.ts`. Cursor was descoped pending a spike; Messages pending a probe with its window open.
