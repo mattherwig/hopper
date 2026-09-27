@@ -9,6 +9,11 @@ import RaycastSwiftMacros
   readRecentApps()
 }
 
+/// Cmd+Tab-style activation; false means the caller falls back to Raycast `open()`.
+@raycast func frontApp(bundleId: String) -> Bool {
+  bringToFront(bundleId: bundleId)
+}
+
 // MARK: Tab level (Accessibility; wrapped by src/lib/platform/tabs.ts)
 
 @raycast func accessibilityTrusted() -> Bool {
