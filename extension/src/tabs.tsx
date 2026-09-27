@@ -1,5 +1,5 @@
-import { TabList } from "./components/tab-list";
+import { SearchList } from "./components/search-list";
 
 export default function Command() {
-  return <TabList scope="all" />;
+  return <SearchList scope="all" />;
 }

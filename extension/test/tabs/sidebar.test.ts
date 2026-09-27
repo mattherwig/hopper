@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { muse } from "../../src/lib/tabs/sources/muse.ts";
 import { fromRows, rowName, type SidebarSpec } from "../../src/lib/tabs/sources/sidebar.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const museApp = app("com.meta.endo", "Muse");
 const row = (title: string, text = "", selected = false) => ({ title, text, selected });

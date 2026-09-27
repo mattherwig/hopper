@@ -4,7 +4,7 @@ import { nextHistory, recordHistory, reopenClosed, reopenable, MAX_CLOSED } from
 import { fileReopenTarget, webReopenTarget } from "../../src/lib/tabs/reopen.ts";
 import { fromWindows } from "../../src/lib/tabs/sources/windows.ts";
 import type { Tab } from "../../src/lib/tabs/model.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const chrome = app("com.google.Chrome", "Google Chrome");
 const textEdit = app("com.apple.TextEdit", "TextEdit");

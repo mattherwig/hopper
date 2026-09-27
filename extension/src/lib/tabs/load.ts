@@ -1,7 +1,7 @@
 // PURE: reading every app's tabs through its source, ordering them, and routing a selection back.
 
 import type { App, Platform, Tab } from "./model";
-import { sourceById, sourceFor } from "./registry";
+import { DISCOVERED, sourceById, sourceFor } from "./registry";
 
 export interface Failure {
   app: App;
@@ -32,15 +32,19 @@ export async function loadTabs(apps: App[], platform: Platform): Promise<LoadRes
     return [] as Tab[];
   };
 
-  const reads = [...groups].flatMap(([source, group]) =>
-    source.listAll
-      ? [source.listAll(group, platform).catch(fail(group))]
-      : group.map((app) => source.list(app, platform).catch(fail([app]))),
-  );
+  const reads = [
+    ...[...groups].flatMap(([source, group]) =>
+      source.listAll
+        ? [source.listAll(group, platform).catch(fail(group))]
+        : group.map((app) => source.list(app, platform).catch(fail([app]))),
+    ),
+    // Places inside other apps: only listed under apps being read. A failure here doesn't blame an app.
+    ...DISCOVERED.map((source) => source.discover!(apps, platform).catch(() => [] as Tab[])),
+  ];
   const [accessibility, ...results] = await Promise.all([platform.accessibilityTrusted(), ...reads]);
   return {
     tabs: orderTabs(
-      results.flat(),
+      placeWithinHosts(results.flat()),
       apps.map((a) => a.bundleId),
     ),
     failures,
@@ -48,11 +52,29 @@ export async function loadTabs(apps: App[], platform: Platform): Promise<LoadRes
   };
 }
 
-/** Select `tab` inside its app. The caller brings the app to the front afterwards. */
-export async function selectTab(tab: Tab, platform: Platform): Promise<void> {
+/**
+ * Select `tab` inside its app, and one of its panes if `paneId` is given and the source can select panes. The
+ * caller brings the app to the front afterwards.
+ */
+export async function selectTab(tab: Tab, platform: Platform, paneId?: string): Promise<void> {
   const source = sourceById(tab.source);
   if (!source) throw new Error(`Unknown tab source "${tab.source}"`);
-  await source.select(tab, platform);
+  if (paneId !== undefined && source.selectPane) await source.selectPane(tab, paneId, platform);
+  else await source.select(tab, platform);
+  // A place inside a terminal (herdr): also bring that terminal's tab and pane forward.
+  if (tab.within) await selectTab(tab.within.tab, platform, tab.within.paneId).catch(() => undefined);
+}
+
+/** Tabs with a `hostTty` get `within`: the tab of the same app with a pane on that tty. */
+export function placeWithinHosts(tabs: Tab[]): Tab[] {
+  return tabs.map((tab) => {
+    if (!tab.hostTty) return tab;
+    for (const host of tabs) {
+      const pane = host.app.bundleId === tab.app.bundleId && host.panes?.find((p) => p.tty === tab.hostTty);
+      if (pane) return { ...tab, within: { tab: host, paneId: pane.id } };
+    }
+    return tab;
+  });
 }
 
 /**
@@ -75,5 +97,7 @@ export function describeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   if (/-1743|not authori[sz]ed/i.test(message)) return "Raycast isn't allowed to control this app (Automation)";
   if (/timed out|timeout/i.test(message)) return "The app didn't respond in time";
-  return message.split("\n")[0];
+  // osascript's own error ("…: execution error: Ghostty got an error: …") rather than "Command failed…".
+  const scriptError = /execution error: (.+)/.exec(message)?.[1];
+  return scriptError ?? message.split("\n")[0];
 }

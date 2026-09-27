@@ -1,0 +1,146 @@
+// Codex: the Codex app (ChatGPT.app, `com.openai.codex`) and the Codex CLI keep every thread in
+// ~/.codex/state_5.sqlite (id, folder, name, source, last update) and log each thread's events to its rollout file.
+// A rollout records when a turn starts and ends, so a thread is working while its last turn has started and not
+// ended. Approval and input requests are never logged (Codex's rollout policy), so Codex agents are never
+// "blocked" here; the app's live state is only on its private app-server pipe and internal IPC bus, which aren't
+// for other apps (ADR-022).
+//
+// Threads from the app open with its codex://threads/<id> link, while the app runs. A CLI thread is listed while
+// a `codex` process in a terminal works in its folder (that process is its host). Verified with Codex 26.924
+// (app) and CLI 0.157.
+
+import type { Process } from "../../platform/model";
+import type { Agent, AgentContext, AgentSource, AgentStatus, Host } from "../model";
+
+const DB = ".codex/state_5.sqlite";
+const CODEX_APP = "com.openai.codex";
+/** App threads older than this aren't listed: the list is for what's going on now. */
+const RECENT_MS = 24 * 60 * 60 * 1000;
+/** Enough of a rollout's end to hold its last turn events (big lines, e.g. tool output, can come after them). */
+const TAIL_BYTES = 256 * 1024;
+
+const threadsQuery = (since: number) => `select id, source, cwd,
+  coalesce(nullif(name, ''), nullif(title, '')) as title,
+  updated_at_ms as updatedAt, rollout_path as rollout
+from threads
+where archived = 0 and source in ('cli', 'vscode', 'appServer') and updated_at_ms > ${Math.floor(since)}
+order by updated_at_ms desc limit 50`;
+
+export interface Thread {
+  id: string;
+  /** "cli" for the terminal UI; "vscode" / "appServer" for the app and IDE extension. */
+  source: string;
+  cwd?: string;
+  title?: string;
+  updatedAt?: number;
+  rollout?: string;
+}
+
+export function parseThreads(rows: Record<string, unknown>[]): Thread[] {
+  const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  return rows.flatMap((r): Thread[] =>
+    typeof r.id === "string"
+      ? [
+          {
+            id: r.id,
+            source: str(r.source) ?? "",
+            cwd: str(r.cwd),
+            title: str(r.title),
+            updatedAt: typeof r.updatedAt === "number" ? r.updatedAt : undefined,
+            rollout: str(r.rollout),
+          },
+        ]
+      : [],
+  );
+}
+
+const STARTED = new Set(["task_started", "turn_started"]);
+const ENDED = new Set(["task_complete", "turn_complete", "turn_aborted"]);
+
+/** Working if the rollout's last turn event is a start; idle if it's an end (or there's none). */
+export function statusOf(rolloutTail: string): AgentStatus {
+  const lines = rolloutTail.split("\n");
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i];
+    if (!line.includes('"event_msg"')) continue;
+    let type: unknown;
+    try {
+      type = JSON.parse(line)?.payload?.type;
+    } catch {
+      continue;
+    }
+    if (STARTED.has(type as string)) return "working";
+    if (ENDED.has(type as string)) return "idle";
+  }
+  return "idle";
+}
+
+/** The Codex process in a terminal working in `cwd`, if exactly one is (two would be a guess). */
+export function terminalFor(cwd: string | undefined, processes: Process[]): Process | undefined {
+  if (!cwd) return undefined;
+  const byPid = new Map(processes.map((p) => [p.pid, p]));
+  const matches = processes.filter(
+    (p) => p.name === "codex" && p.tty && p.cwd === cwd && byPid.get(p.ppid)?.name !== "codex",
+  );
+  return matches.length === 1 ? matches[0] : undefined;
+}
+
+/** Threads with a live host, as agents; `tails` maps a thread id to its rollout's end. */
+export function toAgents(
+  threads: Thread[],
+  tails: Map<string, string>,
+  processes: Process[],
+  appRunning: boolean,
+): Agent[] {
+  return threads.flatMap((thread): Agent[] => {
+    let host: Host;
+    if (thread.source === "cli") {
+      const terminal = terminalFor(thread.cwd, processes);
+      if (!terminal) return [];
+      host = { kind: "process", pid: terminal.pid, tty: terminal.tty };
+    } else {
+      if (!appRunning) return [];
+      host = { kind: "link", bundleId: CODEX_APP, url: `codex://threads/${thread.id}` };
+    }
+    const status = statusOf(tails.get(thread.id) ?? "");
+    return [
+      {
+        key: `codex:${thread.id}`,
+        source: codex.id,
+        product: "Codex",
+        id: thread.id,
+        title: firstLine(thread.title) ?? "Codex",
+        cwd: thread.cwd,
+        status,
+        since: thread.updatedAt,
+        activeAt: status === "idle" ? thread.updatedAt : undefined,
+        host,
+        resumeCommand: `codex resume ${thread.id}`,
+      },
+    ];
+  });
+}
+
+const firstLine = (text?: string) => text?.split("\n")[0]?.trim().slice(0, 80) || undefined;
+
+export const codex: AgentSource = {
+  id: "codex",
+  list: async ({ platform, apps, processes, now }: AgentContext) => {
+    const appRunning = apps.some((a) => a.bundleId === CODEX_APP);
+    const cliRunning = processes.some((p) => p.name === "codex" && p.tty);
+    if (!appRunning && !cliRunning) return [];
+    const rows = await platform
+      .querySqlite(`${platform.homeDir()}/${DB}`, threadsQuery(now - RECENT_MS))
+      // No Codex database: Codex was never used here.
+      .catch(() => []);
+    const threads = parseThreads(rows);
+    const tails = new Map(
+      await Promise.all(
+        threads.map(
+          async (t) => [t.id, t.rollout ? await platform.readTail(t.rollout, TAIL_BYTES).catch(() => "") : ""] as const,
+        ),
+      ),
+    );
+    return toAgents(threads, tails, processes, appRunning);
+  },
+};

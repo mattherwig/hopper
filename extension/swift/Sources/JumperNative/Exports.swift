@@ -14,7 +14,12 @@ import RaycastSwiftMacros
   bringToFront(bundleId: bundleId)
 }
 
-// MARK: Tab level (Accessibility; wrapped by src/lib/platform/tabs.ts)
+/// Every process (agent level: liveness, tty, parent chain).
+@raycast func processes() -> [RunningProcess] {
+  readProcesses()
+}
+
+// MARK: Tab level (Accessibility; wrapped by src/lib/platform/os.ts)
 
 @raycast func accessibilityTrusted() -> Bool {
   axTrusted()

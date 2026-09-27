@@ -5,6 +5,8 @@ struct RunningApp: Codable {
   let bundleId: String
   let name: String
   let path: String
+  /// Process id, 0 if unknown: lets agent sources tell which app a process (e.g. a terminal's shell) belongs to.
+  let pid: Int
 }
 
 /// Running regular apps, most recently used first, across all Spaces.
@@ -45,7 +47,9 @@ private func fromLaunchServices() -> [RunningApp]? {
       let bundleId = info["CFBundleIdentifier"] as? String,
       let path = info["LSBundlePath"] as? String
     else { return nil }
-    return RunningApp(bundleId: bundleId, name: info["LSDisplayName"] as? String ?? bundleId, path: path)
+    return RunningApp(
+      bundleId: bundleId, name: info["LSDisplayName"] as? String ?? bundleId, path: path,
+      pid: (info["pid"] as? NSNumber)?.intValue ?? 0)
   }
 }
 
@@ -68,5 +72,6 @@ private func fromWindowOrder() -> [RunningApp] {
 private func runningApp(_ app: NSRunningApplication) -> RunningApp? {
   guard app.activationPolicy == .regular, let bundleId = app.bundleIdentifier, let path = app.bundleURL?.path
   else { return nil }
-  return RunningApp(bundleId: bundleId, name: app.localizedName ?? bundleId, path: path)
+  return RunningApp(
+    bundleId: bundleId, name: app.localizedName ?? bundleId, path: path, pid: Int(app.processIdentifier))
 }

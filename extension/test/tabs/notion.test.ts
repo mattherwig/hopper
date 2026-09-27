@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { notion, pageId, parseAncestors, shortPath, tabLink } from "../../src/lib/tabs/sources/notion.ts";
 import type { AXWindow, SidebarQuery } from "../../src/lib/tabs/model.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const notionApp = app("notion.id", "Notion");
 const row = (title: string) => ({ title, text: "", selected: false });
@@ -148,7 +148,9 @@ test("Notion: a tab with a known page opens by deep link (switches to it, or reo
   const platform = fakePlatform({
     sidebarRows: async () => [row("Q/A"), row("Looper")],
     windows: async () => [{ bundleId: "notion.id", windows: [win(1, "Looper")] }],
-    webPages: async () => [{ title: "Q/A", url: "https://app.notion.com/p/Q-A-3dbb24976dd380f0b0feff9b483e686e?pvs=4" }],
+    webPages: async () => [
+      { title: "Q/A", url: "https://app.notion.com/p/Q-A-3dbb24976dd380f0b0feff9b483e686e?pvs=4" },
+    ],
     querySqlite: async () => [],
     openUrl: async (url) => {
       urls.push(url);

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { claude, openConversation, parseSession, remember } from "../../src/lib/tabs/sources/claude.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const claudeApp = app("com.anthropic.claudefordesktop", "Claude");
 const row = (title: string, text = "", selected = false) => ({ title, text, selected });

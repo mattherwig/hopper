@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { Tab, TabKind } from "../../src/lib/tabs/model.ts";
 import { searchTabs } from "../../src/lib/tabs/search.ts";
-import { app } from "./fake-platform.ts";
+import { app } from "../fake-platform.ts";
 
 const chrome = app("com.google.Chrome", "Google Chrome");
 const cmux = app("com.cmuxterm.app", "cmux");

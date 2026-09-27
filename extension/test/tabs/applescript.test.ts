@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FIELD as F, RECORD as R, listScript, parseRecords, quote, runSelect } from "../../src/lib/tabs/applescript.ts";
 import { TabGoneError } from "../../src/lib/tabs/model.ts";
-import { fakePlatform } from "./fake-platform.ts";
+import { fakePlatform } from "../fake-platform.ts";
 
 test("parses separator-delimited records, dropping blanks and AppleScript's missing value", () => {
   assert.deepEqual(parseRecords(`a${F}b${R}c${F}missing value${R}\n`, 2), [

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fromWindows, windows } from "../../src/lib/tabs/sources/windows.ts";
 import { TabGoneError } from "../../src/lib/tabs/model.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const ghostty = app("com.mitchellh.ghostty", "Ghostty");
 

@@ -1,5 +1,18 @@
 # Jumper Changelog
 
+## [Agents] - {PR_MERGE_DATE}
+
+- Agents command: every AI agent running on your Mac (Claude Code in terminals and the Claude app, Codex, Cursor, herdr, agent CLIs), grouped by Needs You, Done, Working, and Idle, filterable by project, and one step from where it runs.
+- Next Agent command: jump to the agent that has waited longest for you; run again for the next.
+- Jumping to a terminal agent selects its exact iTerm split or cmux terminal.
+- Tabs is now **Search** (and Tabs in Current App is **Search Current App**): it shows an agent's status next to the tab it runs in, and lists agents that aren't in a tab. Your hotkeys keep working.
+- herdr workspaces and tabs are listed in Search under the terminal running herdr, and agents in herdr panes open in their pane.
+- Ghostty tabs are listed in Search (Ghostty 1.3+), and herdr running in Ghostty is brought forward in its own tab.
+- cmux workspaces with several terminals also list each terminal by its name; herdr lists workspaces and their named tabs.
+- Search lists each agent in its app's section, and shows AppleScript's own error for apps it can't read.
+- Claude Code sessions that haven't started yet (e.g. waiting to trust a folder) are listed as running.
+- Copy Resume Command for Claude Code and Codex sessions.
+
 ## [Tabs] - {PR_MERGE_DATE}
 
 - Tabs command: search tabs, windows, and sessions across running apps (Chromium browsers, Safari, cmux, iTerm, Terminal, Claude, Muse, and any app's windows) and jump to one.

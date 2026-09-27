@@ -11,8 +11,8 @@ import { windows } from "./windows";
 const BUNDLE_ID = "com.anthropic.claudefordesktop";
 
 /** <account>/<org>/local_<uuid>.json, one file per Code session. */
-const SESSIONS_DIR = "Library/Application Support/Claude/claude-code-sessions";
-const SESSION_FILE = /^local_[\w-]+\.json$/;
+export const SESSIONS_DIR = "Library/Application Support/Claude/claude-code-sessions";
+export const SESSION_FILE = /^local_[\w-]+\.json$/;
 
 /** Rows titled "<status> <name>" (status: Running, Idle, a PR badge...); the open session or chat is named by
  * a "<name>, rename session" button above the transcript, which is there even with the sidebar hidden. */
@@ -37,7 +37,7 @@ export interface KnownConversation {
   seenAt: number;
 }
 
-const KNOWN_KEY = "claude-conversations";
+const KNOWN_KEY = "tabs:claude-conversations";
 const MAX_KNOWN = 200;
 /** How many known conversations to list when the sidebar shows none (hidden, or in Code mode). */
 const MAX_LISTED = 20;
@@ -68,12 +68,15 @@ export function parseSession(text: string): CodeSession | undefined {
   };
 }
 
+/** Tab key of a Code session; the agent level uses it to show the session's status on its tab. */
+export const codeSessionKey = (bundleId: string, sessionId: string) => `${bundleId}:code:${sessionId}`;
+
 /** Most recently focused first; `activeTitle` (the open session) marks one as active. */
 export function fromSessions(app: App, sessions: CodeSession[], activeTitle?: string): Tab<Ref>[] {
   return [...sessions]
     .sort((a, b) => b.lastFocusedAt - a.lastFocusedAt)
     .map((s) => ({
-      key: `${app.bundleId}:code:${s.sessionId}`,
+      key: codeSessionKey(app.bundleId, s.sessionId),
       app,
       source: claude.id,
       kind: "session",

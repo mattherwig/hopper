@@ -2,7 +2,8 @@ import { Action, ActionPanel, Icon, Keyboard, List, showToast, Toast } from "@ra
 import { showFailureToast, usePromise } from "@raycast/utils";
 import { excludeFromHistory, includeInHistory, loadHistoryState, removeFromHistory } from "./lib/apps/load-history";
 import { SwitchAction } from "./components/switch-action";
-import { activateApp, type RunningApp } from "./lib/platform/macos";
+import { activateApp } from "./lib/platform/macos";
+import type { App } from "./lib/platform/model";
 
 async function load() {
   const { apps, currentHidden, excluded } = await loadHistoryState();
@@ -87,7 +88,7 @@ export default function Command() {
   );
 }
 
-function SwitchToApp({ app }: { app: RunningApp }) {
+function SwitchToApp({ app }: { app: App }) {
   return (
     <SwitchAction
       title="Switch to App"

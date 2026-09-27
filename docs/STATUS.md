@@ -2,6 +2,16 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Agent level, Search, herdr, Ghostty (ADR-022–024, branch `agents/levels`)
+
+- Levels: App → Tab → Pane (new) as places; Agent as an overlay (status + host, located into places); Project (git repository) as a grouping. Research per app family by subagents; what fits and what didn't is in ADR-022.
+- New commands `agents` (Agents) and `next-agent` (Next Agent). Sources: Claude Code (all surfaces, `~/.claude/sessions`), Codex (thread db + rollout logs; app and CLI, verified live with the Codex app), Cursor (`state.vscdb`), herdr (socket), agent CLIs by process name. Web agents cut (owner).
+- Tabs / Tabs in Current App retitled **Search** / **Search Current App** (names unchanged). Agents show as rows in their app's section and as a status tag on their tab.
+- herdr (0.9.1) verified live: workspaces and named tabs under the terminal running herdr, the Claude session in a pane merged into its herdr pane, `pane.focus`, the terminal tab holding herdr selected (tty in iTerm/cmux/Terminal; Ghostty by title marker, idea from the Raycast Store's Herdr extension).
+- cmux lists workspaces and their terminals by name; Ghostty 1.3 source (Ghostty upgraded 1.2.3 → 1.3.1, verified live after restart); Claude processes found before they register (argv[0] names); Codex CLI upgraded to 0.157.1.
+- Verified: 112 unit tests, lint, build; agent loading and the cmux/iTerm/herdr/Ghostty reads against this Mac. Not verified live: jumping from Raycast (pane selection, Next Agent), Cursor (not running); Codex "working" seen only in tests (the live thread had finished).
+- Next: owner smoke test in Raycast; retake the demo GIF and Store screenshots (they say "Tabs"); menu bar agent status (idea).
+
 ## 2026-09-27 — Switch apps like Cmd+Tab (ADR-021)
 
 - Bug: Back to TV playing a show fullscreen showed TV's home window. Cause: Raycast `open()` sends a reopen event. Now `activateApp()` sets `AXFrontmost` via the Swift helper (`frontApp`), falling back to `open()` without Accessibility or when the main window is minimized/missing.
