@@ -3,6 +3,7 @@ import { getFavicon, useCachedPromise } from "@raycast/utils";
 import { useState } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosTabPlatform } from "../lib/platform/tabs";
+import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
 import { searchTabs } from "../lib/tabs/search";
@@ -25,15 +26,27 @@ async function load(scope: Scope) {
   const recent = await getRecentApps();
   // The frontmost app is recent[0]: Raycast itself is filtered out by getRecentApps().
   const apps = scope === "current" ? recent.slice(0, 1) : recent;
-  return { ...(await loadTabs(apps, macosTabPlatform)), current: recent[0] };
+  const result = await loadTabs(apps, macosTabPlatform);
+  // Only apps this read speaks for can have closed tabs: all of them (running or not) for Tabs, the current app
+  // for Tabs in Current App, never an app that failed to read. Without Accessibility some sources see nothing,
+  // which must not look like everything closed.
+  const failed = new Set(result.failures.map((f) => f.app.bundleId));
+  const covered = (bundleId: string) =>
+    result.accessibility && !failed.has(bundleId) && (scope === "all" || bundleId === recent[0]?.bundleId);
+  const closed = await recordHistory(macosTabPlatform, result.tabs, covered, Date.now());
+  return {
+    ...result,
+    closed: scope === "all" ? closed : closed.filter((c) => c.app.bundleId === recent[0]?.bundleId),
+    current: recent[0],
+  };
 }
 
 /** Tabs, windows, and sessions of every running app (or only the current one), grouped by app. */
 export function TabList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
   // looks the tab up again and reports it if it's gone.
-  const { data, isLoading } = useCachedPromise(load, [scope], { keepPreviousData: true });
-  const { tabs = [], failures = [], accessibility = true, current } = data ?? {};
+  const { data, isLoading, revalidate } = useCachedPromise(load, [scope], { keepPreviousData: true });
+  const { tabs = [], closed = [], failures = [], accessibility = true, current } = data ?? {};
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
 
@@ -53,6 +66,13 @@ export function TabList({ scope }: { scope: Scope }) {
           ))}
         </List.Section>
       ))}
+      {closed.length > 0 && (
+        <List.Section title="Recently Closed" subtitle={String(closed.length)}>
+          {searchTabs(closed, query).map((entry) => (
+            <ClosedItem key={entry.id} entry={entry} onForget={revalidate} />
+          ))}
+        </List.Section>
+      )}
       {(failures.length > 0 || !accessibility) && (
         <List.Section title="Unavailable">
           {!accessibility && (
@@ -115,6 +135,44 @@ function TabItem({ tab }: { tab: Tab }) {
   );
 }
 
+function ClosedItem({ entry, onForget }: { entry: ClosedTab; onForget: () => void }) {
+  const forget = async (id?: string) => {
+    await forgetClosed(macosTabPlatform, id);
+    onForget();
+  };
+  return (
+    <List.Item
+      icon={entry.url ? getFavicon(entry.url, { fallback: Icon.Globe }) : { fileIcon: entry.reopen.target }}
+      title={entry.title}
+      subtitle={entry.app.name}
+      accessories={[{ text: closedDetail(entry) }, { date: new Date(entry.closedAt), tooltip: "Closed" }]}
+      actions={
+        <ActionPanel>
+          <SwitchAction
+            title="Reopen"
+            failureTitle={`Could not reopen ${entry.title}`}
+            onSwitch={() => reopenClosed(entry, macosTabPlatform)}
+          />
+          {entry.url && <Action.CopyToClipboard title="Copy URL" content={entry.url} />}
+          <Action
+            title="Remove from Recently Closed"
+            icon={Icon.XMarkCircle}
+            shortcut={Keyboard.Shortcut.Common.Remove}
+            onAction={() => forget(entry.id)}
+          />
+          <Action
+            title="Clear Recently Closed"
+            icon={Icon.Trash}
+            style={Action.Style.Destructive}
+            shortcut={Keyboard.Shortcut.Common.RemoveAll}
+            onAction={() => forget()}
+          />
+        </ActionPanel>
+      }
+    />
+  );
+}
+
 /** One section per app, in order of each app's first tab (so the best search match's app comes first). */
 function groupByApp(tabs: Tab[]): { app: App; tabs: Tab[] }[] {
   const sections = new Map<string, { app: App; tabs: Tab[] }>();
@@ -126,8 +184,14 @@ function groupByApp(tabs: Tab[]): { app: App; tabs: Tab[] }[] {
   return [...sections.values()];
 }
 
+/** Host for pages, the containing folder for files. */
+function closedDetail(entry: ClosedTab): string {
+  if (entry.reopen.kind === "url") return shortDetail(entry);
+  return entry.reopen.target.split("/").slice(-2, -1)[0] ?? "";
+}
+
 /** Host for URLs, otherwise the source's detail (working directory, status...). */
-function shortDetail(tab: Tab): string {
+function shortDetail(tab: Pick<Tab, "url" | "detail">): string {
   if (!tab.url) return tab.detail ?? "";
   try {
     return new URL(tab.url).hostname;

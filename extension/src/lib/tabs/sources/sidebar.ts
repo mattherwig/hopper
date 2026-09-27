@@ -25,7 +25,8 @@ export interface SidebarSpec extends SidebarQuery {
   format: "status-prefixed" | "plain";
   /** Row names that aren't entries (headings, "New ..." buttons). */
   skip?: string[];
-  /** Description suffix of an element naming the open row, for apps whose rows don't report selection (Claude). */
+  /** Description or title suffix of an element naming the open row, for apps whose rows don't report selection
+   * (Claude, Muse). */
   activeSuffix?: string;
 }
 

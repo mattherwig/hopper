@@ -26,7 +26,8 @@ test("loads every app, batching windows into one call; a failing app doesn't hid
       return `1${F}GitHub${F}https://github.com${F}true${R}`;
     },
     windows: async (ids) => {
-      windowCalls++;
+      // Safari reads its own windows to spot private ones; count only the fallback's batched call.
+      if (!ids.includes(safari.bundleId)) windowCalls++;
       return ids.map((bundleId) => ({
         bundleId,
         windows: [{ index: 1, title: bundleId, minimized: false, tabs: [] }],

@@ -2,6 +2,17 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-26 — Claude conversations by deep link; private windows excluded (ADR-017, ADR-018, branch `tabs/muse-reveal-claude-links`)
+
+- Muse 4.1 hides its Side chats list, so Tabs lists Muse's window unless the panel is open. A reveal (press the button, read, press again) was built, verified live, then removed at the owner's call: too hacky. Owner rule: UI-changing workarounds need a yes first.
+- Claude: page URL (`webPage` Swift call, ~3ms) teaches title → `chat/<uuid>` / `cowork/<cse_id>`; those open by `claude://claude.ai/<path>` (tested live), and stay listed with the sidebar hidden (20 most recent). Archived Code sessions' deep link lands on the Code home screen: still skipped.
+- Reopen capabilities for all sources researched and tested live: #21 (Recently Closed). Limits and stress test: #22. New app issues: Messages #15, Codex #16, Cursor #17, Notes #18, Notion #19.
+- Incognito/private windows left out of Tabs entirely (ADR-018): Chromium by `mode`, Safari by AX title matched to AppleScript windows (fails closed; Safari now needs Accessibility), fallback by title. Chrome script verified live (25 tabs, 0 incognito).
+- Muse reveal removed (owner: too hacky); Muse lists its window unless the Side chats panel is open.
+- Recently Closed (ADR-019, #21 v1): browser tabs by URL and documents by file path, from consecutive reads. Swift `readWindows` now returns each window's AXDocument (verified live: TextEdit file; Terminal/Ghostty folders, skipped).
+- Merged main (Notion source): Claude now reads its page through Notion's shared `webPages` call; my ADRs renumbered 017–019. Notion tabs select and reopen via `notion://…?deepLinkOpenNewTab=true` (ADR-020; tested live: switches to the existing tab, exact URL required).
+- Not yet run in Raycast (dev build) or through the smoke test.
+
 ## 2026-09-26 — Tabs search: typo-tolerant, app first (ADR-015, branch `feature/tab-search-ranking`)
 
 - Tabs filters with `tabs/search.ts` instead of Raycast's filter: "caude" finds Claude; typing an app's name lists that app's tabs before browser/terminal tabs titled with it. Matching is Fuse.js (swapped from ~100 lines of custom scoring); demo GIF query now "github pages" (Fuse has no abbreviations). Live in Raycast: "claude" and "caude" both list the Claude app's 13 sessions first. Smoke test 32/32.

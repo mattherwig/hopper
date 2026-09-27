@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { notion, pageId, parseAncestors, shortPath } from "../../src/lib/tabs/sources/notion.ts";
+import { notion, pageId, parseAncestors, shortPath, tabLink } from "../../src/lib/tabs/sources/notion.ts";
 import type { AXWindow, SidebarQuery } from "../../src/lib/tabs/model.ts";
 import { app, fakePlatform } from "./fake-platform.ts";
 
@@ -141,4 +141,34 @@ test("Notion: an unreadable cache still lists the tabs", async () => {
     tabs.map((t) => [t.title, t.detail]),
     [["Looper", undefined]],
   );
+});
+
+test("Notion: a tab with a known page opens by deep link (switches to it, or reopens it in a new tab)", async () => {
+  const urls: string[] = [];
+  const platform = fakePlatform({
+    sidebarRows: async () => [row("Q/A"), row("Looper")],
+    windows: async () => [{ bundleId: "notion.id", windows: [win(1, "Looper")] }],
+    webPages: async () => [{ title: "Q/A", url: "https://app.notion.com/p/Q-A-3dbb24976dd380f0b0feff9b483e686e?pvs=4" }],
+    querySqlite: async () => [],
+    openUrl: async (url) => {
+      urls.push(url);
+    },
+    openSidebarRow: async () => true,
+  });
+  const [qa, looper] = await notion.list(notionApp, platform);
+  const link = "notion://app.notion.com/p/Q-A-3dbb24976dd380f0b0feff9b483e686e?pvs=4&deepLinkOpenNewTab=true";
+  assert.equal(qa.url, undefined, "detail stays the parents, not the host");
+  await notion.select(qa, platform);
+  assert.deepEqual(urls, [link]);
+  assert.deepEqual(notion.reopenTarget?.(qa), { kind: "url", target: link });
+  assert.equal(notion.reopenTarget?.(looper), undefined, "no page URL: not reopenable");
+});
+
+test("tabLink: https Notion URLs only", () => {
+  assert.equal(
+    tabLink("https://app.notion.com/p/Looper-3c1b24976dd380a89df7fdac87f63569"),
+    "notion://app.notion.com/p/Looper-3c1b24976dd380a89df7fdac87f63569?deepLinkOpenNewTab=true",
+  );
+  assert.equal(tabLink("file:///x"), undefined);
+  assert.equal(tabLink("not a url"), undefined);
 });

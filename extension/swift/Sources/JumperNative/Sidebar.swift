@@ -61,16 +61,19 @@ func openSidebarRow(
   return true
 }
 
-/// Description of the first element whose AXDescription ends with `suffix`, minus the suffix. Claude shows
-/// the open session as a "<name>, rename session" button above the transcript.
+/// Description or title of the first element whose description or title ends with `suffix`, minus the suffix.
+/// Claude shows the open session as a "<name>, rename session" button (description) above the transcript;
+/// Muse as a "<name> Open chat and side chats" button (title).
 func readLabel(bundleId: String, suffix: String) -> String? {
   guard let pid = pid(of: bundleId) else { return nil }
   for window in children(appElement(pid), kAXWindowsAttribute) {
-    if let element = find(window, depth: 30, where: { (string($0, kAXDescriptionAttribute) ?? "").hasSuffix(suffix) }),
-      let desc = string(element, kAXDescriptionAttribute)
-    {
-      return String(desc.dropLast(suffix.count))
+    var label: String?
+    _ = find(window, depth: 30) { element in
+      label = [kAXDescriptionAttribute, kAXTitleAttribute].lazy
+        .compactMap { string(element, $0) }.first { $0.hasSuffix(suffix) }
+      return label != nil
     }
+    if let label { return String(label.dropLast(suffix.count)) }
   }
   return nil
 }

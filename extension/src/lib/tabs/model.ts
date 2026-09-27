@@ -44,6 +44,18 @@ export interface TabSource<Ref = unknown> {
   listAll?(apps: App[], platform: Platform): Promise<Tab<Ref>[]>;
   /** Select the tab inside its app. The caller brings the app to the front afterwards. Throws TabGoneError. */
   select(tab: Tab<Ref>, platform: Platform): Promise<void>;
+  /**
+   * How to open `tab` again once it's closed, for Recently Closed (history.ts); undefined if it can't be
+   * reopened cleanly. Sources without it never show in Recently Closed.
+   */
+  reopenTarget?(tab: Tab<Ref>): ReopenTarget | undefined;
+}
+
+/** Something to open again: a URL (in the tab's app) or a file (with the tab's app). */
+export interface ReopenTarget {
+  kind: "url" | "file";
+  /** The URL, or the file's absolute path. */
+  target: string;
 }
 
 /** The tab disappeared (closed, moved) between listing and selecting. */
@@ -68,16 +80,19 @@ export interface Platform {
   sidebarRows(bundleId: string, query: SidebarQuery): Promise<SidebarRow[]>;
   /** Open the row called `name` (matched as in SidebarQuery.namePattern). False if not found. */
   openSidebarRow(bundleId: string, query: SidebarQuery, name: string): Promise<boolean>;
-  /** Description of the first element whose description ends with `suffix`, minus the suffix. */
+  /** Description or title of the first element whose description or title ends with `suffix`, minus the suffix. */
   labelWithSuffix(bundleId: string, suffix: string): Promise<string | undefined>;
+  /** JSON value a source saved under `key` (namespaced per source by the caller), or `fallback`. */
+  loadJson<T>(key: string, fallback: T): Promise<T>;
+  saveJson(key: string, value: unknown): Promise<void>;
   /** The user's home folder, for sources that read an app's own data files. */
   homeDir(): string;
   /** Text of the files under `dir` (up to `depth` levels down) whose name matches `name`. [] if `dir` is missing. */
   readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string }[]>;
-  /** Open a URL with its registered app, e.g. an app's deep link. */
-  openUrl(url: string): Promise<void>;
+  /** Open a URL or file path with `appPath` (an .app path), or with its registered app if omitted. */
+  openUrl(url: string, appPath?: string): Promise<void>;
   /** Title and URL of each web page open in the app, through Accessibility (Notion: one per tab). */
-  webPages(bundleId: string): Promise<{ title: string; url: string }[]>;
+  webPages(bundleId: string): Promise<WebPage[]>;
   /** Rows of a read-only query on an SQLite file, e.g. an app's local cache. Rejects if the file is missing. */
   querySqlite(path: string, sql: string): Promise<Record<string, unknown>[]>;
 }
@@ -92,6 +107,8 @@ export interface AXWindow {
   index: number;
   title: string;
   minimized: boolean;
+  /** AXDocument URL: the open file (file://...), a folder (Terminal), or a page; absent if none. */
+  document?: string;
   tabs: { title: string; selected: boolean }[];
 }
 
@@ -108,6 +125,12 @@ export interface SidebarQuery {
   namePattern?: string;
   /** Open rows by focusing them and sending Return, for apps that ignore AXPress (Muse). */
   keyboard?: boolean;
+}
+
+export interface WebPage {
+  /** Document title, e.g. "Trip ideas - Claude". */
+  title: string;
+  url: string;
 }
 
 export interface SidebarRow {

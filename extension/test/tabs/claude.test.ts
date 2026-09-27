@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { claude, parseSession } from "../../src/lib/tabs/sources/claude.ts";
+import { claude, openConversation, parseSession, remember } from "../../src/lib/tabs/sources/claude.ts";
 import { app, fakePlatform } from "./fake-platform.ts";
 
 const claudeApp = app("com.anthropic.claudefordesktop", "Claude");
@@ -98,5 +98,75 @@ test("no session files and no sidebar: falls back to the app's windows", async (
   assert.deepEqual(
     (await claude.list(claudeApp, platform)).map((t) => t.source),
     ["windows"],
+  );
+});
+
+const CHAT = "chat/befa66a9-924a-4d89-bc1e-b3d43f9a18ea";
+const page = (title: string, path: string) => ({ title: `${title} - Claude`, url: `https://claude.ai/${path}` });
+
+test("openConversation: chat and Cowork pages; not Code sessions, new chats, or other pages", () => {
+  assert.deepEqual(openConversation(page("Trip ideas", CHAT)), { title: "Trip ideas", path: CHAT });
+  assert.deepEqual(openConversation(page("Launch post", "cowork/cse_01NWJ4vsMXKan3ddSfX5X6L1")), {
+    title: "Launch post",
+    path: "cowork/cse_01NWJ4vsMXKan3ddSfX5X6L1",
+  });
+  assert.deepEqual(openConversation(page("Trip ideas", `${CHAT}?x=1`))?.path, CHAT);
+  assert.equal(openConversation(page("Claude", "epitaxy/local_54edbd37-e47c-41c3-a9a0-8917fa84b72d")), undefined);
+  assert.equal(openConversation(page("New chat", "new?mode=chat")), undefined);
+  assert.equal(openConversation({ title: "x", url: `https://evil.example/${CHAT}` }), undefined);
+  assert.equal(openConversation(undefined), undefined);
+});
+
+test("remember: newest first, replaces the same title or path, capped at 200", () => {
+  const known = Array.from({ length: 200 }, (_, i) => ({ title: `t${i}`, path: `chat/${i}`, seenAt: i }));
+  const next = remember(known, { title: "t5", path: "chat/new" }, 1000);
+  assert.deepEqual(next[0], { title: "t5", path: "chat/new", seenAt: 1000 });
+  assert.equal(next.filter((k) => k.title === "t5").length, 1);
+  assert.equal(next.length, 200);
+  assert.equal(remember(known, { title: "fresh", path: "chat/fresh" }, 1).length, 200);
+});
+
+test("a conversation's id is learned while open; its sidebar row then opens by deep link", async () => {
+  const urls: string[] = [];
+  let open = page("Trip ideas", CHAT);
+  const platform = fakePlatform({
+    sidebarRows: async () => [row("Idle Trip ideas", "Trip ideas"), row("Idle Other", "Other")],
+    webPages: async () => [open],
+    openUrl: async (url) => {
+      urls.push(url);
+    },
+  });
+  await claude.list(claudeApp, platform);
+  open = page("New chat", "new?mode=chat");
+  const tabs = await claude.list(claudeApp, platform);
+  assert.deepEqual(
+    tabs.map((t) => [t.title, t.ref]),
+    [
+      ["Trip ideas", { path: CHAT }],
+      ["Other", { name: "Other" }],
+    ],
+  );
+  await claude.select(tabs[0], platform);
+  assert.deepEqual(urls, [`claude://claude.ai/${CHAT}`]);
+});
+
+test("sidebar showing no conversations: known ones are listed, the open one active", async () => {
+  const platform = fakePlatform({
+    readFiles: async () => [session("local_a", "tabs", 1)],
+    sidebarRows: async () => [row("Idle tabs", "tabs")],
+    loadJson: async <T>() =>
+      [
+        { title: "Trip ideas", path: CHAT, seenAt: 2 },
+        { title: "tabs", path: "chat/x", seenAt: 1 },
+      ] as T,
+    webPages: async () => [page("Trip ideas", CHAT)],
+  });
+  const tabs = await claude.list(claudeApp, platform);
+  assert.deepEqual(
+    tabs.map((t) => [t.title, t.active, t.ref]),
+    [
+      ["tabs", false, { sessionId: "local_a" }],
+      ["Trip ideas", true, { path: CHAT }],
+    ],
   );
 });

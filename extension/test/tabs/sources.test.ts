@@ -63,3 +63,47 @@ test("Terminal: custom title, else the foreground process", () => {
     ],
   );
 });
+
+test("Chromium: the list script skips incognito windows", async () => {
+  const platform = fakePlatform({ runAppleScript: async () => "" });
+  await chromium.chromium.list(app("com.google.Chrome"), platform);
+  assert.match(platform.scripts[0], /if winMode is not "incognito" then/);
+});
+
+const win = (index: number, title: string) => ({ index, title, minimized: false, tabs: [] });
+const safariApp = app("com.apple.Safari", "Safari");
+const rec = (wid: string, i: number, title: string, wname: string) =>
+  `${wid}${F}${i}${F}${title}${F}https://${title}.com${F}${i === 1}${F}${wname}${R}`;
+
+test("Safari: private windows are left out, matched by title in front-to-back order", async () => {
+  const out = rec("1", 1, "Bank", "Bank") + rec("2", 1, "News", "News") + rec("2", 2, "Mail", "News") + rec("3", 1, "Bank", "Bank");
+  const platform = fakePlatform({
+    runAppleScript: async () => out,
+    windows: async () => [
+      {
+        bundleId: safariApp.bundleId,
+        windows: [win(1, "Bank, Private Browsing"), win(2, "News"), win(3, "Bank")],
+      },
+    ],
+  });
+  const tabs = await safari.safari.list(safariApp, platform);
+  assert.deepEqual(
+    tabs.map((t) => [t.ref.windowId, t.title]),
+    [
+      ["2", "News"],
+      ["2", "Mail"],
+      ["3", "Bank"],
+    ],
+  );
+});
+
+test("Safari: fails closed when a private window can't be placed, or Accessibility sees nothing", () => {
+  const script = [
+    { id: "1", name: "Renamed" },
+    { id: "2", name: "News" },
+  ];
+  assert.deepEqual([...safari.privateWindowIds(script, [win(1, "Other, Private Browsing"), win(2, "News")])], ["1"]);
+  assert.deepEqual([...safari.privateWindowIds(script, [win(1, "Other"), win(2, "News")])], []);
+  assert.deepEqual([...safari.privateWindowIds(script, [])], ["1", "2"]);
+  assert.deepEqual([...safari.privateWindowIds([], [])], []);
+});

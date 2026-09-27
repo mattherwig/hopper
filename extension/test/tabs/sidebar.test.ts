@@ -76,3 +76,22 @@ test("rowName without a pattern is the title", () => {
     1,
   );
 });
+
+test("Muse: the open chat is named by the button above the transcript", async () => {
+  let suffix = "";
+  const platform = fakePlatform({
+    sidebarRows: async () => {
+      return [row("Main chat"), row("Couch research"), row("Bed frame research")];
+    },
+    labelWithSuffix: async (_id, s) => {
+      suffix = s;
+      return "Bed frame research";
+    },
+  });
+  const tabs = await muse.list(museApp, platform);
+  assert.equal(suffix, " Open chat and side chats");
+  assert.deepEqual(
+    tabs.filter((t) => t.active).map((t) => t.title),
+    ["Bed frame research"],
+  );
+});

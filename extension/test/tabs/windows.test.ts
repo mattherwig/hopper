@@ -72,3 +72,15 @@ test("selecting a window that's gone throws TabGoneError", async () => {
   const [tab] = fromWindows(ghostty, [{ index: 1, title: "x", minimized: false, tabs: [] }]);
   await assert.rejects(windows.select(tab, fakePlatform({ raiseWindow: async () => false })), TabGoneError);
 });
+
+test("private-browsing windows of other browsers are skipped", () => {
+  const firefox = app("org.mozilla.firefox", "Firefox");
+  const tabs = fromWindows(firefox, [
+    { index: 1, title: "Bank — Private Browsing", minimized: false, tabs: [] },
+    { index: 2, title: "Docs — Mozilla Firefox", minimized: false, tabs: [] },
+  ]);
+  assert.deepEqual(
+    tabs.map((t) => t.title),
+    ["Docs — Mozilla Firefox"],
+  );
+});

@@ -1,7 +1,10 @@
 // Safari tabs have no id: remember window id + position, and the URL to catch a tab that moved.
+// Private windows are skipped entirely (ADR-018). AppleScript can't tell them apart; only their Accessibility
+// title can ("<page>, Private Browsing"), so the two window lists are matched by title in front-to-back order.
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";
-import type { App, Tab, TabSource } from "../model";
+import { webReopenTarget } from "../reopen";
+import type { App, AXWindow, Platform, Tab, TabSource } from "../model";
 
 interface Ref {
   windowId: string;
@@ -12,11 +15,12 @@ interface Ref {
 const LIST = `repeat with win in windows
   try
     set wid to id of win
+    set wname to name of win
     set cur to index of current tab of win
     set names to name of tabs of win
     set urls to URL of tabs of win
     repeat with i from 1 to count names
-      set out to out & wid & F & i & F & (item i of names) & F & (item i of urls) & F & (i = cur) & R
+      set out to out & wid & F & i & F & (item i of names) & F & (item i of urls) & F & (i = cur) & F & wname & R
     end repeat
   end try
 end repeat`;
@@ -40,9 +44,12 @@ set current tab of win to target
 set index of win to 1
 return "ok"`;
 
-/** Rows: windowId, index, title, url, active. */
+/** English only: Safari localizes it, and exposes no other marker (AXIdentifier's IsSecure is false too). */
+const PRIVATE_SUFFIX = ", Private Browsing";
+
+/** Rows: windowId, index, title, url, active, window name. */
 export function parse(app: App, out: string): Tab<Ref>[] {
-  return parseRecords(out, 5).map(([windowId, index, title, url, active]) => ({
+  return parseRecords(out, 6).map(([windowId, index, title, url, active]) => ({
     key: `${app.bundleId}:${windowId}:${index}`,
     app,
     source: safari.id,
@@ -55,9 +62,54 @@ export function parse(app: App, out: string): Tab<Ref>[] {
   }));
 }
 
+/** AppleScript windows (id, name) in front-to-back order, from the list output. */
+export function scriptWindows(out: string): { id: string; name: string }[] {
+  const seen = new Map<string, string>();
+  for (const [windowId, , , , , name] of parseRecords(out, 6)) if (!seen.has(windowId)) seen.set(windowId, name);
+  return [...seen].map(([id, name]) => ({ id, name }));
+}
+
+/**
+ * Ids of the AppleScript windows to leave out: private ones, matched to Accessibility windows by title in
+ * order. Fails closed: when Accessibility sees no windows (not granted), or a window can't be matched while a
+ * private window is unaccounted for, it's left out.
+ */
+export function privateWindowIds(script: { id: string; name: string }[], ax: AXWindow[]): Set<string> {
+  if (script.length > 0 && ax.length === 0) return new Set(script.map((w) => w.id));
+  const pool = ax.map((w) => {
+    const isPrivate = w.title.endsWith(PRIVATE_SUFFIX);
+    return { title: isPrivate ? w.title.slice(0, -PRIVATE_SUFFIX.length) : w.title, isPrivate, used: false };
+  });
+  const hidden = new Set<string>();
+  const unmatched: string[] = [];
+  for (const w of script) {
+    const match = pool.find((p) => !p.used && p.title === w.name);
+    if (!match) unmatched.push(w.id);
+    else {
+      match.used = true;
+      if (match.isPrivate) hidden.add(w.id);
+    }
+  }
+  if (pool.some((p) => p.isPrivate && !p.used)) for (const id of unmatched) hidden.add(id);
+  return hidden;
+}
+
+async function list(app: App, platform: Platform): Promise<Tab<Ref>[]> {
+  const [out, ax] = await Promise.all([
+    platform.runAppleScript(listScript(app.bundleId, LIST)),
+    platform.windows([app.bundleId]).then(
+      (apps) => apps.find((a) => a.bundleId === app.bundleId)?.windows ?? [],
+      () => [],
+    ),
+  ]);
+  const hidden = privateWindowIds(scriptWindows(out), ax);
+  return parse(app, out).filter((t) => !hidden.has(t.ref.windowId));
+}
+
 export const safari: TabSource<Ref> = {
   id: "safari",
   bundleIds: ["com.apple.Safari"],
-  list: async (app, platform) => parse(app, await platform.runAppleScript(listScript(app.bundleId, LIST))),
+  list,
   select: (tab, platform) => runSelect(platform, tab.app.bundleId, select(tab.ref)),
+  reopenTarget: (tab) => webReopenTarget(tab.url),
 };

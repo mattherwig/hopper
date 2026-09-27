@@ -15,6 +15,7 @@ import {
   webPages,
 } from "swift:../../../swift";
 import type { AppWindows, Platform, SidebarRow } from "../tabs/model";
+import { readJson, writeJson } from "./storage";
 
 /** An app that stops responding must not hold up the whole list. */
 const APPLESCRIPT_TIMEOUT = 4000;
@@ -35,6 +36,8 @@ export const macosTabPlatform: Platform = {
   openSidebarRow: (bundleId, query, name) =>
     openSidebar(bundleId, query.container, query.rowRole, name, query.namePattern ?? "", query.keyboard ?? false),
   labelWithSuffix: async (bundleId, suffix) => (await labelWithSuffix(bundleId, suffix)) ?? undefined,
+  loadJson: (key, fallback) => readJson(`tabs:${key}`, fallback),
+  saveJson: (key, value) => writeJson(`tabs:${key}`, value),
   homeDir: () => homedir(),
   readFiles: async (dir, name, depth) => {
     const paths = await findFiles(dir, name, depth);
@@ -43,7 +46,7 @@ export const macosTabPlatform: Platform = {
     );
     return files.filter((f) => f.text !== "");
   },
-  openUrl: (url) => open(url),
+  openUrl: (url, appPath) => open(url, appPath),
   webPages: (bundleId) => webPages(bundleId),
   querySqlite: async (path, sql) => {
     const { stdout } = await execFileAsync("/usr/bin/sqlite3", ["-readonly", "-json", path, sql], {

@@ -1,13 +1,15 @@
 // Notion desktop: the tabs in its tab bar, a web view titled "Tab Bar" whose tabs are buttons named after
 // their page (the close, new-tab and navigation buttons only have descriptions). Tabs report no selection;
 // the window's title is its selected tab's. Accessibility reaches the tab bar of the front window only, so
-// Notion's other windows are listed as windows. notion:// deep links aren't used: they open the page in the
-// current tab instead of switching to the tab that shows it.
+// Notion's other windows are listed as windows. A tab whose page URL is known opens with a notion:// deep link
+// carrying `deepLinkOpenNewTab=true`: Notion then switches to the tab showing that page, in any window, or
+// opens it in a new tab (so closed tabs reopen too). Without that parameter the link replaces the current tab.
+// Notion compares the URL's last path segment exactly ("Q-A-<id>", not just the id), so the tab's own URL is used.
 //
 // Each tab's detail is its page's parents (ADR-016): every tab keeps a web view whose URL ends in the page id,
 // and Notion's local cache (notion.db) links each page to its parent.
 
-import type { App, AppWindows, Platform, Tab, TabSource } from "../model";
+import type { App, AppWindows, Platform, Tab, TabSource, WebPage } from "../model";
 import { fromRows, openSidebarEntry, type SidebarRef, type SidebarSpec } from "./sidebar";
 import { fromWindows } from "./windows";
 
@@ -97,9 +99,35 @@ export function shortPath(parents: string[], max = MAX_PATH): string {
   return shown.join(SEPARATOR);
 }
 
+type Ref = SidebarRef & { url?: string };
+
+/** The deep link that switches to the tab showing `url` (a Notion page URL), or opens it in a new tab. */
+export function tabLink(url: string): string | undefined {
+  try {
+    const link = new URL(url);
+    if (link.protocol !== "https:") return undefined;
+    link.searchParams.set("deepLinkOpenNewTab", "true");
+    return `notion://${link.host}${link.pathname}${link.search}`;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Keeps the page URL of each tab-bar tab whose page is open in a web view (matched by title; first wins), in the
+ * ref only: `Tab.url` would replace the parents shown as detail with the host.
+ */
+export function withUrls(tabs: Tab[], pages: WebPage[]): Tab[] {
+  const urlByTitle = new Map<string, string>();
+  for (const page of pages) if (!urlByTitle.has(page.title)) urlByTitle.set(page.title, page.url);
+  return tabs.map((tab) => {
+    const url = tab.source === TAB_BAR.id ? urlByTitle.get(tab.title) : undefined;
+    return url ? { ...tab, ref: { ...(tab.ref as SidebarRef), url } } : tab;
+  });
+}
+
 /** Tab title → its page's parents (nearest first), for the tabs whose page could be found. */
-async function readParents(app: App, platform: Platform): Promise<Map<string, string[]>> {
-  const pages = await platform.webPages(app.bundleId);
+async function readParents(pages: WebPage[], platform: Platform): Promise<Map<string, string[]>> {
   const idByTitle = new Map<string, string>();
   for (const page of pages) {
     const id = pageId(page.url);
@@ -120,26 +148,36 @@ export function withParents(tabs: Tab[], parents: Map<string, string[]>): Tab[] 
   });
 }
 
-export const notion: TabSource<SidebarRef> = {
+export const notion: TabSource<Ref> = {
   id: TAB_BAR.id,
   bundleIds: [TAB_BAR.bundleId],
   list: async (app: App, platform: Platform) => {
-    const [rows, all, parents] = await Promise.all([
+    // Page URLs and parents are extra: no page views, no cache, or a changed schema just means none.
+    const pagesRead = platform.webPages(app.bundleId).catch(() => [] as WebPage[]);
+    const [rows, all, pages, parents] = await Promise.all([
       platform.sidebarRows(app.bundleId, TAB_BAR),
       platform.windows([app.bundleId]),
-      // Parents are extra: no page views, no cache, or a changed schema just means no parents.
-      readParents(app, platform).catch(() => new Map<string, string[]>()),
+      pagesRead,
+      pagesRead.then((pages) => readParents(pages, platform)).catch(() => new Map<string, string[]>()),
     ]);
     const appWindows = all.find((w) => w.bundleId === app.bundleId)?.windows ?? [];
     // Tab bar not found (hidden, or Notion's UI changed): offer its windows instead.
-    if (rows.length === 0) return fromWindows(app, appWindows) as Tab[] as Tab<SidebarRef>[];
+    if (rows.length === 0) return fromWindows(app, appWindows) as Tab[] as Tab<Ref>[];
     const tabs = fromTabBar(
       app,
       rows.map((r) => r.title),
       appWindows,
     );
-    return withParents(tabs, parents) as Tab<SidebarRef>[];
+    return withUrls(withParents(tabs, parents), pages) as Tab<Ref>[];
   },
   // Window entries carry source "windows", so their selection is routed there, not here.
-  select: (tab, platform) => openSidebarEntry(tab, TAB_BAR, platform),
+  select: async (tab, platform) => {
+    const link = tab.ref.url && tabLink(tab.ref.url);
+    if (link) await platform.openUrl(link);
+    else await openSidebarEntry(tab, TAB_BAR, platform);
+  },
+  reopenTarget: (tab) => {
+    const link = tab.ref.url && tabLink(tab.ref.url);
+    return link ? { kind: "url", target: link } : undefined;
+  },
 };

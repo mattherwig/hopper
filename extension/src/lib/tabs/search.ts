@@ -16,8 +16,11 @@ const KEYS = [
   { name: "kind", weight: 0.5 },
 ];
 
+/** The fields search looks at: open tabs, and Recently Closed entries. */
+type Searchable = Pick<Tab, "title" | "detail" | "url" | "kind"> & { app: Pick<Tab["app"], "name"> };
+
 /** Tabs matching every word of `query`, best match first; ties keep the input order (recency). */
-export function searchTabs(tabs: Tab[], query: string): Tab[] {
+export function searchTabs<T extends Searchable>(tabs: T[], query: string): T[] {
   if (!query.trim()) return tabs;
   const fuse = new Fuse(tabs, {
     keys: KEYS,
