@@ -3,162 +3,206 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hopper</title>
-<meta name="description" content="Jump to any app, tab, or session on your Mac. Browser-style Back and Forward for apps, plus one search across browser tabs, terminal tabs, and Claude sessions. A free Raycast extension.">
-<meta property="og:title" content="Hopper — Jump to any app, tab, or session">
-<meta property="og:description" content="Step back through recent apps like browser history, or search every tab, window, and session in one list.">
-<meta property="og:image" content="tabs.png">
+<title>Hopper — Built for context switchers</title>
+<meta name="description" content="Built for context switchers. Your AI tools change every month. The way you get around shouldn't. Jump to any app, tab, or agent on your Mac. A free Raycast extension.">
+<meta property="og:title" content="Hopper — Built for context switchers">
+<meta property="og:description" content="Your AI tools change every month. The way you get around shouldn't.">
+<meta property="og:image" content="search.png">
+<meta name="color-scheme" content="light">
 <link rel="icon" href="extension-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f7f6fa;
-  --surface: #ffffff;
-  --surface-2: #efedf4;
-  --text: #1a1822;
-  --muted: #676478;
-  --border: #e2e0ea;
-  --accent: #6d3fe0;
-  --accent-2: #b04fd8;
-  --accent-soft: #eee6ff;
-  --shadow: 0 1px 2px rgba(20,10,50,.05), 0 10px 28px rgba(20,10,50,.08);
-  --radius: 16px;
+  --bg: #ffffff;
+  --wash: #f4f6fb;
+  --text: #0e0752;
+  --muted: #5c5680;
+  --line: #e4e7f2;
+  --blue: #125cef;
+  --blue-press: #0e4ec9;
+  --soft: #e8eeff;
+  --magenta: #fd019a;
+  --shadow: 0 24px 60px rgba(14, 7, 82, .14);
+  --wrap: 1040px;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #111016;
-    --surface: #1b1a21;
-    --surface-2: #24222c;
-    --text: #f1eff7;
-    --muted: #9d99ad;
-    --border: #2f2d3a;
-    --accent: #b48cff;
-    --accent-2: #e08cf0;
-    --accent-soft: #2a2040;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #111016; --surface: #1b1a21; --surface-2: #24222c; --text: #f1eff7; --muted: #9d99ad;
-  --border: #2f2d3a; --accent: #b48cff; --accent-2: #e08cf0; --accent-soft: #2a2040;
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
-}
-
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; background: var(--bg); color: var(--text);
-  font: 16px/1.55 Inter, system-ui, -apple-system, sans-serif;
+  margin: 0;
+  background:
+    radial-gradient(720px 320px at 8% -40px, rgba(253, 1, 154, .07), transparent 70%),
+    radial-gradient(640px 360px at 100% 0, rgba(18, 92, 239, .08), transparent 65%),
+    var(--bg);
+  color: var(--text);
+  font: 17px/1.55 Inter, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-a { color: inherit; }
-img { max-width: 100%; }
-.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+::selection { background: #d9e4ff; color: var(--text); }
+a { color: var(--blue); }
+img { max-width: 100%; height: auto; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
 kbd {
-  font: 500 .82em "JetBrains Mono", ui-monospace, monospace;
-  background: var(--surface); border: 1px solid var(--border); border-bottom-width: 2px;
-  border-radius: 6px; padding: .1em .45em; white-space: nowrap;
+  font: 500 .78em "JetBrains Mono", ui-monospace, monospace;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: .12em .45em;
+  color: var(--text);
+  white-space: nowrap;
 }
 
-/* Nav */
-nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; }
-.brand img { width: 30px; height: 30px; border-radius: 8px; }
-nav .links { display: flex; gap: 20px; font-size: 15px; color: var(--muted); }
-nav .links a { text-decoration: none; }
-nav .links a:hover { color: var(--text); }
-
-/* Hero */
-.hero { text-align: center; padding: 48px 0 36px; position: relative; }
-.hero::before {
-  content: ""; position: absolute; inset: -40px 0 auto; height: 420px; z-index: -1; pointer-events: none;
-  background: radial-gradient(600px 260px at 50% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 0; gap: 16px;
 }
-.hero img.icon { width: 88px; height: 88px; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 22px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -.02em; }
+.brand img { width: 32px; height: 32px; border-radius: 8px; }
+.links { display: flex; align-items: center; gap: 22px; font-size: 15px; }
+.links a { color: var(--muted); text-decoration: none; font-weight: 500; }
+.links a:hover { color: var(--text); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 12px 18px; border-radius: 10px;
+  font-weight: 600; font-size: 15px; text-decoration: none;
+  border: 1px solid var(--line); background: #fff; color: var(--text);
+}
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.primary:hover { background: var(--blue-press); border-color: var(--blue-press); }
+.btn.nav { padding: 8px 12px; font-size: 14px; }
+.btn:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+.hero { padding: 56px 0 8px; }
 .hero h1 {
-  font-size: clamp(36px, 6.4vw, 64px); line-height: 1.04; letter-spacing: -.04em;
-  margin: 0 auto 18px; max-width: 13ch; font-weight: 800;
+  margin: 0;
+  max-width: 11em;
+  font-size: clamp(44px, 6.6vw, 76px);
+  line-height: .98;
+  letter-spacing: -.045em;
+  font-weight: 800;
+  text-wrap: balance;
 }
 .hero h1 em {
   font-style: normal;
-  background: linear-gradient(95deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+  color: var(--blue);
+  background: linear-gradient(100deg, var(--magenta), var(--blue));
+  -webkit-background-clip: text;
+  background-clip: text;
 }
-.hero p { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 46ch; margin: 0 auto 28px; }
-.cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.btn {
-  display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 10px;
-  font-weight: 600; text-decoration: none; border: 1px solid var(--border); background: var(--surface);
-  font-size: 15px; color: var(--text);
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero h1 em { color: transparent; }
 }
-.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-:root[data-theme="dark"] .btn.primary { color: #16102a; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #16102a; } }
-.btn:hover { transform: translateY(-1px); }
-.note { font-size: 13px; color: var(--muted); margin-top: 14px; }
-
-/* Sections */
-section { padding: 44px 0; }
-.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
-h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10px; line-height: 1.15; }
-.lede { color: var(--muted); max-width: 62ch; margin: 0 0 28px; }
-
-.shot { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--surface-2); }
-.shot img { display: block; width: 100%; height: auto; }
-
-/* Two levels */
-.levels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.level.wide { grid-column: 1 / -1; }
-.level {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 22px; display: flex; flex-direction: column; gap: 18px;
+.sub {
+  margin: 22px 0 0;
+  max-width: 28em;
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height: 1.4;
+  letter-spacing: -.02em;
 }
-.level header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.level h3 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
-.level > p { margin: -8px 0 0; color: var(--muted); font-size: 15px; }
-.cmds { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.cmds li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--border); }
-.cmds b { font-size: 15px; }
-.cmds span { grid-column: 1 / -1; font-size: 14px; color: var(--muted); }
-.cmds kbd { font-size: 12px; align-self: center; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.meta { margin: 16px 0 0; color: var(--muted); font-size: 14px; }
 
-/* How it works */
-.how { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.how h3 { font-size: 16px; margin: 0 0 12px; }
+.demo { padding: 36px 0 12px; }
+.shot {
+  margin: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: var(--wash);
+  line-height: 0;
+}
+.shot img { display: block; width: 100%; }
+
+.pillar { padding: 84px 0 8px; }
+.kicker {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+.pillar h2 {
+  margin: 0;
+  max-width: 16em;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+.lede { margin: 16px 0 0; max-width: 40em; color: var(--muted); font-size: 17px; }
+.hotkeys {
+  list-style: none; margin: 22px 0 28px; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 10px 22px;
+}
+.hotkeys li { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; }
+.hotkeys span { font-weight: 500; color: var(--muted); }
+
+.manual { background: var(--wash); margin-top: 88px; padding: 72px 0 24px; }
+.manual h2 {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 3vw, 32px);
+  letter-spacing: -.03em;
+  line-height: 1.15;
+}
+.manual .intro { margin: 0 0 28px; max-width: 42em; color: var(--muted); }
+.block { margin-top: 56px; }
+.block:first-child { margin-top: 0; }
+
+.how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.how h3 { margin: 0 0 12px; font-size: 16px; }
 .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-.facts li { padding-left: 16px; position: relative; font-size: 15px; color: var(--muted); }
-.facts li::before { content: ""; position: absolute; left: 0; top: .6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.facts li { position: relative; padding-left: 14px; color: var(--muted); font-size: 15px; }
+.facts li::before {
+  content: ""; position: absolute; left: 0; top: .55em;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--blue);
+}
 .facts strong { color: var(--text); font-weight: 600; }
 
-/* Supported apps */
-table { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-th, td { text-align: left; padding: 12px 16px; border-top: 1px solid var(--border); vertical-align: top; }
-th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; border-top: 0; background: var(--surface-2); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: left; padding: 12px 16px; vertical-align: top; }
+th {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); font-weight: 600; background: #f7f8fc;
+}
+tr + tr td, tr + tr th { border-top: 1px solid var(--line); }
 td:last-child { color: var(--muted); }
-.fine { font-size: 13px; color: var(--muted); margin: 12px 0 0; max-width: 72ch; }
+.fine { font-size: 13px; color: var(--muted); margin: 12px 0 0; max-width: 68em; }
 
-/* Setup */
-.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; max-width: 700px; }
-.steps li { counter-increment: s; display: flex; gap: 14px; align-items: baseline; }
+.keys td:last-child { color: var(--text); width: 46%; }
+.keys td span { color: var(--muted); font-weight: 400; }
+
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 14px; max-width: 40em; }
+.steps li { counter-increment: s; display: flex; gap: 12px; align-items: baseline; }
 .steps li::before {
-  content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px;
+  content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--soft); color: var(--blue); font-weight: 700; font-size: 13px;
 }
 
-footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--border); margin-top: 32px; }
-footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+footer { padding: 28px 0 48px; color: var(--muted); font-size: 14px; background: var(--wash); }
+footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 22px; border-top: 1px solid var(--line); }
+footer a { text-decoration: none; }
+footer a:hover { text-decoration: underline; }
 
-@media (max-width: 820px) {
-  .levels, .how { grid-template-columns: 1fr; }
+@media (max-width: 800px) {
+  .how { grid-template-columns: 1fr; }
+  .links a.hide-sm { display: none; }
 }
 @media (max-width: 600px) {
-  nav .links a.hide-sm { display: none; }
-  .hero img.icon { width: 72px; height: 72px; }
+  .hero { padding-top: 28px; }
+  .pillar { padding-top: 56px; }
+  .manual { margin-top: 56px; padding-top: 48px; }
   th, td { padding: 10px 12px; }
 }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 </style>
 </head>
 <body>
@@ -167,87 +211,79 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <nav>
     <a class="brand" href="#"><img src="extension-icon.png" alt="">Hopper</a>
     <div class="links">
-      <a href="#demo">Demo</a>
-      <a class="hide-sm" href="#features">Features</a>
+      <a class="hide-sm" href="#search">Search</a>
+      <a class="hide-sm" href="#agents">Agents</a>
+      <a class="hide-sm" href="#apps">Apps</a>
       <a class="hide-sm" href="#setup">Setup</a>
       <a href="https://github.com/mattherwig/hopper">GitHub</a>
+      <a class="btn primary nav" href="https://www.raycast.com/matt_herwig/hopper">Install</a>
     </div>
   </nav>
 </header>
 
 <main>
-  <div class="wrap hero">
-    <img class="icon" src="extension-icon.png" alt="">
-    <h1>Jump to any <em>app, tab, or agent.</em></h1>
-    <p>Step back through recent apps like browser history, search every tab and session in one list, and jump to the AI agent that needs you. Free for Raycast.</p>
+  <section class="hero wrap">
+    <h1>Built for<br><em>context switchers.</em></h1>
+    <p class="sub">Your AI tools change every month. The way you get around shouldn't.</p>
     <div class="cta">
-      <a class="btn primary" id="install" href="https://www.raycast.com/matt_herwig/hopper">Get it for Raycast</a>
-      <a class="btn" href="#demo">See it in action ↓</a>
+      <a class="btn primary" href="https://www.raycast.com/matt_herwig/hopper">Get it for Raycast</a>
+      <a class="btn" href="https://github.com/mattherwig/hopper">View source</a>
     </div>
-    <div class="note">macOS · Free and open source · No background process</div>
-  </div>
-
-  <section id="demo">
-    <div class="wrap">
-      <div class="shot"><img src="demo.gif" alt="Hopper demo: Back, Forward, Toggle, History, and a Search jumping to a terminal workspace" width="960" height="625"></div>
-    </div>
+    <p class="meta">macOS · Free and open source · No background process</p>
   </section>
 
-  <section id="features">
-    <div class="wrap">
-      <p class="eyebrow">Three ways to jump</p>
-      <h2>Apps, search, and agents</h2>
-      <p class="lede">Move between apps with hotkeys, like Back and Forward in a browser. Open one list of everything open inside them and pick what you want. Or go straight to the AI agent that's waiting on you, wherever it runs.</p>
-
-      <div class="levels">
-        <article class="level">
-          <header><h3>Apps</h3></header>
-          <p>Browser-style history for the apps you've been using.</p>
-          <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
-          <ul class="cmds">
-            <li><b>Back / Forward</b><kbd>⌃⌘[ ⌃⌘]</kbd><span>Step back to the app you used before this one, and keep going. Forward retraces.</span></li>
-            <li><b>Toggle</b><kbd>⌘ ⌘</kbd><span>Flip between your two most recent apps. Run again to flip back.</span></li>
-            <li><b>History</b><kbd>⌃⌘</kbd><span>Running apps from most to least recent. Jump to any of them, or remove and exclude apps.</span></li>
-          </ul>
-        </article>
-
-        <article class="level">
-          <header><h3>Search</h3></header>
-          <p>One search across the tabs, windows, sessions, and agents of every running app.</p>
-          <div class="shot"><img src="tabs.png" alt="Search command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
-          <ul class="cmds">
-            <li><b>Search</b><kbd>⌃ ⌃</kbd><span>Search browser tabs, terminal tabs, herdr workspaces, Claude and Muse sessions, Notion and Obsidian tabs, any app's windows, and agents, then jump straight to one.</span></li>
-            <li><b>Search Current App</b><span>The same, for just the app you're in.</span></li>
-          </ul>
-        </article>
-
-        <article class="level wide">
-          <header><h3>Agents</h3></header>
-          <p>Claude Code, Codex, Cursor, herdr, and other agents, wherever they run, by what they need from you.</p>
-          <ul class="cmds">
-            <li><b>Agents</b><kbd>⌥⌘</kbd><span>Every running agent grouped by Needs You, Done, Working, and Idle, filterable by project. Jump to its terminal pane, herdr pane, or session in the Claude app or Cursor.</span></li>
-            <li><b>Next Agent</b><kbd>⌥⌘]</kbd><span>Jump to the agent that has waited longest for you: needs input or approval first, then finished and unseen. Run again for the next.</span></li>
-          </ul>
-        </article>
-      </div>
-    </div>
+  <section class="demo wrap" id="demo">
+    <figure class="shot">
+      <img src="demo.gif" alt="Hopper demo. Search finds a Safari tab, Agents jumps to Claude, then Back, Forward, and Toggle move between Notion, Safari, and a note. The word Hopper is copied and pasted into Google." width="960" height="625">
+    </figure>
   </section>
 
-  <section>
-    <div class="wrap">
-      <p class="eyebrow">How it works</p>
-      <h2>Browser rules for apps, one list for everything else</h2>
-      <p class="lede">Apps come from the order macOS already keeps for Cmd+Tab, so nothing runs in the background. Search reads each app when you open it.</p>
+  <section class="pillar wrap" id="search">
+    <p class="kicker">Search</p>
+    <h2>Whatever tool you use this month, one search finds it.</h2>
+    <p class="lede">Browser tabs, terminal splits, Claude and Cursor sessions, Notion and Obsidian pages, any window. Agents show their status in the same list. Recently Closed brings back tabs, pages, notes, and documents from the past week.</p>
+    <ul class="hotkeys">
+      <li>Search <kbd>⌃⌃</kbd></li>
+      <li>Search Current App <span>the app you're in</span></li>
+    </ul>
+    <figure class="shot">
+      <img src="search.png" alt="Search: apps, tabs, sessions, and agents in one list, with status on the agent rows" width="2000" height="1250" loading="lazy">
+    </figure>
+  </section>
+
+  <section class="pillar wrap" id="agents">
+    <p class="kicker">Agents</p>
+    <h2>Run every agent you pay for.</h2>
+    <p class="lede">Claude, Codex, Cursor, and herdr in one list, grouped by Needs You, Done, Working, and Idle. Next Agent jumps to the one that has waited longest, in the exact pane.</p>
+    <ul class="hotkeys">
+      <li>Agents <kbd>⌥⌘</kbd></li>
+      <li>Next Agent <kbd>⌥⌘]</kbd></li>
+    </ul>
+    <figure class="shot">
+      <img src="agents.png" alt="Agents grouped by Done, Working, and Idle across Claude and Cursor" width="2000" height="1250" loading="lazy">
+    </figure>
+  </section>
+
+  <section class="pillar wrap" id="apps">
+    <p class="kicker">Apps</p>
+    <h2>A Back button for your Mac.</h2>
+    <p class="lede">Double-tap to flip between your two most recent apps. Step back and forward through the trail, the way a browser keeps history. History is the list when you want to pick.</p>
+    <ul class="hotkeys">
+      <li>Toggle <kbd>⌘⌘</kbd></li>
+      <li>Back <kbd>⌃⌘[</kbd></li>
+      <li>Forward <kbd>⌃⌘]</kbd></li>
+      <li>History <kbd>⌃⌘</kbd></li>
+    </ul>
+    <figure class="shot">
+      <img src="history.png" alt="History: running apps from most recent to least, with how many steps back each one is" width="2000" height="1250" loading="lazy">
+    </figure>
+  </section>
+
+  <div class="manual">
+    <section class="wrap block" id="how">
+      <h2>How it works</h2>
+      <p class="intro">Apps come from the order macOS already keeps for Cmd+Tab, so nothing runs in the background. Search and Agents read each app when you open them.</p>
       <div class="how">
-        <div>
-          <h3>Apps</h3>
-          <ul class="facts">
-            <li><strong>The first Back takes a snapshot</strong> of your app order and moves one step back. Further Backs go deeper; Forward retraces.</li>
-            <li><strong>Switching any other way starts fresh.</strong> Click an app or Cmd+Tab and the forward history is dropped, just like visiting a new page in a browser.</li>
-            <li><strong>You land where you left off.</strong> With Accessibility, an app comes back to the window you were in, like Cmd+Tab.</li>
-            <li><strong>Remove from History</strong> (<kbd>⌃X</kbd>) hides an app until you use it again; <strong>Exclude</strong> (<kbd>⌃⇧X</kbd>) hides it for good.</li>
-          </ul>
-        </div>
         <div>
           <h3>Search</h3>
           <ul class="facts">
@@ -255,76 +291,101 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
             <li><strong>Search forgives typos</strong> ("caude" finds Claude) and matches app names first: an app's own tabs before tabs that mention it.</li>
             <li><strong>Picking an entry selects it</strong> in its app and brings the app to the front.</li>
             <li><strong>Copy URL</strong> and <strong>Copy Title</strong> are in the action panel.</li>
-            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, Obsidian notes, and documents closed since Search last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
+            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, Obsidian notes, and documents closed since Search last looked (a week, up to 100). Terminals, chats, and private windows stay out of it.</li>
             <li><strong>Apps Hopper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
           </ul>
         </div>
         <div>
           <h3>Agents</h3>
           <ul class="facts">
-            <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, Codex's thread log, Cursor's flags, herdr's detection. No hooks to install.</li>
-            <li><strong>Done means finished since you last looked,</strong> in the agent's own app or by jumping to it from Hopper.</li>
+            <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, Codex's thread log, Cursor's flags, herdr's detection. No hooks to install, and nothing to undo when you switch tools.</li>
+            <li><strong>Needs You</strong> is an agent stopped on a prompt: a permission request or a question. <strong>Done</strong> means it finished since you last looked, in the agent's own app or by jumping to it from Hopper.</li>
             <li><strong>Jumping goes to where it runs:</strong> the exact iTerm split or cmux terminal, the herdr pane, the Claude session, the Cursor agent.</li>
-            <li><strong>Projects are git repositories;</strong> worktrees count as their main repository.</li>
+            <li><strong>Projects are git repositories;</strong> worktrees count as their main repository. Filter the list by project.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Apps</h3>
+          <ul class="facts">
+            <li><strong>The first Back takes a snapshot</strong> of your app order and moves one step back. Further Backs go deeper; Forward retraces.</li>
+            <li><strong>Switching any other way starts fresh.</strong> Click an app or press Cmd+Tab and the forward history is dropped, the way visiting a new page works in a browser.</li>
+            <li><strong>You land where you left off.</strong> With Accessibility, an app comes back to the window you were in, like Cmd+Tab.</li>
+            <li><strong>Remove from History</strong> (<kbd>⌃X</kbd>) hides an app until you use it again. <strong>Exclude</strong> (<kbd>⌃⇧X</kbd>) hides it for good.</li>
           </ul>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section>
-    <div class="wrap">
-      <p class="eyebrow">Supported apps</p>
+    <section class="wrap block">
       <h2>What Search finds</h2>
-      <table>
-        <thead><tr><th>App</th><th>Lists</th></tr></thead>
-        <tbody>
-          <tr><td>Chrome, Brave, Edge, Vivaldi, Chromium, Safari</td><td>Tabs (never incognito or private windows)</td></tr>
-          <tr><td>iTerm, Terminal</td><td>Tabs, with the status of an agent running in them</td></tr>
-          <tr><td>cmux</td><td>Workspaces and their terminals, with the status of an agent running in them</td></tr>
-          <tr><td>Ghostty (1.3+)</td><td>Tabs, with the status of an agent running in them</td></tr>
-          <tr><td>herdr</td><td>Workspaces and their named tabs, under the terminal running herdr, with their agents' status</td></tr>
-          <tr><td>Claude</td><td>Code sessions with their status, plus Chat and Cowork conversations, even with the sidebar hidden</td></tr>
-          <tr><td>Muse</td><td>Main chat and side chats while the side chats panel is open</td></tr>
-          <tr><td>Notion</td><td>Tabs of the front window with each page's parent pages, then its other windows</td></tr>
-          <tr><td>Obsidian</td><td>Tabs of every open vault, in all its windows, with each note's folder</td></tr>
-          <tr><td>Any other app</td><td>Windows, and tabs if the window has a native tab bar</td></tr>
-        </tbody>
-      </table>
-      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar Notion and Obsidian from their tab bars, so an app update can change what Hopper finds; if nothing is found, the app's windows are listed instead.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>App</th><th>Lists</th></tr></thead>
+          <tbody>
+            <tr><td>Chrome, Brave, Edge, Vivaldi, Chromium, Safari</td><td>Tabs (never incognito or private windows)</td></tr>
+            <tr><td>iTerm, Terminal</td><td>Tabs, with the status of an agent running in them</td></tr>
+            <tr><td>cmux</td><td>Workspaces and their terminals, with the status of an agent running in them</td></tr>
+            <tr><td>Ghostty (1.3+)</td><td>Tabs, with the status of an agent running in them</td></tr>
+            <tr><td>herdr</td><td>Workspaces and their named tabs, under the terminal running herdr, with their agents' status</td></tr>
+            <tr><td>Claude</td><td>Code sessions with their status, plus Chat and Cowork conversations, even with the sidebar hidden</td></tr>
+            <tr><td>Muse</td><td>Main chat and side chats while the side chats panel is open</td></tr>
+            <tr><td>Notion</td><td>Tabs of the front window with each page's parent pages, then its other windows</td></tr>
+            <tr><td>Obsidian</td><td>Tabs of every open vault, in all its windows, with each note's folder</td></tr>
+            <tr><td>Any other app</td><td>Windows, and tabs if the window has a native tab bar</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar. Notion and Obsidian are read from their tab bars, so an app update can change what Hopper finds. If nothing is found, the app's windows are listed instead.</p>
+    </section>
 
+    <section class="wrap block">
       <h2>What Agents finds</h2>
-      <table>
-        <thead><tr><th>Agent</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Claude Code (terminals, Claude app, IDEs)</td><td>Working, needs approval or input, done, idle</td></tr>
-          <tr><td>Codex (Codex app, terminals)</td><td>Working, done, idle</td></tr>
-          <tr><td>Cursor</td><td>Working, needs input, done, idle</td></tr>
-          <tr><td>Any agent in herdr</td><td>herdr's own status</td></tr>
-          <tr><td>Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs</td><td>Running</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Agent</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Claude Code (terminals, Claude app, IDEs)</td><td>Working, needs approval or input, done, idle</td></tr>
+            <tr><td>Codex (Codex app, terminals)</td><td>Working, done, idle</td></tr>
+            <tr><td>Cursor</td><td>Working, needs input, done, idle</td></tr>
+            <tr><td>Any agent in herdr</td><td>herdr's own status</td></tr>
+            <tr><td>Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs</td><td>Running</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-  <section id="setup">
-    <div class="wrap">
+    <section class="wrap block" id="setup">
       <h2>Setup</h2>
       <ol class="steps">
-        <li><span>Install Hopper from the <a href="https://www.raycast.com/">Raycast</a> Store.</span></li>
-        <li><span>Record hotkeys in Raycast Settings → Extensions → Hopper (extensions can't set them). Recommended: the ones shown above.</span></li>
-        <li><span>First time in Search: allow <strong>Automation</strong> and <strong>Accessibility</strong> when asked.</span></li>
+        <li><span>Install Hopper from the <a href="https://www.raycast.com/matt_herwig/hopper">Raycast Store</a>.</span></li>
+        <li><span>Record hotkeys in Raycast Settings → Extensions → Hopper. Extensions can't set them.</span></li>
+        <li><span>The first time you open Search, allow <strong>Automation</strong> (once per app) and <strong>Accessibility</strong>.</span></li>
       </ol>
-    </div>
-  </section>
-</main>
+      <div class="table-wrap" style="margin-top: 28px">
+        <table class="keys">
+          <thead><tr><th>Command</th><th>Hotkey</th></tr></thead>
+          <tbody>
+            <tr><td>Toggle</td><td><kbd>⌘⌘</kbd> <span>double tap</span></td></tr>
+            <tr><td>Search</td><td><kbd>⌃⌃</kbd> <span>double tap</span></td></tr>
+            <tr><td>History</td><td><kbd>⌃⌘</kbd> <span>press and release</span></td></tr>
+            <tr><td>Back / Forward</td><td><kbd>⌃⌘[</kbd> <kbd>⌃⌘]</kbd></td></tr>
+            <tr><td>Agents</td><td><kbd>⌥⌘</kbd> <span>press and release</span></td></tr>
+            <tr><td>Next Agent</td><td><kbd>⌥⌘]</kbd></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine">Each level has a base: the base alone opens its list, <kbd>[</kbd> and <kbd>]</kbd> step back and forward. These avoid the tab-switching keys of browsers, terminals, and editors. <kbd>⌥⌘]</kbd> unfolds code in VS Code and Cursor, and <kbd>⌃⌃</kbd> is taken if macOS Dictation is set to “Press Control Key Twice”.</p>
+      <p class="fine">Back, Forward, Toggle, and History need no permissions. With Accessibility granted to Raycast, they switch like Cmd+Tab, so an app comes back to the window you left. Agents and Next Agent read the agents' own files and need no permission of their own. Jumping into a terminal pane uses the same Automation permission as Search.</p>
+    </section>
 
-<footer>
-  <div class="wrap">
-    <span>Hopper · MIT · by <a href="https://mattherwig.com/">Matt Herwig</a></span>
-    <span><a href="https://github.com/mattherwig/hopper">Source</a> · <a href="https://github.com/sponsors/mattherwig">Sponsor</a></span>
+    <footer>
+      <div class="wrap">
+        <span>Hopper · MIT · by <a href="https://mattherwig.com/">Matt Herwig</a></span>
+        <span><a href="https://github.com/mattherwig/hopper">Source</a> · <a href="https://github.com/sponsors/mattherwig">Sponsor</a></span>
+      </div>
+    </footer>
   </div>
-</footer>
+</main>
 
 </body>
 </html>

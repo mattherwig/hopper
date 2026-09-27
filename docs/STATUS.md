@@ -2,6 +2,11 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Landing page
+
+- `site/index.html` rebuilt around "Built for context switchers." White page, navy type, visor gradient (magenta `#FD019A` → blue `#125CEF`) on the headline only. Install button is blue. Three pillars in order: Search (`hopper-1`), Agents (`hopper-2`), Apps / Back (`hopper-3`), then the demo GIF under the hero. How it works, the two tables, and Setup stay below.
+- Symlinks: `search.png`, `agents.png`, `history.png`. `tabs.png` removed (it pointed at the commands still). Pages workflow now redeploys when hopper-2 or hopper-3 changes.
+
 ## 2026-09-27 — Demo GIF
 
 - `extension/media/demo.gif` retaken: Search and Agents typed out (not shown as commands), Claude sized before the jump, Notion / Safari / a one-word note as the cast, copy then Toggle into Google. Lessons are in the `demo-gif` skill.
