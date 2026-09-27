@@ -45,25 +45,26 @@ extension/                                    the Raycast extension; everything 
   src/back.ts, src/forward.ts,
   src/toggle.ts                               no-view commands (thin; call runNavigation)
   src/history.tsx                             view command: List of running apps by recency
-  src/tabs.tsx, src/app-tabs.tsx              view commands: tab-level list (all apps / current app), thin; render TabList
+  src/tabs.tsx, src/app-tabs.tsx              Search / Search Current App (names `tabs` / `app-tabs`, ADR-022), thin; render SearchList
   src/agents.tsx, src/next-agent.ts           Agents (view, thin; renders AgentList) and Next Agent (no-view: jump to the longest-waiting agent)
-  src/components/                             shared UI: tab-list.tsx (the tab-level List), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
+  src/components/                             shared UI: search-list.tsx (Search: tabs + agents), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
     navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
     history.ts                                PURE filters on the app list (exclude, remove), unit-tested
     load-history.ts                           glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
     run-navigation.ts                         glue: read MRU, LocalStorage state, navigate(), activate
-  src/lib/tabs/                               tab level (Tabs, Tabs in Current App): places inside apps and their panes — PURE, sources get OS access via a Platform
+  src/lib/tabs/                               place level (Search): tabs, windows, sessions inside apps, and their panes — PURE, sources get OS access via a Platform
     model.ts                                  Tab, Pane, TabSource types; how to add an app or an action
-    registry.ts                               which source handles which app (windows is the fallback) — add new apps here
+    registry.ts                               which source handles which app (windows is the fallback), plus DISCOVERED sources of places inside other apps (herdr) — add new apps here
     search.ts                                 search bar filter + ranking (typos, app-name first; ADR-015)
     load.ts                                   read all apps' tabs in parallel, order them, route selection (and pane selection) to the source
     history.ts, reopen.ts                     Recently Closed (ADR-019)
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
     sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript; terminals report panes with tty);
+                                              herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-022);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
-  src/lib/agents/                             agent level (Agents, Next Agent, status in Tabs) — PURE (ADR-021)
+  src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-021)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
     registry.ts                               the agent sources — add new agent products here
     sources/                                  claude (~/.claude/sessions + Claude app files), codex (app-server daemon), cursor (state.vscdb),
@@ -77,7 +78,8 @@ extension/                                    the Raycast extension; everything 
     os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
     macos.ts                                  getRecentApps() (calls Swift, apps with pid) + activateApp() via Raycast open()
-    agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Tabs
+    processes.ts                              PURE: process-tree helpers (app of a process, herdr client)
+    agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Search
   swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift (app level);
                                               AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level); Processes.swift (agent level)
   assets/extension-icon.png                   Store icon, 512x512

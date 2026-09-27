@@ -1,7 +1,7 @@
 // PURE: reading every app's tabs through its source, ordering them, and routing a selection back.
 
 import type { App, Platform, Tab } from "./model";
-import { sourceById, sourceFor } from "./registry";
+import { DISCOVERED, sourceById, sourceFor } from "./registry";
 
 export interface Failure {
   app: App;
@@ -32,11 +32,15 @@ export async function loadTabs(apps: App[], platform: Platform): Promise<LoadRes
     return [] as Tab[];
   };
 
-  const reads = [...groups].flatMap(([source, group]) =>
-    source.listAll
-      ? [source.listAll(group, platform).catch(fail(group))]
-      : group.map((app) => source.list(app, platform).catch(fail([app]))),
-  );
+  const reads = [
+    ...[...groups].flatMap(([source, group]) =>
+      source.listAll
+        ? [source.listAll(group, platform).catch(fail(group))]
+        : group.map((app) => source.list(app, platform).catch(fail([app]))),
+    ),
+    // Places inside other apps: only listed under apps being read. A failure here doesn't blame an app.
+    ...DISCOVERED.map((source) => source.discover!(apps, platform).catch(() => [] as Tab[])),
+  ];
   const [accessibility, ...results] = await Promise.all([platform.accessibilityTrusted(), ...reads]);
   return {
     tabs: orderTabs(

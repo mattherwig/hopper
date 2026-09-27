@@ -44,7 +44,7 @@ export interface Agent {
   resumeCommand?: string;
   /** Session ids another source may report for the same agent (herdr knows the Claude session in a pane). */
   sessionIds?: string[];
-  /** Key of the Tab that shows this agent, when its host is a link (a Claude Code session listed by Tabs). */
+  /** Key of the Tab that shows this agent, when its host is a link (a Claude Code session or herdr tab listed by Search). */
   placeKey?: string;
 }
 

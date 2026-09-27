@@ -189,14 +189,14 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
   <section id="demo">
     <div class="wrap">
-      <div class="shot"><img src="demo.gif" alt="Jumper demo: Back, Forward, Toggle, History, and a Tabs search jumping to a terminal workspace" width="960" height="625"></div>
+      <div class="shot"><img src="demo.gif" alt="Jumper demo: Back, Forward, Toggle, History, and a Search jumping to a terminal workspace" width="960" height="625"></div>
     </div>
   </section>
 
   <section id="features">
     <div class="wrap">
       <p class="eyebrow">Three ways to jump</p>
-      <h2>Apps, tabs, and agents</h2>
+      <h2>Apps, search, and agents</h2>
       <p class="lede">Move between apps with hotkeys, like Back and Forward in a browser. Open one list of everything open inside them and pick what you want. Or go straight to the AI agent that's waiting on you, wherever it runs.</p>
 
       <div class="levels">
@@ -212,12 +212,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
         </article>
 
         <article class="level">
-          <header><h3>Tabs</h3></header>
-          <p>One search across the tabs, windows, and sessions of every running app.</p>
-          <div class="shot"><img src="tabs.png" alt="Tabs command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
+          <header><h3>Search</h3></header>
+          <p>One search across the tabs, windows, sessions, and agents of every running app.</p>
+          <div class="shot"><img src="tabs.png" alt="Search command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Tabs</b><kbd>⌃⌘</kbd><span>Search browser tabs, terminal tabs, Claude and Muse sessions, Notion tabs, and any app's windows, then jump straight to one.</span></li>
-            <li><b>Tabs in Current App</b><span>The same, for just the app you're in.</span></li>
+            <li><b>Search</b><kbd>⌃⌘</kbd><span>Search browser tabs, terminal tabs, herdr workspaces, Claude and Muse sessions, Notion tabs, any app's windows, and agents, then jump straight to one.</span></li>
+            <li><b>Search Current App</b><span>The same, for just the app you're in.</span></li>
           </ul>
         </article>
 
@@ -236,8 +236,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <section>
     <div class="wrap">
       <p class="eyebrow">How it works</p>
-      <h2>Browser rules for apps, one list for tabs</h2>
-      <p class="lede">Apps come from the order macOS already keeps for Cmd+Tab, so nothing runs in the background. Tabs are read from each app when you open the list.</p>
+      <h2>Browser rules for apps, one list for everything else</h2>
+      <p class="lede">Apps come from the order macOS already keeps for Cmd+Tab, so nothing runs in the background. Search reads each app when you open it.</p>
       <div class="how">
         <div>
           <h3>Apps</h3>
@@ -248,13 +248,13 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           </ul>
         </div>
         <div>
-          <h3>Tabs</h3>
+          <h3>Search</h3>
           <ul class="facts">
             <li><strong>Apps are ordered by recent use;</strong> within an app, active tabs come first.</li>
             <li><strong>Search forgives typos</strong> ("caude" finds Claude) and matches app names first: an app's own tabs before tabs that mention it.</li>
             <li><strong>Picking an entry selects it</strong> in its app and brings the app to the front.</li>
             <li><strong>Copy URL</strong> and <strong>Copy Title</strong> are in the action panel.</li>
-            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, and documents closed since Tabs last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
+            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, and documents closed since Search last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
             <li><strong>Apps Jumper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
           </ul>
         </div>
@@ -274,13 +274,14 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <section>
     <div class="wrap">
       <p class="eyebrow">Supported apps</p>
-      <h2>What Tabs finds</h2>
+      <h2>What Search finds</h2>
       <table>
         <thead><tr><th>App</th><th>Lists</th></tr></thead>
         <tbody>
           <tr><td>Chrome, Brave, Edge, Vivaldi, Chromium, Safari</td><td>Tabs (never incognito or private windows)</td></tr>
           <tr><td>iTerm, Terminal</td><td>Tabs, with the status of an agent running in them</td></tr>
           <tr><td>cmux</td><td>Workspaces, with the status of an agent running in them</td></tr>
+          <tr><td>herdr</td><td>Workspaces and tabs, under the terminal running herdr, with their agents' status</td></tr>
           <tr><td>Claude</td><td>Code sessions with their status, plus Chat and Cowork conversations, even with the sidebar hidden</td></tr>
           <tr><td>Muse</td><td>Main chat and side chats while the side chats panel is open</td></tr>
           <tr><td>Notion</td><td>Tabs of the front window with each page's parent pages, then its other windows</td></tr>
@@ -309,8 +310,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <h2>Setup</h2>
       <ol class="steps">
         <li><span>Install Jumper from the <a href="https://www.raycast.com/">Raycast</a> Store.</span></li>
-        <li><span>Assign hotkeys to Back, Forward, Toggle, Tabs (<kbd>⌃⌘</kbd>), and Next Agent (<kbd>⌃⌥A</kbd>) in Raycast Settings → Extensions → Jumper.</span></li>
-        <li><span>First time in Tabs: allow <strong>Automation</strong> and <strong>Accessibility</strong> when asked.</span></li>
+        <li><span>Assign hotkeys to Back, Forward, Toggle, Search (<kbd>⌃⌘</kbd>), and Next Agent (<kbd>⌃⌥A</kbd>) in Raycast Settings → Extensions → Jumper.</span></li>
+        <li><span>First time in Search: allow <strong>Automation</strong> and <strong>Accessibility</strong> when asked.</span></li>
       </ol>
     </div>
   </section>

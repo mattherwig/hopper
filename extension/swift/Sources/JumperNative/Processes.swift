@@ -18,9 +18,10 @@ struct RunningProcess: Codable {
 
 private let interpreters: Set<String> = ["node", "bun", "deno", "python", "python3", "ruby"]
 
-/// Every process of the current user, from one sysctl read (a few ms; no permissions needed).
+/// Every process, from one sysctl read (a few ms; no permissions needed). All users', not just ours: a terminal's
+/// `login` runs as root, and parent chains from an agent to its terminal app go through it.
 func readProcesses() -> [RunningProcess] {
-  var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_UID, Int32(getuid())]
+  var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
   var size = 0
   guard sysctl(&mib, UInt32(mib.count), nil, &size, nil, 0) == 0 else { return [] }
   // Room for processes started between the two calls.

@@ -52,6 +52,12 @@ export interface TabSource<Ref = unknown> {
   bundleIds: readonly string[];
   /** Tabs of one app, in the app's own order. */
   list(app: App, platform: Platform): Promise<Tab<Ref>[]>;
+  /**
+   * For places that aren't an app of their own but live inside one (herdr, running in some terminal): tabs found
+   * among `apps`, each under the app it lives in. Such sources have no bundleIds and are listed in registry.ts's
+   * DISCOVERED.
+   */
+  discover?(apps: App[], platform: Platform): Promise<Tab<Ref>[]>;
   /** Optional batch form of `list`, used when present: reads many apps with one native call. */
   listAll?(apps: App[], platform: Platform): Promise<Tab<Ref>[]>;
   /** Select the tab inside its app. The caller brings the app to the front afterwards. Throws TabGoneError. */

@@ -80,7 +80,14 @@ export function mergeAgents(agents: Agent[], runsInHerdr: (pid: number) => boole
     const pane = agent.sessionIds?.map((id) => herdrBySession.get(id)).find(Boolean);
     if (pane) {
       absorbed.add(pane.key);
-      return [{ ...agent, host: pane.host, status: agent.status === "unknown" ? pane.status : agent.status }];
+      return [
+        {
+          ...agent,
+          host: pane.host,
+          placeKey: pane.placeKey,
+          status: agent.status === "unknown" ? pane.status : agent.status,
+        },
+      ];
     }
     if (agent.source === "cli" && herdr.length > 0 && agent.host.kind === "process" && runsInHerdr(agent.host.pid)) {
       return [];

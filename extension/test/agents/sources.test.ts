@@ -7,7 +7,8 @@ import {
   statusOf as cursorStatus,
   toAgents as cursorAgents,
 } from "../../src/lib/agents/sources/cursor.ts";
-import { herdr, parseSnapshot } from "../../src/lib/agents/sources/herdr.ts";
+import { fromSnapshot, herdr } from "../../src/lib/agents/sources/herdr.ts";
+import { snapshotOf } from "../../src/lib/tabs/sources/herdr.ts";
 import { webAgents } from "../../src/lib/agents/sources/web.ts";
 import type { Tab } from "../../src/lib/tabs/model.ts";
 import { fakePlatform } from "../fake-platform.ts";
@@ -81,7 +82,7 @@ const snapshot = {
 };
 
 test("herdr: agents from a snapshot, with the session they run and their pane", () => {
-  const agents = parseSnapshot(snapshot, "/s");
+  const agents = fromSnapshot(snapshotOf(snapshot)!, "/s");
   assert.deepEqual(
     agents.map((a) => [a.product, a.id, a.status, a.cwd, a.sessionIds, a.host]),
     [
@@ -103,7 +104,7 @@ test("herdr: agents from a snapshot, with the session they run and their pane", 
       ],
     ],
   );
-  assert.deepEqual(parseSnapshot({ error: { code: "x" } }, "/s"), []);
+  assert.equal(snapshotOf({ error: { code: "x" } }), undefined);
 });
 
 test("herdr: asks every session's socket; one that doesn't answer is skipped", async () => {

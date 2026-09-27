@@ -4,6 +4,7 @@ import type { App, TabSource } from "./model";
 import { chromium } from "./sources/chromium";
 import { claude } from "./sources/claude";
 import { cmux } from "./sources/cmux";
+import { herdr } from "./sources/herdr";
 import { iterm } from "./sources/iterm";
 import { muse } from "./sources/muse";
 import { notion } from "./sources/notion";
@@ -13,11 +14,14 @@ import { windows } from "./sources/windows";
 
 export const SOURCES: readonly TabSource[] = [chromium, safari, cmux, iterm, terminal, claude, muse, notion];
 
+/** Sources of places inside other apps (TabSource.discover), read alongside every list. */
+export const DISCOVERED: readonly TabSource[] = [herdr];
+
 /** The fallback for every app no source claims. */
 export const FALLBACK: TabSource = windows;
 
 const byBundleId = new Map(SOURCES.flatMap((s) => s.bundleIds.map((id) => [id, s] as const)));
-const byId = new Map([...SOURCES, FALLBACK].map((s) => [s.id, s]));
+const byId = new Map([...SOURCES, ...DISCOVERED, FALLBACK].map((s) => [s.id, s]));
 
 export function sourceFor(app: App): TabSource {
   return byBundleId.get(app.bundleId) ?? FALLBACK;

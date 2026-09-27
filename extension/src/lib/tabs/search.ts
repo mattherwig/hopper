@@ -16,8 +16,8 @@ const KEYS = [
   { name: "kind", weight: 0.5 },
 ];
 
-/** The fields search looks at: open tabs, and Recently Closed entries. */
-type Searchable = Pick<Tab, "title" | "detail" | "url" | "kind"> & { app: Pick<Tab["app"], "name"> };
+/** The fields search looks at: open tabs, Recently Closed entries, and agents (kind "agent", detail their product). */
+export type Searchable = Pick<Tab, "title" | "detail" | "url"> & { kind: string; app: Pick<Tab["app"], "name"> };
 
 /** Tabs matching every word of `query`, best match first; ties keep the input order (recency). */
 export function searchTabs<T extends Searchable>(tabs: T[], query: string): T[] {

@@ -325,7 +325,7 @@ def gif() -> None:
         ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.4),
         ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.7),
         ({"keys": ["↩"], "title": "Switch to App", "detail": "jump straight there"}, "key code 36", 1.5),
-        ({"keys": tabs, "title": "Tabs", "detail": "tabs, windows, and sessions of every app"}, "tabs", 2.0),
+        ({"keys": tabs, "title": "Search", "detail": "tabs, sessions, and agents of every app"}, "tabs", 2.0),
         ({"keys": [tab_query], "title": "Fuzzy search", "detail": "finds the github-pages workspace in cmux"}, f"paste:{tab_query}", 1.8),
         ({"keys": ["↩"], "title": "Jump to Tab", "detail": "straight to that workspace"}, "key code 36", 2.0),
         ({}, None, 0.3),

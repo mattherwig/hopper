@@ -40,7 +40,7 @@ export interface Platform {
   openUrl(url: string, appPath?: string): Promise<void>;
   /** Rows of a read-only query on an SQLite file, e.g. an app's local cache. Rejects if the file is missing. */
   querySqlite(path: string, sql: string): Promise<Record<string, unknown>[]>;
-  /** Every process of the current user. */
+  /** Every process (all users': parent chains go through root's `login`). */
   processes(): Promise<Process[]>;
   /**
    * Sends one JSON request over a Unix socket speaking newline-delimited JSON and returns the parsed response

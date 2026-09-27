@@ -1,4 +1,4 @@
-// Glue: the agent level on macOS, shared by the Agents list, Next Agent, and the status shown in Tabs.
+// Glue: the agent level on macOS, shared by the Agents list, Next Agent, and the status shown in Search.
 
 import { loadAgents, type AgentLoadResult } from "../agents/load";
 import { loadTabs } from "../tabs/load";
@@ -13,7 +13,7 @@ const BROWSER_SOURCES = new Set(["chromium", "safari"]);
 
 /**
  * All agents. `withWebAgents` also reads browser tabs for web agents (the Agents list; Next Agent skips them:
- * their status is never known). `tabs`: tabs already read (Tabs), reused to locate terminal agents.
+ * their status is never known). `tabs`: tabs already read (Search), reused to locate terminal agents.
  */
 export async function loadAllAgents(
   options: { withWebAgents?: boolean; tabs?: Tab[] } = {},

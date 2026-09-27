@@ -10,7 +10,7 @@ import { searchTabs } from "../lib/tabs/search";
 import type { ListedAgent } from "../lib/agents/load";
 import { STATUS_TITLE } from "../lib/agents/status";
 import { loadAllAgents } from "../lib/platform/agents";
-import { STATUS_COLOR } from "./agent-list";
+import { AgentItem, STATUS_COLOR } from "./agent-list";
 import { SwitchAction } from "./switch-action";
 
 export type Scope = "all" | "current";
@@ -31,8 +31,8 @@ async function load(scope: Scope) {
   // The frontmost app is recent[0]: Raycast itself is filtered out by getRecentApps().
   const apps = scope === "current" ? recent.slice(0, 1) : recent;
   const result = await loadTabs(apps, macosPlatform);
-  // Only apps this read speaks for can have closed tabs: all of them (running or not) for Tabs, the current app
-  // for Tabs in Current App, never an app that failed to read. Without Accessibility some sources see nothing,
+  // Only apps this read speaks for can have closed tabs: all of them (running or not) for Search, the current app
+  // for Search Current App, never an app that failed to read. Without Accessibility some sources see nothing,
   // which must not look like everything closed.
   const failed = new Set(result.failures.map((f) => f.app.bundleId));
   const covered = (bundleId: string) =>
@@ -45,24 +45,34 @@ async function load(scope: Scope) {
   };
 }
 
-/** Tabs, windows, and sessions of every running app (or only the current one), grouped by app. */
-export function TabList({ scope }: { scope: Scope }) {
+/**
+ * Search: tabs, windows, sessions, and agents of every running app (or only the current one), grouped by app.
+ * Agents shown on a tab (a Claude Code session, a terminal running an agent) are a status on that tab; others
+ * (Cursor agents, Codex app threads...) get their own section.
+ */
+export function SearchList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
   // looks the tab up again and reports it if it's gone.
   const { data, isLoading, revalidate } = useCachedPromise(load, [scope], { keepPreviousData: true });
   const { tabs = [], closed = [], failures = [], accessibility = true, current } = data ?? {};
-  // Agents running in these tabs (a Claude Code session, a terminal running Codex...): their status is shown on
-  // the tab. Read after the tabs, which it reuses, so the list shows first.
-  const { data: agentData } = useCachedPromise((read: Tab[]) => loadAllAgents({ tabs: read }), [tabs], {
-    execute: tabs.length > 0,
-    keepPreviousData: true,
-  });
+  // Agents: read after the tabs, which it reuses to locate them, so the list shows first.
+  const { data: agentData, revalidate: reloadAgents } = useCachedPromise(
+    (read: Tab[]) => loadAllAgents({ tabs: read }),
+    [tabs],
+    { execute: tabs.length > 0, keepPreviousData: true },
+  );
   const agentByTab = new Map(
     (agentData?.agents ?? []).flatMap((a) => {
-      const key = a.location?.tab?.key ?? a.placeKey;
+      const key = placeOf(a);
       return key ? [[key, a] as const] : [];
     }),
   );
+  const tabKeys = new Set(tabs.map((t) => t.key));
+  const otherAgents = (agentData?.agents ?? []).filter((a) => {
+    const key = placeOf(a);
+    const inScope = scope === "all" || a.location?.app.bundleId === current?.bundleId;
+    return a.location && inScope && !(key && tabKeys.has(key));
+  });
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
 
@@ -72,9 +82,16 @@ export function TabList({ scope }: { scope: Scope }) {
       filtering={false}
       onSearchTextChange={setQuery}
       searchBarPlaceholder={
-        scope === "current" && current ? `Filter ${current.name} tabs` : "Filter tabs, windows, and sessions"
+        scope === "current" && current ? `Search ${current.name}` : "Search apps, tabs, sessions, and agents"
       }
     >
+      {otherAgents.length > 0 && (
+        <List.Section title="Agents" subtitle={String(otherAgents.length)}>
+          {searchTabs(otherAgents.map(searchableAgent), query).map(({ agent }) => (
+            <AgentItem key={agent.key} agent={agent} onRefresh={reloadAgents} />
+          ))}
+        </List.Section>
+      )}
       {groupByApp(searchTabs(tabs, query)).map(({ app, tabs }) => (
         <List.Section key={app.bundleId} title={app.name} subtitle={String(tabs.length)}>
           {tabs.map((tab) => (
@@ -195,6 +212,23 @@ function ClosedItem({ entry, onForget }: { entry: ClosedTab; onForget: () => voi
       }
     />
   );
+}
+
+/** Key of the tab that shows an agent: where it was located, or the tab its source says shows it. */
+function placeOf(agent: ListedAgent): string | undefined {
+  return agent.location?.tab?.key ?? agent.placeKey;
+}
+
+/** An agent in the shape search reads. */
+function searchableAgent(agent: ListedAgent) {
+  return {
+    agent,
+    title: agent.title,
+    detail: [agent.product, agent.project?.name].filter(Boolean).join(" "),
+    url: undefined,
+    kind: "agent",
+    app: { name: agent.location?.app.name ?? agent.product },
+  };
 }
 
 /** One section per app, in order of each app's first tab (so the best search match's app comes first). */

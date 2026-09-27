@@ -83,7 +83,7 @@ export function AgentList() {
   );
 }
 
-function AgentItem({ agent, onRefresh }: { agent: ListedAgent; onRefresh: () => void }) {
+export function AgentItem({ agent, onRefresh }: { agent: ListedAgent; onRefresh: () => void }) {
   const where = agent.location?.label ?? "Not found";
   const place = agent.project ? projectLabel(agent.project) : agent.cwd ? tildify(agent.cwd) : undefined;
   return (
