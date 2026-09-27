@@ -5,6 +5,8 @@ import { codex, statusOf as codexStatus, terminalFor, threadsDb } from "../../sr
 import {
   cursor,
   parseHeaders,
+  transcriptPath,
+  turnOpen,
   statusOf as cursorStatus,
   toAgents as cursorAgents,
 } from "../../src/lib/agents/sources/cursor.ts";
@@ -82,6 +84,28 @@ test("cursor: headers from the composerHeaders table, the old blob when Cursor h
   };
   assert.deepEqual(await run(true), { ids: ["a"], legacy: false });
   assert.deepEqual(await run(false), { ids: ["a"], legacy: true });
+});
+
+test("cursor: an agent saved as aborted is working while its transcript's turn is open", async () => {
+  assert.equal(
+    transcriptPath("/h", "/Users/me/my_app.v2", "x"),
+    "/h/.cursor/projects/Users-me-my-app-v2/agent-transcripts/x/x.jsonl",
+  );
+  assert.equal(turnOpen('{"role":"user"}\n'), true);
+  assert.equal(turnOpen('{"role":"user"}\n{"type":"turn_ended","status":"success"}\n'), false);
+  assert.equal(turnOpen(""), false);
+  const header = { id: "a", unread: 0, blocking: 0, updatedAt: 5, folder: "/p/app" };
+  const statusFor = async (tail: string) => {
+    const platform = fakePlatform({
+      querySqlite: async (_db, sql) =>
+        sql.includes("from composerHeaders") ? [header] : [{ id: "a", status: "aborted" }],
+      readTail: async () => tail,
+    });
+    const apps = [{ name: "Cursor", bundleId: "com.todesktop.230313mzl4w4u92", path: "/Applications/Cursor.app" }];
+    return (await cursor.list({ platform, apps, now: 10 } as never))[0]?.status;
+  };
+  assert.equal(await statusFor('{"role":"user"}'), "working");
+  assert.equal(await statusFor('{"type":"turn_ended","status":"success"}'), "idle");
 });
 
 const snapshot = {

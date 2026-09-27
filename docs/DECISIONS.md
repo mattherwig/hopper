@@ -214,6 +214,8 @@ Mechanics learned in the prototype:
 
 **Context.** Cursor 3.15 moved agent headers out of the `composer.composerHeaders` blob in `ItemTable` into a `composerHeaders` table (one row per agent, `isSubagent` column; `composer.composerHeaders.tableGateEnabled` = true). The blob stopped updating, so the source saw only months-old agents and listed none. Jumping opened the agent's folder with Cursor, which in Cursor 3.x (agents live in the "Cursor Agents" window) opened an extra editor window that looks like VS Code. Cursor's bundle handles `cursor://anysphere.cursor-deeplink/agent?id=<composerId>` (`handleAgentOpen` → `glass.openCloudAgentById`, which resolves the id through the local agent repository, not only `bc-` cloud ids).
 
-**Decision.** Read headers from `composerHeaders` (non-subagent rows); if the table is missing (older Cursor), read the blob. Jump with the agent deep link.
+Watching the database through a run: 3.15 never saves `generating`; a running agent's `composerData` status is `aborted` from the start of a turn and `completed` at its end. Each agent's transcript, `~/.cursor/projects/<folder, non-alphanumerics as ->/agent-transcripts/<id>/<id>.jsonl`, ends each turn with `{"type":"turn_ended","status":"success"}`. Agents created but never sent a message have no `lastUpdatedAt` and no name.
+
+**Decision.** Read headers from `composerHeaders` (non-subagent rows); if the table is missing (older Cursor), read the blob. An agent saved `aborted` and updated in the last day is working while its transcript's last line isn't `turn_ended`. Headers without `lastUpdatedAt` are left out. Jump with the agent deep link.
 
 **Consequences.** Verified live on Cursor 3.15.6: the current agent listed; the link brings the Agents window forward with no editor window and no error. The link is undocumented app behavior; if a later Cursor drops it, Cursor shows "We can't find this agent".
