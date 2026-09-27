@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Obsidian tabs (ADR-027)
+
+- Obsidian 1.13.7 installed with Homebrew (`brew install --cask obsidian`); test vault `~/Obsidian/Hopper Test` registered in `obsidian.json`.
+- `sources/obsidian.ts`: every open vault's tabs from `.obsidian/workspace.json` (main + popouts), selected by pressing the tab header (new `Platform.pressWebElement` / Swift `pressWebElement`); URI fallback and Recently Closed via `obsidian://open?vault=<id>&file=…&paneType=tab`.
+- Verified: unit tests, lint, build; the Swift press against live Obsidian (main, popout, duplicate titles, window raise). Not verified: picking an Obsidian tab from Search in Raycast (smoke test `tabs`).
+
 ## 2026-09-27 — Raycast mark on white (in progress)
 
 - Palette in use: magenta `#FD019A`, blue `#125CEF`, white. Navy stays inside the rabbit drawing.
