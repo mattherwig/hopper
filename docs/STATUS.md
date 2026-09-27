@@ -9,7 +9,9 @@ Done:
 - `src/lib` regrouped by level (`apps/`, `tabs/`, `platform/`). 43 unit tests, sources tested against a fake Platform.
 - AppleScript for every source compile-checked against the real dictionaries and run live (read-only); Claude and Muse read and open verified from a standalone helper build. Prototype jumps tested by owner for cmux, iTerm, Terminal, Muse.
 
-Not done: jumps not re-tested in Raycast on this branch; Messages (needs its window open to probe); Cursor (descoped, needs a spike); tab Back/Forward (needs a switch recorder); README demo GIF / Store screenshots don't show the new commands.
+- Owner smoke-tested the app-level commands on this branch (History uses the new shared SwitchAction): good.
+
+Not done: Messages (probed, out: rows are unlabeled groups whose only text is "name, preview, time", and group names contain commas); Cursor (descoped, needs a spike); tab Back/Forward (needs a switch recorder); demo GIF / Store screenshots (#11).
 
 ## 2026-09-26 — v1 submitted to the Raycast Store (#1)
 
