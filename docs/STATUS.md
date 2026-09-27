@@ -2,6 +2,10 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-26 — Tabs search: typo-tolerant, app first (ADR-015, branch `feature/tab-search-ranking`)
+
+- Tabs filters with `tabs/search.ts` instead of Raycast's filter: "caude" finds Claude; typing an app's name lists that app's tabs before browser/terminal tabs titled with it. 7 new unit tests. Not yet tried live in Raycast.
+
 ## 2026-09-26 — Landing page: tab level + new tagline (branch `site/tabs-branding`)
 
 - `site/index.html` rebuilt around "Jump to any app, tab, or session": demo GIF up top, Apps and Tabs as equal columns (Store screenshots jumper-1 / jumper-5, symlinked), how it works for both, supported-apps table, permissions in Setup.

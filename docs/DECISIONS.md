@@ -107,3 +107,11 @@ Mechanics learned in the prototype:
 **Decision.** List Code sessions from Claude's per-session files, `~/Library/Application Support/Claude/claude-code-sessions/<account>/<org>/local_<uuid>.json` (`sessionId`, `title`, `cwd`, `isArchived`, `lastFocusedAt`), skipping archived ones, most recently focused first. Open one with the deep link through `Platform.openUrl`. Keep reading the sidebar for Chat-mode conversations (not stored locally), adding rows the files don't have. The open session is still named by the "<name>, rename session" label, which stays visible with the sidebar hidden. Fall back to windows if both are empty.
 
 **Consequences.** Code sessions show across all projects without Accessibility and regardless of sidebar state (~16ms for 11 files). The deep link is a public entry point (Claude's own Dock menu and Spotlight use it); the file layout is undocumented and may change, in which case the source degrades to the sidebar. Muse has no equivalent (no Spotlight items, no thread deep link, no local chat list; `hatch://` routes tested and ignored), tracked in #13.
+
+## ADR-015: Own search ranking in Tabs, app before mentions, typo-tolerant (2026-09-26)
+
+**Context.** Raycast's built-in List filter matched tabs through `keywords` (app name, detail, kind) but gave no control over ranking and no typo tolerance: typing "claude" listed browser tabs and cmux workspaces titled "Claude" ahead of (or mixed with) the Claude app's own sessions, and "caude" found nothing.
+
+**Decision.** Tabs turns Raycast filtering off (`filtering={false}` + `onSearchTextChange`) and filters with the PURE `tabs/search.ts`. Every query word must match a field (app name, title, detail, URL, kind); a word scores by match quality: exact > prefix > word prefix > substring > typo (edit distance ≤1 for words of 4–7 letters, ≤2 from 8, adjacent swaps count as one) > letters in order within a word (3+ letters). App-name matches get a bonus, so an app's own tabs outrank tabs that merely mention it. Results sort by score, ties keep recency; sections follow their app's best tab.
+
+**Consequences.** Search ranking is ours to tune and unit-tested; no Raycast highlighting of matched text. Filtering is synchronous over the cached list (hundreds of tabs, negligible cost).
