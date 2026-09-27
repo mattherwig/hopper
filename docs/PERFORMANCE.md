@@ -3,7 +3,7 @@
 ## How to profile
 
 1. `cd extension && npm run dev` (in background, log to a file).
-2. In-command step timings: dev builds log `PERF start <epoch>`, `PERF read <ms>`, `PERF activated <ms>` (see `timer()` in `extension/src/lib/run-navigation.ts`; silent in production).
+2. In-command step timings: dev builds log `PERF start <epoch>`, `PERF read <ms>`, `PERF activated <ms>` (see `timer()` in `extension/src/lib/apps/run-navigation.ts`; silent in production).
 3. End-to-end (trigger → frontmost app changed):
    ```bash
    swiftc -O -o /tmp/aff-bench scripts/bench.swift   # from the repo root

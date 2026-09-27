@@ -44,7 +44,7 @@ Not covered: "Back at oldest" (the owner's own apps lie past the demo apps; `nav
 ## How it knows the expected app
 
 - It sets up a known app order itself with `DemoApps` from `scripts/media/store_media.py` (built-in apps launched with `open -a`, the owner's Ghostty activated if running; nothing is framed or moved). Don't set up order with AppleScript `activate`: an AppleScript-activated Finder did not register in macOS's app order and produced false failures.
-- `Model` in `smoke.py` mirrors the rules in `extension/src/lib/navigation.ts` (snapshot, cursor, fresh start on manual switch, Toggle always fresh, skip quit apps) and `history.ts` (removed apps hidden until frontmost again, excluded apps hidden, frontmost never hidden). **If you change those rules, update `Model` too**, or the smoke test reports the new behavior as a failure.
+- `Model` in `smoke.py` mirrors the rules in `extension/src/lib/apps/navigation.ts` (snapshot, cursor, fresh start on manual switch, Toggle always fresh, skip quit apps) and `history.ts` (removed apps hidden until frontmost again, excluded apps hidden, frontmost never hidden). **If you change those rules, update `Model` too**, or the smoke test reports the new behavior as a failure.
 - Compares by process name (`ghostty` is lowercase; see `PROCESS` in `store_media.py`).
 
 ## After running

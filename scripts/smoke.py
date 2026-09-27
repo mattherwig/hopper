@@ -5,7 +5,7 @@
   python3 scripts/smoke.py --dist   # builds `ray build -e dist` into Raycast first, then restores dev mode
 
 Commands run by deeplink (Raycast ignores synthetic hotkeys). Expected results come from a small model of the rules
-in extension/src/lib/navigation.ts and history.ts, fed with the app order this script sets up itself. Takes over the
+in extension/src/lib/apps/navigation.ts and history.ts, fed with the app order this script sets up itself. Takes over the
 screen for ~2 minutes. See .claude/skills/smoke-test/SKILL.md.
 """
 

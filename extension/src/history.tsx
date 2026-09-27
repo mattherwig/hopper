@@ -10,8 +10,8 @@ import {
   Toast,
 } from "@raycast/api";
 import { showFailureToast, usePromise } from "@raycast/utils";
-import { excludeFromHistory, includeInHistory, loadHistoryState, removeFromHistory } from "./lib/load-history";
-import { activateApp, type RunningApp } from "./lib/macos";
+import { excludeFromHistory, includeInHistory, loadHistoryState, removeFromHistory } from "./lib/apps/load-history";
+import { activateApp, type RunningApp } from "./lib/platform/macos";
 
 async function load() {
   const { apps, currentHidden, excluded } = await loadHistoryState();

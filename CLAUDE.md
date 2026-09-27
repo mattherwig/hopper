@@ -45,17 +45,19 @@ extension/                                    the Raycast extension; everything 
   src/back.ts, src/forward.ts,
   src/toggle.ts                               no-view commands (thin; call runNavigation)
   src/history.tsx                             view command: List of running apps by recency
-  src/lib/navigation.ts                       PURE back/forward state machine — all logic lives here, unit-tested
-  src/lib/history.ts                          PURE filters on the app list (exclude, remove), unit-tested
-  src/lib/load-history.ts                     glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
-  src/lib/run-navigation.ts                   glue: read MRU, LocalStorage state, navigate(), activate
-  src/lib/storage.ts                          LocalStorage JSON read/write; unreadable values fall back to defaults
-  src/lib/macos.ts                            getRecentApps() (calls Swift) + activateApp() via Raycast open()
+  src/lib/apps/                               app level (Back/Forward/Toggle/History)
+    navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
+    history.ts                                PURE filters on the app list (exclude, remove), unit-tested
+    load-history.ts                           glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
+    run-navigation.ts                         glue: read MRU, LocalStorage state, navigate(), activate
+  src/lib/platform/                           macOS / Raycast glue shared by every level
+    storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
+    macos.ts                                  getRecentApps() (calls Swift) + activateApp() via Raycast open()
   swift/Sources/JumperNative/                 native helper: RecentApps.swift (logic, plain Swift) + Exports.swift (@raycast)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
   media/demo.gif                              README demo, shown on the Store page (skill: demo-gif)
-  test/*.test.ts                              node:test, run via --experimental-strip-types
+  test/<level>/*.test.ts                      node:test, run via --experimental-strip-types; mirrors src/lib/
 docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
 scripts/smoke.py                              end-to-end smoke test of every feature in Raycast (skill: smoke-test)
@@ -67,7 +69,7 @@ README.md                                     GitHub landing page; points to ext
 
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`) are permanent: users' hotkeys bind to them.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
-- Keep `navigation.ts` and `history.ts` free of Raycast/Node imports so `npm test` works without Raycast.
+- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`) free of Raycast/Node imports so `npm test` works without Raycast.
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `extension/assets/compiled_raycast_swift/` is build output and stays gitignored.
