@@ -2,11 +2,15 @@ import { Action, ActionPanel, Icon, Keyboard, List, open } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
 import { useState } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
-import { macosTabPlatform } from "../lib/platform/tabs";
+import { macosPlatform } from "../lib/platform/os";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
 import { searchTabs } from "../lib/tabs/search";
+import type { ListedAgent } from "../lib/agents/load";
+import { STATUS_TITLE } from "../lib/agents/status";
+import { loadAllAgents } from "../lib/platform/agents";
+import { STATUS_COLOR } from "./agent-list";
 import { SwitchAction } from "./switch-action";
 
 export type Scope = "all" | "current";
@@ -26,14 +30,14 @@ async function load(scope: Scope) {
   const recent = await getRecentApps();
   // The frontmost app is recent[0]: Raycast itself is filtered out by getRecentApps().
   const apps = scope === "current" ? recent.slice(0, 1) : recent;
-  const result = await loadTabs(apps, macosTabPlatform);
+  const result = await loadTabs(apps, macosPlatform);
   // Only apps this read speaks for can have closed tabs: all of them (running or not) for Tabs, the current app
   // for Tabs in Current App, never an app that failed to read. Without Accessibility some sources see nothing,
   // which must not look like everything closed.
   const failed = new Set(result.failures.map((f) => f.app.bundleId));
   const covered = (bundleId: string) =>
     result.accessibility && !failed.has(bundleId) && (scope === "all" || bundleId === recent[0]?.bundleId);
-  const closed = await recordHistory(macosTabPlatform, result.tabs, covered, Date.now());
+  const closed = await recordHistory(macosPlatform, result.tabs, covered, Date.now());
   return {
     ...result,
     closed: scope === "all" ? closed : closed.filter((c) => c.app.bundleId === recent[0]?.bundleId),
@@ -47,6 +51,18 @@ export function TabList({ scope }: { scope: Scope }) {
   // looks the tab up again and reports it if it's gone.
   const { data, isLoading, revalidate } = useCachedPromise(load, [scope], { keepPreviousData: true });
   const { tabs = [], closed = [], failures = [], accessibility = true, current } = data ?? {};
+  // Agents running in these tabs (a Claude Code session, a terminal running Codex...): their status is shown on
+  // the tab. Read after the tabs, which it reuses, so the list shows first.
+  const { data: agentData } = useCachedPromise((read: Tab[]) => loadAllAgents({ tabs: read }), [tabs], {
+    execute: tabs.length > 0,
+    keepPreviousData: true,
+  });
+  const agentByTab = new Map(
+    (agentData?.agents ?? []).flatMap((a) => {
+      const key = a.location?.tab?.key ?? a.placeKey;
+      return key ? [[key, a] as const] : [];
+    }),
+  );
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
 
@@ -62,7 +78,7 @@ export function TabList({ scope }: { scope: Scope }) {
       {groupByApp(searchTabs(tabs, query)).map(({ app, tabs }) => (
         <List.Section key={app.bundleId} title={app.name} subtitle={String(tabs.length)}>
           {tabs.map((tab) => (
-            <TabItem key={tab.key} tab={tab} />
+            <TabItem key={tab.key} tab={tab} agent={agentByTab.get(tab.key)} />
           ))}
         </List.Section>
       ))}
@@ -107,12 +123,20 @@ export function TabList({ scope }: { scope: Scope }) {
   );
 }
 
-function TabItem({ tab }: { tab: Tab }) {
+function TabItem({ tab, agent }: { tab: Tab; agent?: ListedAgent }) {
   return (
     <List.Item
       icon={tab.url ? getFavicon(tab.url, { fallback: Icon.Globe }) : { fileIcon: tab.app.path }}
       title={tab.title}
       accessories={[
+        ...(agent && agent.status !== "unknown"
+          ? [
+              {
+                tag: { value: agent.statusDetail ?? STATUS_TITLE[agent.status], color: STATUS_COLOR[agent.status] },
+                tooltip: agent.product,
+              },
+            ]
+          : []),
         ...(tab.active ? [{ tag: "Active" }] : []),
         { text: shortDetail(tab), tooltip: tab.detailFull },
         { icon: KIND_ICON[tab.kind], tooltip: tab.kind },
@@ -123,7 +147,7 @@ function TabItem({ tab }: { tab: Tab }) {
             title="Jump to Tab"
             failureTitle={`Could not jump to ${tab.title}`}
             onSwitch={async () => {
-              await selectTab(tab, macosTabPlatform);
+              await selectTab(tab, macosPlatform);
               await activateApp(tab.app);
             }}
           />
@@ -137,7 +161,7 @@ function TabItem({ tab }: { tab: Tab }) {
 
 function ClosedItem({ entry, onForget }: { entry: ClosedTab; onForget: () => void }) {
   const forget = async (id?: string) => {
-    await forgetClosed(macosTabPlatform, id);
+    await forgetClosed(macosPlatform, id);
     onForget();
   };
   return (
@@ -151,7 +175,7 @@ function ClosedItem({ entry, onForget }: { entry: ClosedTab; onForget: () => voi
           <SwitchAction
             title="Reopen"
             failureTitle={`Could not reopen ${entry.title}`}
-            onSwitch={() => reopenClosed(entry, macosTabPlatform)}
+            onSwitch={() => reopenClosed(entry, macosPlatform)}
           />
           {entry.url && <Action.CopyToClipboard title="Copy URL" content={entry.url} />}
           <Action

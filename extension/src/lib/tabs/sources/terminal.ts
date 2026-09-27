@@ -1,4 +1,5 @@
-// Terminal.app: tabs have no id or title of their own; the tty identifies them, the process names them.
+// Terminal.app: tabs have no id or title of their own; the tty identifies them, the process names them. Each tab
+// is one shell, so it's its own single pane (by tty), which is how agents running in it are found.
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";
 import type { App, Tab, TabSource } from "../model";
@@ -40,6 +41,7 @@ export function parse(app: App, out: string): Tab<Ref>[] {
       detail: tty,
       active: isTrue(selected),
       ref: { windowId, tty },
+      panes: [{ id: tty, tty: tty.replace(/^\/dev\//, "") }],
     };
   });
 }

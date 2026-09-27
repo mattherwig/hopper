@@ -24,7 +24,7 @@ export interface HistoryState {
   closed: ClosedTab[];
 }
 
-const KEY = "recently-closed";
+const KEY = "tabs:recently-closed";
 export const MAX_CLOSED = 100;
 export const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 

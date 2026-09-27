@@ -4,7 +4,7 @@ import { FIELD as F, RECORD as R } from "../../src/lib/tabs/applescript.ts";
 import { describeError, loadTabs, orderTabs, selectTab } from "../../src/lib/tabs/load.ts";
 import type { Tab } from "../../src/lib/tabs/model.ts";
 import { sourceFor } from "../../src/lib/tabs/registry.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const chrome = app("com.google.Chrome", "Google Chrome");
 const safari = app("com.apple.Safari", "Safari");

@@ -1,6 +1,6 @@
 # CLAUDE.md — Jumper (Raycast extension)
 
-Browser-style Back / Forward for macOS apps, shipped as a Raycast Store extension.
+Browser-style Back / Forward for macOS apps, tab search across apps, and jumping to AI agents wherever they run; shipped as a Raycast Store extension.
 Store slug `jumper`, title "Jumper".
 
 ## Start here
@@ -46,32 +46,44 @@ extension/                                    the Raycast extension; everything 
   src/toggle.ts                               no-view commands (thin; call runNavigation)
   src/history.tsx                             view command: List of running apps by recency
   src/tabs.tsx, src/app-tabs.tsx              view commands: tab-level list (all apps / current app), thin; render TabList
-  src/components/                             shared UI: tab-list.tsx (the tab-level List), switch-action.tsx (switch, then close Raycast)
+  src/agents.tsx, src/next-agent.ts           Agents (view, thin; renders AgentList) and Next Agent (no-view: jump to the longest-waiting agent)
+  src/components/                             shared UI: tab-list.tsx (the tab-level List), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
     navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
     history.ts                                PURE filters on the app list (exclude, remove), unit-tested
     load-history.ts                           glue: getRecentApps() + filters; removals + exclusions in LocalStorage; both commands read history through loadHistory()
     run-navigation.ts                         glue: read MRU, LocalStorage state, navigate(), activate
-  src/lib/tabs/                               tab level (Tabs, Tabs in Current App) — PURE, sources get OS access via a Platform
-    model.ts                                  Tab, TabSource, Platform types; how to add an app or an action
+  src/lib/tabs/                               tab level (Tabs, Tabs in Current App): places inside apps and their panes — PURE, sources get OS access via a Platform
+    model.ts                                  Tab, Pane, TabSource types; how to add an app or an action
     registry.ts                               which source handles which app (windows is the fallback) — add new apps here
-    history.ts, reopen.ts                     Recently Closed: diff of consecutive reads, reopen targets (URL / file) per source (ADR-019)
     search.ts                                 search bar filter + ranking (typos, app-name first; ADR-015)
-    load.ts                                   read all apps' tabs in parallel, order them, route selection to the source
+    load.ts                                   read all apps' tabs in parallel, order them, route selection (and pane selection) to the source
+    history.ts, reopen.ts                     Recently Closed (ADR-019)
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
-    sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript);
-                                              windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar, only while it's shown; ADR-017), notion (tab bar + deepLinkOpenNewTab links; ADR-016, ADR-020);
+    sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript; terminals report panes with tty);
+                                              windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
+  src/lib/agents/                             agent level (Agents, Next Agent, status in Tabs) — PURE (ADR-021)
+    model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
+    registry.ts                               the agent sources — add new agent products here
+    sources/                                  claude (~/.claude/sessions + Claude app files), codex (app-server daemon), cursor (state.vscdb),
+                                              herdr (socket snapshot), cli (agent CLIs by process name), web (agent URLs in browser tabs)
+    locate.ts                                 host → app / tab / pane: process parent chain + tty against panes; herdr panes
+    status.ts                                 done-until-seen, urgency order, Next Agent's pick
+    load.ts                                   read all sources, merge one agent per session, locate, attach projects; jumpToAgent
+  src/lib/projects/project.ts                 PURE: projects = git repositories (worktrees under their main checkout); a grouping, not a level
   src/lib/platform/                           macOS / Raycast glue shared by every level
+    model.ts                                  PURE: the Platform interface (OS capabilities) and App; fake in test/fake-platform.ts
+    os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
-    macos.ts                                  getRecentApps() (calls Swift) + activateApp() via Raycast open()
-    tabs.ts                                   the tab level's Platform on macOS: runAppleScript + Swift Accessibility calls
+    macos.ts                                  getRecentApps() (calls Swift, apps with pid) + activateApp() via Raycast open()
+    agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Tabs
   swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift (app level);
-                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level)
+                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level); Processes.swift (agent level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
   media/demo.gif                              README demo, shown on the Store page (skill: demo-gif)
-  test/<level>/*.test.ts                      node:test, run via --experimental-strip-types; mirrors src/lib/. test/tabs/fake-platform.ts fakes the OS
+  test/<level>/*.test.ts                      node:test, run via --experimental-strip-types; mirrors src/lib/. test/fake-platform.ts fakes the OS
   test/setup.mjs                              lets Node resolve extensionless imports ("./model") to .ts in tests
 docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
@@ -83,10 +95,11 @@ site/index.html                               GitHub Pages landing page (deploye
 
 ## Invariants (don't break)
 
-- Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`) are permanent once published: users' hotkeys bind to them.
+- Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`, `agents`, `next-agent`) are permanent once published: users' hotkeys bind to them.
 - Incognito / private browser windows never reach the tab list (ADR-018): filter them in the source, not the UI.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
-- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`) free of Raycast/Node imports so `npm test` works without Raycast. Tab sources reach the OS only through `Platform` (ADR-013).
+- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, and `platform/model.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-021).
+- Agent sources read agents' own state read-only: never install hooks, write their config, or call anything that starts, resumes, loads, or sends input to a session (ADR-021).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.
 - Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.

@@ -48,11 +48,15 @@ export async function loadTabs(apps: App[], platform: Platform): Promise<LoadRes
   };
 }
 
-/** Select `tab` inside its app. The caller brings the app to the front afterwards. */
-export async function selectTab(tab: Tab, platform: Platform): Promise<void> {
+/**
+ * Select `tab` inside its app, and one of its panes if `paneId` is given and the source can select panes. The
+ * caller brings the app to the front afterwards.
+ */
+export async function selectTab(tab: Tab, platform: Platform, paneId?: string): Promise<void> {
   const source = sourceById(tab.source);
   if (!source) throw new Error(`Unknown tab source "${tab.source}"`);
-  await source.select(tab, platform);
+  if (paneId !== undefined && source.selectPane) await source.selectPane(tab, paneId, platform);
+  else await source.select(tab, platform);
 }
 
 /**

@@ -9,6 +9,11 @@ import RaycastSwiftMacros
   readRecentApps()
 }
 
+/// Processes of the current user (agent level: liveness, tty, parent chain).
+@raycast func processes() -> [RunningProcess] {
+  readProcesses()
+}
+
 // MARK: Tab level (Accessibility; wrapped by src/lib/platform/tabs.ts)
 
 @raycast func accessibilityTrusted() -> Bool {

@@ -6,7 +6,7 @@ import * as cmux from "../../src/lib/tabs/sources/cmux.ts";
 import * as iterm from "../../src/lib/tabs/sources/iterm.ts";
 import * as safari from "../../src/lib/tabs/sources/safari.ts";
 import * as terminal from "../../src/lib/tabs/sources/terminal.ts";
-import { app, fakePlatform } from "./fake-platform.ts";
+import { app, fakePlatform } from "../fake-platform.ts";
 
 const chrome = app("com.google.Chrome", "Google Chrome");
 
@@ -76,7 +76,11 @@ const rec = (wid: string, i: number, title: string, wname: string) =>
   `${wid}${F}${i}${F}${title}${F}https://${title}.com${F}${i === 1}${F}${wname}${R}`;
 
 test("Safari: private windows are left out, matched by title in front-to-back order", async () => {
-  const out = rec("1", 1, "Bank", "Bank") + rec("2", 1, "News", "News") + rec("2", 2, "Mail", "News") + rec("3", 1, "Bank", "Bank");
+  const out =
+    rec("1", 1, "Bank", "Bank") +
+    rec("2", 1, "News", "News") +
+    rec("2", 2, "Mail", "News") +
+    rec("3", 1, "Bank", "Bank");
   const platform = fakePlatform({
     runAppleScript: async () => out,
     windows: async () => [
@@ -106,4 +110,38 @@ test("Safari: fails closed when a private window can't be placed, or Accessibili
   assert.deepEqual([...safari.privateWindowIds(script, [win(1, "Other"), win(2, "News")])], []);
   assert.deepEqual([...safari.privateWindowIds(script, [])], ["1", "2"]);
   assert.deepEqual([...safari.privateWindowIds([], [])], []);
+});
+
+test("cmux: terminals are panes, with ttys from cmux's session file", () => {
+  const ttys = cmux.parseTtys(
+    JSON.stringify({
+      windows: [{ tabManager: { workspaces: [{ panels: [{ id: "P1", ttyName: "ttys003" }, { id: "P2" }] }] } }],
+    }),
+  );
+  const [tab] = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}jumper${F}true${F}/p${F}P1,P2${R}`, ttys);
+  assert.deepEqual(tab.panes, [{ id: "P1", tty: "ttys003" }]);
+  assert.equal(cmux.parseTtys("{").size, 0);
+});
+
+test("cmux: selecting a pane focuses its terminal", async () => {
+  const platform = fakePlatform({ runAppleScript: async () => "ok" });
+  const [tab] = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}jumper${F}true${F}/p${F}P1${R}`);
+  await cmux.cmux.selectPane!(tab, "P1", platform);
+  assert.match(platform.scripts[0], /if \(id of term\) is "P1" then[\s\S]*focus term/);
+});
+
+test("iTerm: every split session is a pane with its tty", () => {
+  const [tab] = iterm.parse(
+    app("com.googlecode.iterm2"),
+    `1${F}S-1${F}zsh${F}true${F}S-1=/dev/ttys004,S-2=/dev/ttys005,${R}`,
+  );
+  assert.deepEqual(tab.panes, [
+    { id: "S-1", tty: "ttys004" },
+    { id: "S-2", tty: "ttys005" },
+  ]);
+});
+
+test("Terminal: each tab is one pane, by tty", () => {
+  const [tab] = terminal.parse(app("com.apple.Terminal"), `5${F}${F}/dev/ttys001${F}true${F}zsh${R}`);
+  assert.deepEqual(tab.panes, [{ id: "/dev/ttys001", tty: "ttys001" }]);
 });

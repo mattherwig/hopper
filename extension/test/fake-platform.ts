@@ -1,4 +1,4 @@
-import type { Platform } from "../../src/lib/tabs/model.ts";
+import type { Platform } from "../src/lib/platform/model.ts";
 
 /** A Platform where every call fails unless overridden; records AppleScript calls. */
 export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { scripts: string[] } {
@@ -31,6 +31,11 @@ export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { sc
     openUrl: overrides.openUrl ?? unexpected("openUrl"),
     webPages: overrides.webPages ?? (async () => []),
     querySqlite: overrides.querySqlite ?? (async () => []),
+    listDir: overrides.listDir ?? (async () => []),
+    processes: overrides.processes ?? (async () => []),
+    socketRequest: overrides.socketRequest ?? unexpected("socketRequest"),
+    connectRpc: overrides.connectRpc ?? unexpected("connectRpc"),
+    gitRepos: overrides.gitRepos ?? (async (dirs) => dirs.map(() => undefined)),
   };
 }
 

@@ -1,5 +1,13 @@
 # Jumper Changelog
 
+## [Agents] - {PR_MERGE_DATE}
+
+- Agents command: every AI agent running on your Mac (Claude Code in terminals and the Claude app, Codex, Cursor, herdr, agent CLIs, web agents), grouped by Needs You, Done, Working, and Idle, filterable by project, and one step from where it runs.
+- Next Agent command: jump to the agent that has waited longest for you; run again for the next.
+- Jumping to a terminal agent selects its exact iTerm split or cmux terminal.
+- Tabs shows the status of Claude Code sessions and terminal agents next to their tabs.
+- Copy Resume Command for Claude Code and Codex sessions.
+
 ## [Tabs] - {PR_MERGE_DATE}
 
 - Tabs command: search tabs, windows, and sessions across running apps (Chromium browsers, Safari, cmux, iTerm, Terminal, Claude, Muse, and any app's windows) and jump to one.

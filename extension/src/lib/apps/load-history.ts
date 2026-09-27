@@ -1,5 +1,6 @@
 import { applyRemovals, excludeApps, removeApp, type Removals } from "./history";
-import { getRecentApps, type RunningApp } from "../platform/macos";
+import { getRecentApps } from "../platform/macos";
+import type { App } from "../platform/model";
 import { readJson, writeJson } from "../platform/storage";
 
 const REMOVALS_KEY = "removed-apps";
@@ -10,9 +11,9 @@ const EXCLUDED_KEY = "excluded-apps";
  * first; `currentHidden` says whether it's itself removed or excluded (navigation keeps it, the list hides it).
  */
 export async function loadHistoryState(): Promise<{
-  apps: RunningApp[];
+  apps: App[];
   currentHidden: boolean;
-  excluded: RunningApp[];
+  excluded: App[];
 }> {
   const [recent, removals, excluded] = await Promise.all([
     getRecentApps(),
@@ -31,29 +32,31 @@ export async function loadHistoryState(): Promise<{
   };
 }
 
-export async function loadHistory(): Promise<RunningApp[]> {
+export async function loadHistory(): Promise<App[]> {
   return (await loadHistoryState()).apps;
 }
 
 /** Hides `app` from history until it's used again. `history` is the list as shown, most recent first. */
-export async function removeFromHistory(history: RunningApp[], app: RunningApp): Promise<void> {
+export async function removeFromHistory(history: App[], app: App): Promise<void> {
   await writeJson(REMOVALS_KEY, removeApp(history, app.bundleId, await readJson<Removals>(REMOVALS_KEY, {})));
 }
 
 /** Apps always skipped in history, in the order they were excluded. Kept with name and path to list them when not running. */
-async function loadExcludedApps(): Promise<RunningApp[]> {
-  return readJson<RunningApp[]>(EXCLUDED_KEY, []);
+async function loadExcludedApps(): Promise<App[]> {
+  return readJson<App[]>(EXCLUDED_KEY, []);
 }
 
 /** Excluded apps other than `app`. */
-async function excludedExcept(app: RunningApp): Promise<RunningApp[]> {
+async function excludedExcept(app: App): Promise<App[]> {
   return (await loadExcludedApps()).filter((a) => a.bundleId !== app.bundleId);
 }
 
-export async function excludeFromHistory(app: RunningApp): Promise<void> {
-  await writeJson(EXCLUDED_KEY, [...(await excludedExcept(app)), app]);
+export async function excludeFromHistory(app: App): Promise<void> {
+  // Without the pid: it's only valid while this instance of the app runs.
+  const { bundleId, name, path } = app;
+  await writeJson(EXCLUDED_KEY, [...(await excludedExcept(app)), { bundleId, name, path }]);
 }
 
-export async function includeInHistory(app: RunningApp): Promise<void> {
+export async function includeInHistory(app: App): Promise<void> {
   await writeJson(EXCLUDED_KEY, await excludedExcept(app));
 }
