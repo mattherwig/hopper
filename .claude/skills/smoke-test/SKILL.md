@@ -1,6 +1,6 @@
 ---
 name: smoke-test
-description: End-to-end smoke test of Jumper in the real Raycast app, in suites (nav = Back/Forward/Toggle, history = History + Remove/Exclude, tabs = Tabs search and jump), on the dev or distribution build. Run only when the owner asks for it or agrees to it (it takes their screen for ~30s–2½ min depending on suites); suggest it, naming the suites `--changed` picks and why, after user-facing behavior changes or macOS/Raycast updates.
+description: End-to-end smoke test of Hopper in the real Raycast app, in suites (nav = Back/Forward/Toggle, history = History + Remove/Exclude, tabs = Tabs search and jump), on the dev or distribution build. Run only when the owner asks for it or agrees to it (it takes their screen for ~30s–2½ min depending on suites); suggest it, naming the suites `--changed` picks and why, after user-facing behavior changes or macOS/Raycast updates.
 ---
 
 # Smoke test

@@ -5,7 +5,7 @@
 import type { GitRepo } from "../platform/model";
 
 export interface Project {
-  /** Folder name of the main checkout, e.g. "jumper". */
+  /** Folder name of the main checkout, e.g. "hopper". */
   name: string;
   /** Main checkout's folder: the project's identity. */
   root: string;
@@ -20,7 +20,7 @@ export function projectOf(repo: GitRepo | undefined): Project | undefined {
   return { name, root: repo.mainRoot, ...(worktree ? { worktree } : {}) };
 }
 
-/** "jumper", or "jumper · agents/levels" in a worktree. */
+/** "hopper", or "hopper · agents/levels" in a worktree. */
 export function projectLabel(project: Project): string {
   return project.worktree ? `${project.name} · ${project.worktree}` : project.name;
 }

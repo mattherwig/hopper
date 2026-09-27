@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jumper</title>
+<title>Hopper</title>
 <meta name="description" content="Jump to any app, tab, or session on your Mac. Browser-style Back and Forward for apps, plus one search across browser tabs, terminal tabs, and Claude sessions. A free Raycast extension.">
-<meta property="og:title" content="Jumper — Jump to any app, tab, or session">
+<meta property="og:title" content="Hopper — Jump to any app, tab, or session">
 <meta property="og:description" content="Step back through recent apps like browser history, or search every tab, window, and session in one list.">
 <meta property="og:image" content="tabs.png">
 <link rel="icon" href="extension-icon.png">
@@ -165,12 +165,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
 <header class="wrap">
   <nav>
-    <a class="brand" href="#"><img src="extension-icon.png" alt="">Jumper</a>
+    <a class="brand" href="#"><img src="extension-icon.png" alt="">Hopper</a>
     <div class="links">
       <a href="#demo">Demo</a>
       <a class="hide-sm" href="#features">Features</a>
       <a class="hide-sm" href="#setup">Setup</a>
-      <a href="https://github.com/mattherwig/jumper">GitHub</a>
+      <a href="https://github.com/mattherwig/hopper">GitHub</a>
     </div>
   </nav>
 </header>
@@ -181,7 +181,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <h1>Jump to any <em>app, tab, or agent.</em></h1>
     <p>Step back through recent apps like browser history, search every tab and session in one list, and jump to the AI agent that needs you. Free for Raycast.</p>
     <div class="cta">
-      <a class="btn primary" id="install" href="https://www.raycast.com/matt_herwig/jumper">Get it for Raycast</a>
+      <a class="btn primary" id="install" href="https://www.raycast.com/matt_herwig/hopper">Get it for Raycast</a>
       <a class="btn" href="#demo">See it in action ↓</a>
     </div>
     <div class="note">macOS · Free and open source · No background process</div>
@@ -189,7 +189,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
   <section id="demo">
     <div class="wrap">
-      <div class="shot"><img src="demo.gif" alt="Jumper demo: Back, Forward, Toggle, History, and a Search jumping to a terminal workspace" width="960" height="625"></div>
+      <div class="shot"><img src="demo.gif" alt="Hopper demo: Back, Forward, Toggle, History, and a Search jumping to a terminal workspace" width="960" height="625"></div>
     </div>
   </section>
 
@@ -256,14 +256,14 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
             <li><strong>Picking an entry selects it</strong> in its app and brings the app to the front.</li>
             <li><strong>Copy URL</strong> and <strong>Copy Title</strong> are in the action panel.</li>
             <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, and documents closed since Search last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
-            <li><strong>Apps Jumper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
+            <li><strong>Apps Hopper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
           </ul>
         </div>
         <div>
           <h3>Agents</h3>
           <ul class="facts">
             <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, Codex's thread log, Cursor's flags, herdr's detection. No hooks to install.</li>
-            <li><strong>Done means finished since you last looked,</strong> in the agent's own app or by jumping to it from Jumper.</li>
+            <li><strong>Done means finished since you last looked,</strong> in the agent's own app or by jumping to it from Hopper.</li>
             <li><strong>Jumping goes to where it runs:</strong> the exact iTerm split or cmux terminal, the herdr pane, the Claude session, the Cursor agent.</li>
             <li><strong>Projects are git repositories;</strong> worktrees count as their main repository.</li>
           </ul>
@@ -290,7 +290,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <tr><td>Any other app</td><td>Windows, and tabs if the window has a native tab bar</td></tr>
         </tbody>
       </table>
-      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar and Notion from its tab bar, so an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead.</p>
+      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar and Notion from its tab bar, so an app update can change what Hopper finds; if nothing is found, the app's windows are listed instead.</p>
 
       <h2>What Agents finds</h2>
       <table>
@@ -310,8 +310,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="wrap">
       <h2>Setup</h2>
       <ol class="steps">
-        <li><span>Install Jumper from the <a href="https://www.raycast.com/">Raycast</a> Store.</span></li>
-        <li><span>Record hotkeys in Raycast Settings → Extensions → Jumper (extensions can't set them). Recommended: the ones shown above.</span></li>
+        <li><span>Install Hopper from the <a href="https://www.raycast.com/">Raycast</a> Store.</span></li>
+        <li><span>Record hotkeys in Raycast Settings → Extensions → Hopper (extensions can't set them). Recommended: the ones shown above.</span></li>
         <li><span>First time in Search: allow <strong>Automation</strong> and <strong>Accessibility</strong> when asked.</span></li>
       </ol>
     </div>
@@ -320,8 +320,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
 <footer>
   <div class="wrap">
-    <span>Jumper · MIT · by <a href="https://mattherwig.com/">Matt Herwig</a></span>
-    <span><a href="https://github.com/mattherwig/jumper">Source</a> · <a href="https://github.com/sponsors/mattherwig">Sponsor</a></span>
+    <span>Hopper · MIT · by <a href="https://mattherwig.com/">Matt Herwig</a></span>
+    <span><a href="https://github.com/mattherwig/hopper">Source</a> · <a href="https://github.com/sponsors/mattherwig">Sponsor</a></span>
   </div>
 </footer>
 

@@ -63,7 +63,7 @@ export async function readSnapshots(platform: Platform): Promise<{ socket: strin
   const results = await Promise.all(
     sockets.map((socket) =>
       platform
-        .socketRequest(socket, { id: "jumper", method: "session.snapshot", params: {} })
+        .socketRequest(socket, { id: "hopper", method: "session.snapshot", params: {} })
         .then((response) => {
           const snapshot = snapshotOf(response);
           return snapshot ? [{ socket, snapshot }] : [];
@@ -149,7 +149,7 @@ export function fromSnapshot(app: App, socket: string, snapshot: Snapshot, hostT
 }
 
 async function focus(platform: Platform, socket: string, method: string, params: object): Promise<void> {
-  const response = (await platform.socketRequest(socket, { id: "jumper", method, params })) as {
+  const response = (await platform.socketRequest(socket, { id: "hopper", method, params })) as {
     error?: { message?: string };
   };
   if (response?.error) throw new Error(response.error.message ?? `herdr couldn't ${method}`);
@@ -162,9 +162,9 @@ async function focus(platform: Platform, socket: string, method: string, params:
  */
 export async function revealClient(platform: Platform, socket: string, app: App): Promise<void> {
   if (app.bundleId !== GHOSTTY) return;
-  const marker = `jumper-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const marker = `hopper-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const request = (method: string, params: object) =>
-    platform.socketRequest(socket, { id: "jumper", method, params }).catch(() => undefined);
+    platform.socketRequest(socket, { id: "hopper", method, params }).catch(() => undefined);
   try {
     const set = (await request("client.window_title.set", { title: marker })) as { result?: { changed?: boolean } };
     if (set?.result?.changed === false) return;

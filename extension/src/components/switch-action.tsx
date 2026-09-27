@@ -17,7 +17,7 @@ export function SwitchAction({
       icon={Icon.ArrowRight}
       onAction={async () => {
         // Switch first: closing the window with Immediate unmounts this view and kills the command before
-        // the switch runs (ADR-009, https://github.com/mattherwig/jumper/blob/main/docs/DECISIONS.md).
+        // the switch runs (ADR-009, https://github.com/mattherwig/hopper/blob/main/docs/DECISIONS.md).
         try {
           await onSwitch();
         } catch (error) {

@@ -40,11 +40,11 @@ test("Safari: remembers window, position, and URL", () => {
 test("cmux: workspaces with the working directory as detail", () => {
   const [tab] = cmux.parse(
     app("com.cmuxterm.app"),
-    `W1${F}T1${F}jumper${F}true${F}/Users/matt/Projects/jumper${F}P1${R}`,
+    `W1${F}T1${F}hopper${F}true${F}/Users/matt/Projects/hopper${F}P1${R}`,
   );
   assert.deepEqual(
     [tab.kind, tab.title, tab.detail, tab.ref],
-    ["workspace", "jumper", "~/Projects/jumper", { windowId: "W1", tabId: "T1" }],
+    ["workspace", "hopper", "~/Projects/hopper", { windowId: "W1", tabId: "T1" }],
   );
 });
 

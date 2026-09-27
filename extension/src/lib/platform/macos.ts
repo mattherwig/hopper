@@ -7,7 +7,7 @@ const IGNORED = new Set(["com.raycast.macos"]);
 
 /**
  * Regular (Dock) apps, most recently used first, across all Spaces.
- * Implemented natively in `swift/Sources/JumperNative/RecentApps.swift` (~7ms per call; ADR-001, ADR-008 in https://github.com/mattherwig/jumper/blob/main/docs/DECISIONS.md).
+ * Implemented natively in `swift/Sources/HopperNative/RecentApps.swift` (~7ms per call; ADR-001, ADR-008 in https://github.com/mattherwig/hopper/blob/main/docs/DECISIONS.md).
  */
 export async function getRecentApps(): Promise<App[]> {
   const apps: App[] = await recentApps();
@@ -20,7 +20,7 @@ export async function getRecentApps(): Promise<App[]> {
  * home screen over a fullscreen show). `NSRunningApplication.activate` from a background process is ignored on
  * macOS 14+ (ADR-002). The helper declines when there's no Accessibility permission or the app's main window is
  * minimized or missing; then `open()` restores or creates one like a Dock click (ADR-007). See ADR-021 in
- * https://github.com/mattherwig/jumper/blob/main/docs/DECISIONS.md.
+ * https://github.com/mattherwig/hopper/blob/main/docs/DECISIONS.md.
  */
 export async function activateApp(app: App): Promise<void> {
   if (await frontApp(app.bundleId)) return;

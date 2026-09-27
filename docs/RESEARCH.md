@@ -30,14 +30,14 @@ Store search probes (`https://www.raycast.com/api/v1/store_listings/search?q=…
 - Keywords do match: "alt tab" returns only Window Walker, via its `alt-tab` keyword.
 - Open ground: "tab switcher" (no results), "app switcher" and "window switcher" (only unrelated tmux/media extensions), "recent apps", "previous app", "terminal tabs" (weak results).
 - Crowded but relevant: "browser tabs", "switch tabs" (Browser Tabs, Firefox Tabs, browser extensions).
-- "harpoon" matches the Harpoon extension (tag apps and switch between them, inspired by ThePrimeagen's Neovim plugin): people searching it want fast jumping, which Jumper does.
+- "harpoon" matches the Harpoon extension (tag apps and switch between them, inspired by ThePrimeagen's Neovim plugin): people searching it want fast jumping, which Hopper does.
 
 Dropped: "alt tab" and "cmd tab" (web-search terms, not how people search a Store; owner's call), "jump" and "app history" (already in the title/description), "last used app" (duplicate).
 
 ## Name
 
-**Jumper** (`jumper`). Free in the Store; nearby names: Jump, Quick Jump, SpaceJump. Searchable terms live in command titles, description, and keywords. See ADR-005.
+**Hopper** (`hopper`). Free in the Store; nearby names: Jump, Quick Jump, SpaceJump. Searchable terms live in command titles, description, and keywords. See ADR-005.
 
 ## Pitch (README / posts)
 
-**Jumper**: Your Mac gets a browser-style Back button for apps. Cmd+Tab only knows "most recent" and reshuffles every time you switch, so walking back three apps is guesswork. Bind **Back** and **Forward** to hotkeys (e.g. ⌃⌘[ and ⌃⌘]; recommended set in `extension/README.md` Setup) and step through your recent apps exactly like Safari or VS Code history. **History** lists the trail so you can jump anywhere. No setup, no permissions, no background process.
+**Hopper**: Your Mac gets a browser-style Back button for apps. Cmd+Tab only knows "most recent" and reshuffles every time you switch, so walking back three apps is guesswork. Bind **Back** and **Forward** to hotkeys (e.g. ⌃⌘[ and ⌃⌘]; recommended set in `extension/README.md` Setup) and step through your recent apps exactly like Safari or VS Code history. **History** lists the trail so you can jump anywhere. No setup, no permissions, no background process.

@@ -6,9 +6,9 @@ import { agent } from "./helpers.ts";
 test("idle agents active since last seen are done; first sightings count as seen", () => {
   const { agents, seen } = applySeen(
     [
-      agent("a", { activeAt: 50 }), // Jumper saw it at 10
+      agent("a", { activeAt: 50 }), // Hopper saw it at 10
       agent("b", { activeAt: 50, seenAt: 60 }), // its app says it was looked at after
-      agent("c", { activeAt: 50 }), // new to Jumper
+      agent("c", { activeAt: 50 }), // new to Hopper
       agent("d", { status: "working", activeAt: 50 }),
     ],
     { a: 10, gone: 1 },

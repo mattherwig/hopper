@@ -1,6 +1,6 @@
 ---
 name: publish-store
-description: Submit or update Jumper on the Raycast Store (npm run publish → PR on raycast/extensions), then fill the PR, get CI green, and triage bot reviews. Use when asked to publish, re-publish, push an update to the Store, or fix a failing Store PR.
+description: Submit or update Hopper on the Raycast Store (npm run publish → PR on raycast/extensions), then fill the PR, get CI green, and triage bot reviews. Use when asked to publish, re-publish, push an update to the Store, or fix a failing Store PR.
 ---
 
 # Publish to the Raycast Store
@@ -9,7 +9,7 @@ Everything here is outward-facing: **confirm with the owner before running publi
 
 ## How publishing works
 
-- `npm run publish` (run in `extension/`) copies **every file on disk** in `extension/` into a fork of `raycast/extensions` (branch `ext/jumper`) and opens or updates a PR. Not a git export, and there is no ignore file: only `.git`, `.github`, `node_modules`, `raycast-env.d.ts`, `.direnv`, `.raycast-swift-build`, `.swiftpm`, `compiled_raycast_*` are skipped. That's why dev material lives at the repo root (ADR-012).
+- `npm run publish` (run in `extension/`) copies **every file on disk** in `extension/` into a fork of `raycast/extensions` (branch `ext/hopper`) and opens or updates a PR. Not a git export, and there is no ignore file: only `.git`, `.github`, `node_modules`, `raycast-env.d.ts`, `.direnv`, `.raycast-swift-build`, `.swiftpm`, `compiled_raycast_*` are skipped. That's why dev material lives at the repo root (ADR-012).
 - Merge = published. Later updates: run publish again; it updates the open PR or opens a new one.
 
 ## 1. Before publishing
@@ -19,7 +19,7 @@ Everything here is outward-facing: **confirm with the owner before running publi
 3. The PR checklist asks for a tested **distribution** build. Don't run the smoke test by default: it takes the owner's screen for ~2½ minutes. Only if user-facing behavior changed since the last tested build, *suggest* `python3 scripts/smoke.py --dist` (the `smoke-test` skill) with the reason, and run it only if the owner agrees. Refactors, docs, and media changes don't need it. (`npm run build` alone is plain `ray build` = `-e dev`, not the distribution build.)
 4. If `extension/metadata/` changed: run Raycast's image checker locally (see the `store-screenshots` skill). CI fails on screenshot padding.
 5. Remove stray files that would ship: `rm -rf extension/swift/.build` (every `ray build`/`npm run check` recreates it) and `find extension -name .DS_Store -not -path "*/node_modules/*" -delete`.
-6. Commit and push to github.com/mattherwig/jumper first, so the PR matches the repo.
+6. Commit and push to github.com/mattherwig/hopper first, so the PR matches the repo.
 
 ## 2. Publish
 
@@ -33,10 +33,10 @@ source ~/.nvm/nvm.sh && nvm use && npm run publish
 ## 3. After publishing
 
 - Verify what shipped: `gh api repos/raycast/extensions/pulls/<n>/files --paginate --jq '.[].filename'` (expect only extension files, no `swift/.build`, no docs).
-- A **new** PR is opened as a **draft with an empty template**. Fill it (description, screencast = `![demo](https://github.com/mattherwig/jumper/raw/main/extension/media/demo.gif)`, checklist) and only tick boxes that are true (e.g. "tested this distribution build" only after step 1.3 or the owner confirms).
+- A **new** PR is opened as a **draft with an empty template**. Fill it (description, screencast = `![demo](https://github.com/mattherwig/hopper/raw/main/extension/media/demo.gif)`, checklist) and only tick boxes that are true (e.g. "tested this distribution build" only after step 1.3 or the owner confirms).
   - `gh pr edit` fails on this repo (GraphQL "Projects (classic) is being deprecated"). Use REST: `gh api -X PATCH repos/raycast/extensions/pulls/<n> -F body=@body.md`.
   - `gh pr ready <n> --repo raycast/extensions` works.
-- Comment the PR link on issue #1 (REST works: `gh api repos/mattherwig/jumper/issues/1/comments -f body=...`).
+- Comment the PR link on issue #1 (REST works: `gh api repos/mattherwig/hopper/issues/1/comments -f body=...`).
 
 ## 4. CI and bot reviews
 

@@ -2,7 +2,7 @@
 // Usage: swift keycast.swift <x> <y> <width> <height> <icon.png>   (recording area, points, top-left origin)
 // Reads one JSON object per line on stdin:
 //   {"keys": ["⌃", "⌥", "["], "title": "Back", "detail": "to the previous app"}   keycaps HUD at the bottom
-//   {"card": "Jumper", "sub": "Back and Forward for your Mac apps"}               full-frame title card
+//   {"card": "Hopper", "sub": "Back and Forward for your Mac apps"}               full-frame title card
 //   {"backdrop": true}                                                            dark backdrop at normal window level
 //                                                                                 (stays until {"backdrop": false})
 //   {}                                                                            hide the HUD and card

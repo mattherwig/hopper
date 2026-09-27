@@ -1,15 +1,15 @@
 // PURE: "done" (finished, not seen yet) and the order agents are shown and visited in.
 //
 // Sources report idle agents; an idle agent that did something since the user last looked at it is done. "Last
-// looked" is the later of the agent's own record (Claude's lastFocusedAt) and Jumper's: jumping to an agent
-// marks it seen. Agents Jumper sees for the first time, with no record of their own, count as seen then, so
+// looked" is the later of the agent's own record (Claude's lastFocusedAt) and Hopper's: jumping to an agent
+// marks it seen. Agents Hopper sees for the first time, with no record of their own, count as seen then, so
 // agents that were already sitting idle don't all show up as done.
 
 import type { Agent, AgentStatus } from "./model";
 
 export const SEEN_KEY = "agents:seen";
 
-/** Agent key → when Jumper last saw the user look at it (ms). */
+/** Agent key → when Hopper last saw the user look at it (ms). */
 export type SeenMap = Record<string, number>;
 
 /** `agents` with done applied, and the seen map to store (only current agents are kept). */

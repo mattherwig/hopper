@@ -16,7 +16,7 @@ import { proc } from "./helpers.ts";
 const live = (extra: Partial<LiveSession> = {}): LiveSession => ({
   pid: 100,
   sessionId: "cli-1",
-  cwd: "/Users/me/Projects/jumper",
+  cwd: "/Users/me/Projects/hopper",
   kind: "interactive",
   entrypoint: "cli",
   status: "idle",
@@ -99,10 +99,10 @@ test("desktop sessions open by deep link with the app's title; terminal ones are
         9,
         "com.anthropic.claudefordesktop:code:local_a",
       ],
-      ["claude:cli-b", "jumper", { kind: "process", pid: 2, tty: "" }, undefined, undefined],
+      ["claude:cli-b", "hopper", { kind: "process", pid: 2, tty: "" }, undefined, undefined],
     ],
   );
-  assert.equal(agents[1].resumeCommand, "cd /Users/me/Projects/jumper && claude --resume cli-b");
+  assert.equal(agents[1].resumeCommand, "cd /Users/me/Projects/hopper && claude --resume cli-b");
 });
 
 test("a forked side process of a desktop session doesn't show twice; SDK and daemon processes are hidden", () => {

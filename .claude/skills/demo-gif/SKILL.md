@@ -1,11 +1,11 @@
 ---
 name: demo-gif
-description: Record Jumper's demo GIF (extension/media/demo.gif, shown at the top of the README and so on the Store page) by driving Back, Forward, Toggle, History, and Tabs on this Mac. Use when commands or their behavior change, or when asked to redo the demo/GIF/screencast.
+description: Record Hopper's demo GIF (extension/media/demo.gif, shown at the top of the README and so on the Store page) by driving Back, Forward, Toggle, History, and Tabs on this Mac. Use when commands or their behavior change, or when asked to redo the demo/GIF/screencast.
 ---
 
 # Demo GIF
 
-Produces `extension/media/demo.gif` (~24s, ~3 MB at 12 fps): a title card (the tagline), Back ×2, Forward ×2, Toggle ×2 (all cycling through the same three staged windows), History (↓↓ ↩), Tabs (paste the query "github pages" ↩, lands on the owner's cmux workspace `github-pages`), and an end card. Each step shows keycaps with the owner's hotkeys and a caption. `extension/README.md` embeds it as `![Jumper demo](media/demo.gif)`; Raycast requires README media in a `media/` folder at the extension's top level. The root GitHub README embeds it as `extension/media/demo.gif`. The same clip works as the PR screencast and for launch posts.
+Produces `extension/media/demo.gif` (~24s, ~3 MB at 12 fps): a title card (the tagline), Back ×2, Forward ×2, Toggle ×2 (all cycling through the same three staged windows), History (↓↓ ↩), Tabs (paste the query "github pages" ↩, lands on the owner's cmux workspace `github-pages`), and an end card. Each step shows keycaps with the owner's hotkeys and a caption. `extension/README.md` embeds it as `![Hopper demo](media/demo.gif)`; Raycast requires README media in a `media/` folder at the extension's top level. The root GitHub README embeds it as `extension/media/demo.gif`. The same clip works as the PR screencast and for launch posts.
 
 ## Before running
 

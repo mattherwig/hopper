@@ -32,11 +32,11 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Decision.** Call `closeMainWindow({ popToRootType: Immediate })` at the start of the no-view commands. (The list view does the reverse; see ADR-009.)
 
-## ADR-005: Name "Jumper" (2026-09-26)
+## ADR-005: Name "Hopper" (2026-09-26)
 
-**Context.** Store search matches title, description, and keywords. Checked raycast/extensions (3,322 extensions): no `jumper`. Neighbors: Jump (websites/folders), Quick Jump (team links), SpaceJump (macOS Spaces switcher, closest risk of confusion).
+**Context.** Store search matches title, description, and keywords. Checked raycast/extensions (3,322 extensions): no `hopper`. Neighbors: Jump (websites/folders), Quick Jump (team links), SpaceJump (macOS Spaces switcher, closest risk of confusion).
 
-**Decision.** Title `Jumper`, slug `jumper`. The title is brandable; command titles carry the searchable words ("Jump Back to Previous App", "Jump Forward to Next App", "Show App History"), and description/keywords carry "app switcher", "previous app", "alt tab" (what people actually search, see `docs/RESEARCH.md`). Command `name`s are `go-back` / `go-forward` / `show-app-history` (internal IDs; never rename after publish). Command titles and names superseded by ADR-011.
+**Decision.** Title `Hopper`, slug `hopper`. The title is brandable; command titles carry the searchable words ("Jump Back to Previous App", "Jump Forward to Next App", "Show App History"), and description/keywords carry "app switcher", "previous app", "alt tab" (what people actually search, see `docs/RESEARCH.md`). Command `name`s are `go-back` / `go-forward` / `show-app-history` (internal IDs; never rename after publish). Command titles and names superseded by ADR-011.
 
 **Consequences.** The title alone doesn't say "apps"; discoverability leans on command titles, description, and keywords. Revisit if Store search performs poorly.
 
@@ -54,7 +54,7 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Context.** Profiling showed the osascript/JXA read of the app list was the biggest cost we control (~50ms of ~75ms). A native prototype does the same read in ~7ms. Owner chose speed (issue #2).
 
-**Decision.** Move `readRecentApps()` to Swift (`swift/Sources/JumperNative/`), exported with `@raycast` via `raycast/extensions-swift-tools`, imported in TS as `swift:../../swift`. Swift is compiled from source by `ray build`, so there is no prebuilt binary (Store rule: https://developers.raycast.com/basics/prepare-an-extension-for-store.md, Binary Dependencies). The JXA path is removed (one code path). Activation stays in TS via Raycast `open()` (ADR-007) because a background helper can't reliably activate apps (ADR-002).
+**Decision.** Move `readRecentApps()` to Swift (`swift/Sources/HopperNative/`), exported with `@raycast` via `raycast/extensions-swift-tools`, imported in TS as `swift:../../swift`. Swift is compiled from source by `ray build`, so there is no prebuilt binary (Store rule: https://developers.raycast.com/basics/prepare-an-extension-for-store.md, Binary Dependencies). The JXA path is removed (one code path). Activation stays in TS via Raycast `open()` (ADR-007) because a background helper can't reliably activate apps (ADR-002).
 
 **Consequences.** Builders need Xcode 16.3+ (Swift 6). The bridge spawns the helper once per call, so keep exported functions few and coarse. The bridge rejects Windows (see issue #7). `RecentApps.swift` has no macro imports, so it can be checked with plain `swiftc` (see docs/PERFORMANCE.md).
 
@@ -76,7 +76,7 @@ Newest at bottom. Add an ADR whenever a choice would surprise a future reader. F
 
 **Decision.** Titles `Back`, `Forward`, `Toggle`, `History`; command `name`s match (`back`, `forward`, `toggle`, `history`), as do the source files. Descriptions distinguish Back (walks deeper) from Toggle (flips between two). Search terms like "previous app", "last app", "jump" live in keywords. Supersedes the command naming in ADR-005 and ADR-010.
 
-**Consequences.** Short titles are generic in Raycast root search; the "Jumper" subtitle and keywords disambiguate. Names are permanent once published. Existing dev hotkeys must be rebound.
+**Consequences.** Short titles are generic in Raycast root search; the "Hopper" subtitle and keywords disambiguate. Names are permanent once published. Existing dev hotkeys must be rebound.
 
 ## ADR-012: Extension lives in extension/, dev material at repo root (2026-09-26)
 
@@ -146,7 +146,7 @@ Mechanics learned in the prototype:
 
 **Decision.** `history.ts` (PURE) compares each read with the previous one, stored in LocalStorage (`tabs:recently-closed`: last open entries + closed list). An entry that was open in an app the read covers and isn't now becomes closed; one that's open again leaves the list. Covered: every app for Tabs (so quitting an app closes its tabs), the frontmost app for Tabs in Current App, never an app that failed to read, nothing without Accessibility (sources then see nothing, which must not look like everything closed). A source opts in with `reopenTarget(tab)`: Chromium and Safari return the http(s) URL, the windows fallback the window's file (AXDocument `file://`, not folders). Reopen is `open(target, app.path)`. Newest first, one week, max 100. Not tracked: Claude (sessions don't close; archived ones don't reopen; conversations are already listed from learned ids), Muse and terminals (no clean reopen), private windows (never listed, ADR-018).
 
-**Consequences.** Only what Jumper saw: tabs opened and closed between two Tabs uses are missed, and a tab that moved to another window with a new URL looks closed. Reopened pages lose their back history. The browser menus that keep it are an open question for the owner (UI automation). Limits: #22.
+**Consequences.** Only what Hopper saw: tabs opened and closed between two Tabs uses are missed, and a tab that moved to another window with a new URL looks closed. Reopened pages lose their back history. The browser menus that keep it are an open question for the owner (UI automation). Limits: #22.
 
 ## ADR-020: Notion tabs open by deep link with `deepLinkOpenNewTab` (2026-09-26)
 
@@ -171,7 +171,7 @@ Mechanics learned in the prototype:
 **Decision.**
 - Levels: App (unchanged) → Tab (places inside apps: windows, tabs, sessions) → Pane (new: `Tab.panes` with tty, `TabSource.selectPane`; iTerm splits, cmux terminals, Terminal's one shell). Agent is not a place but an overlay: `src/lib/agents/` (PURE). An `Agent` has an identity, a status, and a `Host` (a terminal process, a link opened with an app, a browser tab, or a herdr pane); `locate.ts` resolves the host to a `Location` by walking the process's parent chain to an app (apps now carry their pid) and matching its tty against that app's panes; herdr hosts focus the pane over herdr's socket and bring forward the terminal running a herdr client.
 - Sources (`agents/sources/`, `registry.ts`; Codex and web agents superseded by ADR-025): `claude` (session files, desktop session joined on `hostSessionId`, forks deduped by `cliSessionId`), `codex` (daemon: `initialize`, `thread/loaded/list`, `thread/read`; never loads, resumes or subscribes; a terminal thread's host is the one `codex` process working in its folder), `cursor` (only while Cursor runs; headers and jump superseded by ADR-026), `herdr` (every session's socket), `cli` (agent CLIs by process name, status unknown), plus web agents recognized by URL in browser tabs (`web.ts`, status unknown). `mergeAgents` keeps one agent per session: herdr's pane becomes the host of a session another source knows; bare CLIs inside herdr or already described by a source are dropped.
-- Status: sources report blocked / working / idle / unknown. `status.ts` makes idle agents active since last seen "done"; "seen" is the later of the agent's own record (Claude's `lastFocusedAt`, Cursor's unread flag) and Jumper's (`agents:seen`, set on jump; first sighting counts as seen). A post-turn question (Claude's `need_input`) is idle with detail "Needs input", so done until seen, not blocked forever; blocked is a live prompt.
+- Status: sources report blocked / working / idle / unknown. `status.ts` makes idle agents active since last seen "done"; "seen" is the later of the agent's own record (Claude's `lastFocusedAt`, Cursor's unread flag) and Hopper's (`agents:seen`, set on jump; first sighting counts as seen). A post-turn question (Claude's `need_input`) is idle with detail "Needs input", so done until seen, not blocked forever; blocked is a live prompt.
 - Commands: `agents` (List, grouped Needs You / Done / Working / Idle / Running, project dropdown, refreshes every 4s while open, Copy Resume Command) and `next-agent` (no-view: longest-waiting blocked, then done; repeated runs step through them via `agents:last-next`). Tabs shows the status of an agent on its tab (`location.tab` or the agent's `placeKey`, a Claude Code session's tab key).
 - Projects (`src/lib/projects/`, PURE): a project is a git repository found from a folder by reading `.git` (no `git` process); a linked worktree belongs to its main checkout, named by branch. A grouping and filter, not a level; nothing without a folder in a repository is guessed into one. Called "project" in the UI (macOS Spaces and apps' own "workspaces" mean other things).
 - `Platform` moved to `src/lib/platform/model.ts` (shared by tab and agent levels) and gained `processes` (Swift sysctl: pid, ppid, tty, name, start time, cwd of tty processes; interpreters report their script's name, other arguments are never read), `listDir`, `socketRequest`, `connectRpc` (WebSocket JSON-RPC, `ws` package), `gitRepos`. The implementation is `platform/os.ts` (`macosPlatform`); storage keys are no longer prefixed by the platform (tab keys keep `tabs:`).

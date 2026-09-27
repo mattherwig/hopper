@@ -109,7 +109,7 @@ test("cursor: an agent saved as aborted is working while its transcript's turn i
 });
 
 const snapshot = {
-  id: "jumper",
+  id: "hopper",
   result: {
     type: "session_snapshot",
     snapshot: {

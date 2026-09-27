@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Generate Raycast Store media for Jumper by driving Raycast on this Mac.
+"""Generate Raycast Store media for Hopper by driving Raycast on this Mac.
 
-  python3 scripts/media/store_media.py screenshots   -> extension/metadata/jumper-1.png ... (2000x1250)
+  python3 scripts/media/store_media.py screenshots   -> extension/metadata/hopper-1.png ... (2000x1250)
   python3 scripts/media/store_media.py gif           -> extension/media/demo.gif
 
 Needs: `npm run dev` running (in extension/), Accessibility + Screen Recording permission for the calling app,
@@ -21,8 +21,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]  # repo root
 EXT = ROOT / "extension"  # the Raycast extension (what ships to the Store)
 HERE = Path(__file__).resolve().parent
-DEEPLINK = "raycast://extensions/matt_herwig/jumper/"
-TMP = Path(tempfile.mkdtemp(prefix="jumper-media-"))
+DEEPLINK = "raycast://extensions/matt_herwig/hopper/"
+TMP = Path(tempfile.mkdtemp(prefix="hopper-media-"))
 atexit.register(shutil.rmtree, TMP, ignore_errors=True)
 
 # Built-in apps with no personal content, activated oldest -> newest so they fill every visible
@@ -58,7 +58,7 @@ SAFARI_TABS = [
 # Apps whose process name differs from the app name.
 PROCESS = {"Ghostty": "ghostty"}
 
-# Keys shown in the GIF overlay: the owner's own bindings (Raycast Settings → Extensions → Jumper).
+# Keys shown in the GIF overlay: the owner's own bindings (Raycast Settings → Extensions → Hopper).
 # Commands are actually triggered by deeplink, since Raycast ignores synthetic hotkeys.
 HOTKEYS = {
     "back": ["⇧", "⌘", "["],
@@ -145,7 +145,7 @@ class DemoApps:
         self.before_staged = before_staged  # called once before the first staged app comes up (the backdrop)
         self.launched: list[str] = []
         self.safari_window: str | None = None
-        self.note = TMP / "Jumper.txt"
+        self.note = TMP / "Hopper.txt"
         self.previous_app = frontmost()
 
     def __enter__(self):
@@ -228,19 +228,19 @@ def capture(path: Path) -> None:
 def screenshots() -> None:
     out = EXT / "metadata"
     out.mkdir(exist_ok=True)
-    for old in out.glob("jumper-*.png"):
+    for old in out.glob("hopper-*.png"):
         old.unlink()
     close_raycast()
     with DemoApps():
         # 1. History list
         deeplink("history")
         time.sleep(2)
-        capture(out / "jumper-1.png")
+        capture(out / "hopper-1.png")
 
         # 2. Action panel
         keys('keystroke "k" using command down')
         time.sleep(1)
-        capture(out / "jumper-2.png")
+        capture(out / "hopper-2.png")
         escape()
 
         # 3. Excluded section: exclude Chess, filter to it, show Include in History, then undo.
@@ -250,7 +250,7 @@ def screenshots() -> None:
         time.sleep(3)  # let the success toast fade
         keys('keystroke "k" using command down')
         time.sleep(1)
-        capture(out / "jumper-3.png")
+        capture(out / "hopper-3.png")
         keys("key code 36")  # Return = Include in History
         time.sleep(1.5)
         close_raycast()
@@ -260,10 +260,10 @@ def screenshots() -> None:
         time.sleep(1)
         deeplink("tabs")
         time.sleep(3.5)  # the list first shows the cached copy, then refreshes
-        capture(out / "jumper-5.png")
+        capture(out / "hopper-5.png")
         close_raycast()
 
-    # 4. Root search for "jumper": every command, the second row selected to show its hotkey (Raycast ranks by use). Raycast ignores a synthetic
+    # 4. Root search for "hopper": every command, the second row selected to show its hotkey (Raycast ranks by use). Raycast ignores a synthetic
     # ⌘Space, but Escape from a command's view pops to root search. Matching files from the
     # user's disk show below the commands; review them before committing.
     deeplink("history")
@@ -272,11 +272,11 @@ def screenshots() -> None:
     time.sleep(0.6)
     if raycast_window() is None:
         raise RuntimeError("root search did not open")
-    keys('keystroke "jumper"')
+    keys('keystroke "hopper"')
     time.sleep(1.5)
     keys("key code 125")  # Raycast shows the hotkey of the selected row only
     time.sleep(0.6)
-    capture(out / "jumper-4.png")
+    capture(out / "hopper-4.png")
     close_raycast()
 
 
@@ -310,7 +310,7 @@ def gif() -> None:
     # list matching private tabs. Tabs ranks matches across all apps (ADR-015); "github pages" ranks the cmux workspace first
     # (check with a test run if the owner's tabs change). Checked after recording.
     tab_query, tab_target = "github pages", "cmux"
-    card = {"card": "Jumper", "sub": "Jump to any app, tab, or session"}
+    card = {"card": "Hopper", "sub": "Jump to any app, tab, or session"}
     # (overlay message, deeplink command or keystroke or None, seconds to hold)
     timeline = [
         (card, None, 2.6),
@@ -329,7 +329,7 @@ def gif() -> None:
         ({"keys": [tab_query], "title": "Fuzzy search", "detail": "finds the github-pages workspace in cmux"}, f"paste:{tab_query}", 1.8),
         ({"keys": ["↩"], "title": "Jump to Tab", "detail": "straight to that workspace"}, "key code 36", 2.0),
         ({}, None, 0.3),
-        ({"card": "Jumper", "sub": "Free on the Raycast Store"}, None, 2.6),
+        ({"card": "Hopper", "sub": "Free on the Raycast Store"}, None, 2.6),
     ]
     keycast = subprocess.Popen(
         ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(EXT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
