@@ -53,7 +53,7 @@ An app Jumper can't read shows under **Unavailable**, with a shortcut to the rig
 | Muse | Main chat and side chats |
 | Any other app | Windows, and tabs if the window has a native tab bar |
 
-Apps are ordered by recent use; within an app, active tabs come first. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar, so they only appear while the sidebar is visible, and an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead.
+Apps are ordered by recent use; within an app, active tabs come first. Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar, so they only appear while the sidebar is visible, and an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead.
 
 ## Support
 

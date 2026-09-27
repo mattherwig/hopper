@@ -55,6 +55,7 @@ extension/                                    the Raycast extension; everything 
   src/lib/tabs/                               tab level (Tabs, Tabs in Current App) — PURE, sources get OS access via a Platform
     model.ts                                  Tab, TabSource, Platform types; how to add an app or an action
     registry.ts                               which source handles which app (windows is the fallback) — add new apps here
+    search.ts                                 search bar filter + ranking (typos, app-name first; ADR-015)
     load.ts                                   read all apps' tabs in parallel, order them, route selection to the source
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
     sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript);

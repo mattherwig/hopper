@@ -1,9 +1,11 @@
 import { Action, ActionPanel, Icon, Keyboard, List, open } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
+import { useState } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosTabPlatform } from "../lib/platform/tabs";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
+import { searchTabs } from "../lib/tabs/search";
 import { SwitchAction } from "./switch-action";
 
 export type Scope = "all" | "current";
@@ -32,15 +34,19 @@ export function TabList({ scope }: { scope: Scope }) {
   // looks the tab up again and reports it if it's gone.
   const { data, isLoading } = useCachedPromise(load, [scope], { keepPreviousData: true });
   const { tabs = [], failures = [], accessibility = true, current } = data ?? {};
+  // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
+  const [query, setQuery] = useState("");
 
   return (
     <List
       isLoading={isLoading}
+      filtering={false}
+      onSearchTextChange={setQuery}
       searchBarPlaceholder={
         scope === "current" && current ? `Filter ${current.name} tabs` : "Filter tabs, windows, and sessions"
       }
     >
-      {groupByApp(tabs).map(({ app, tabs }) => (
+      {groupByApp(searchTabs(tabs, query)).map(({ app, tabs }) => (
         <List.Section key={app.bundleId} title={app.name} subtitle={String(tabs.length)}>
           {tabs.map((tab) => (
             <TabItem key={tab.key} tab={tab} />
@@ -86,7 +92,6 @@ function TabItem({ tab }: { tab: Tab }) {
     <List.Item
       icon={tab.url ? getFavicon(tab.url, { fallback: Icon.Globe }) : { fileIcon: tab.app.path }}
       title={tab.title}
-      keywords={[tab.app.name, tab.detail ?? "", tab.kind]}
       accessories={[
         ...(tab.active ? [{ tag: "Active" }] : []),
         { text: shortDetail(tab) },
@@ -110,14 +115,15 @@ function TabItem({ tab }: { tab: Tab }) {
   );
 }
 
+/** One section per app, in order of each app's first tab (so the best search match's app comes first). */
 function groupByApp(tabs: Tab[]): { app: App; tabs: Tab[] }[] {
-  const sections: { app: App; tabs: Tab[] }[] = [];
+  const sections = new Map<string, { app: App; tabs: Tab[] }>();
   for (const tab of tabs) {
-    const last = sections[sections.length - 1];
-    if (last?.app.bundleId === tab.app.bundleId) last.tabs.push(tab);
-    else sections.push({ app: tab.app, tabs: [tab] });
+    const section = sections.get(tab.app.bundleId);
+    if (section) section.tabs.push(tab);
+    else sections.set(tab.app.bundleId, { app: tab.app, tabs: [tab] });
   }
-  return sections;
+  return [...sections.values()];
 }
 
 /** Host for URLs, otherwise the source's detail (working directory, status...). */
