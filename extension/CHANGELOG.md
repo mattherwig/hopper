@@ -4,6 +4,7 @@
 
 - Tabs command: search tabs, windows, and sessions across running apps (Chromium browsers, Safari, cmux, iTerm, Terminal, Claude, Muse, and any app's windows) and jump to one.
 - Tabs in Current App command: the same for the frontmost app.
+- Claude Code sessions are listed from Claude's session files (all projects, most recent first, sidebar hidden or not) and open via Claude's deep link.
 
 ## [Initial Version] - {PR_MERGE_DATE}
 

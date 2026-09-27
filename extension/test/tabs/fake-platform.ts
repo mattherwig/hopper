@@ -16,6 +16,9 @@ export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { sc
     sidebarRows: overrides.sidebarRows ?? unexpected("sidebarRows"),
     openSidebarRow: overrides.openSidebarRow ?? unexpected("openSidebarRow"),
     labelWithSuffix: overrides.labelWithSuffix ?? (async () => undefined),
+    homeDir: overrides.homeDir ?? (() => "/Users/me"),
+    readFiles: overrides.readFiles ?? (async () => []),
+    openUrl: overrides.openUrl ?? unexpected("openUrl"),
   };
 }
 

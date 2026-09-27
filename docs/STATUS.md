@@ -6,6 +6,11 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 
 - `site/index.html` rebuilt around "Jump to any app, tab, or session": demo GIF up top, Apps and Tabs as equal columns (Store screenshots jumper-1 / jumper-5, symlinked), how it works for both, supported-apps table, permissions in Setup.
 
+## 2026-09-26 — Claude Code sessions without the sidebar (ADR-014)
+
+- Claude source reads Claude's session files and opens sessions with `claude://code/continue?session=<id>`: listed across projects, most recent first, with the sidebar hidden. Deep link verified live; source verified against the real files (11 sessions, 16ms). Chat-mode conversations still come from the sidebar.
+- Muse has no equivalent (probed: no deep link, Spotlight items, or local chat list): #13.
+
 ## 2026-09-26 — Tab level merged to main (ADR-013)
 
 Done:

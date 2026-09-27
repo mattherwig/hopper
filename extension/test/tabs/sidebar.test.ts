@@ -1,33 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { claude } from "../../src/lib/tabs/sources/claude.ts";
 import { muse } from "../../src/lib/tabs/sources/muse.ts";
 import { fromRows, rowName, type SidebarSpec } from "../../src/lib/tabs/sources/sidebar.ts";
 import { app, fakePlatform } from "./fake-platform.ts";
 
-const claudeApp = app("com.anthropic.claudefordesktop", "Claude");
 const museApp = app("com.meta.endo", "Muse");
 const row = (title: string, text = "", selected = false) => ({ title, text, selected });
-
-test("Claude: status prefix becomes detail, non-session buttons skipped, active from the label", async () => {
-  const platform = fakePlatform({
-    sidebarRows: async () => [
-      row("New"),
-      row("jumper", "jumper"),
-      row("Idle main", "main"),
-      row("#31608 · Open publication", "publication"),
-    ],
-    labelWithSuffix: async () => "main",
-  });
-  const tabs = await claude.list(claudeApp, platform);
-  assert.deepEqual(
-    tabs.map((t) => [t.title, t.detail, t.active, t.ref]),
-    [
-      ["main", "Idle", true, { name: "main" }],
-      ["publication", "#31608 · Open", false, { name: "publication" }],
-    ],
-  );
-});
 
 test("Muse: hover suffix (date + More thread actions) is stripped from row names", async () => {
   const platform = fakePlatform({
@@ -76,10 +54,10 @@ test("no sidebar found: falls back to the app's windows", async () => {
   const platform = fakePlatform({
     sidebarRows: async () => [],
     windows: async () => [
-      { bundleId: claudeApp.bundleId, windows: [{ index: 1, title: "Claude", minimized: false, tabs: [] }] },
+      { bundleId: museApp.bundleId, windows: [{ index: 1, title: "Muse", minimized: false, tabs: [] }] },
     ],
   });
-  const tabs = await claude.list(claudeApp, platform);
+  const tabs = await muse.list(museApp, platform);
   assert.deepEqual(
     tabs.map((t) => [t.source, t.kind]),
     [["windows", "window"]],

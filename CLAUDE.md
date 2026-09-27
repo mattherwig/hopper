@@ -58,7 +58,8 @@ extension/                                    the Raycast extension; everything 
     load.ts                                   read all apps' tabs in parallel, order them, route selection to the source
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
     sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript);
-                                              windows (Accessibility fallback); sidebar.ts + claude, muse (Accessibility sidebars)
+                                              windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar);
+                                              claude (session files + claude:// deep link, sidebar for Chat mode; ADR-014)
   src/lib/platform/                           macOS / Raycast glue shared by every level
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
     macos.ts                                  getRecentApps() (calls Swift) + activateApp() via Raycast open()

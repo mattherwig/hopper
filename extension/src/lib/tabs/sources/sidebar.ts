@@ -1,10 +1,11 @@
 // Apps whose "tabs" are rows in an in-window list (chat sessions, conversations), read through Accessibility.
-// Each app is a SidebarSpec passed to sidebarSource(); see claude.ts, muse.ts. These depend on the app's UI
+// Each app is a SidebarSpec passed to sidebarSource() (see muse.ts), or read with readSidebar() (claude.ts). These depend on the app's UI
 // structure, so an app update can break them: when no rows are found, the app's windows are listed instead.
 
 import {
   TabGoneError,
   type App,
+  type Platform,
   type SidebarQuery,
   type SidebarRow,
   type Tab,
@@ -28,7 +29,7 @@ export interface SidebarSpec extends SidebarQuery {
   activeSuffix?: string;
 }
 
-interface Ref {
+export interface SidebarRef {
   name: string;
 }
 
@@ -38,8 +39,8 @@ export function rowName(spec: SidebarSpec, title: string): string {
   return new RegExp(spec.namePattern).exec(title)?.[1] ?? title;
 }
 
-export function fromRows(app: App, spec: SidebarSpec, rows: SidebarRow[], activeName?: string): Tab<Ref>[] {
-  return rows.flatMap((row): Tab<Ref>[] => {
+export function fromRows(app: App, spec: SidebarSpec, rows: SidebarRow[], activeName?: string): Tab<SidebarRef>[] {
+  return rows.flatMap((row): Tab<SidebarRef>[] => {
     let name = rowName(spec, row.title);
     let status: string | undefined;
     if (spec.format === "status-prefixed") {
@@ -63,25 +64,32 @@ export function fromRows(app: App, spec: SidebarSpec, rows: SidebarRow[], active
   });
 }
 
+/** The sidebar's entries, or [] if it's hidden or not found. */
+export async function readSidebar(app: App, spec: SidebarSpec, platform: Platform): Promise<Tab<SidebarRef>[]> {
+  const [rows, active] = await Promise.all([
+    platform.sidebarRows(app.bundleId, spec),
+    spec.activeSuffix ? platform.labelWithSuffix(app.bundleId, spec.activeSuffix) : undefined,
+  ]);
+  return fromRows(app, spec, rows, active);
+}
+
+export async function openSidebarEntry(tab: Tab<SidebarRef>, spec: SidebarSpec, platform: Platform): Promise<void> {
+  if (!(await platform.openSidebarRow(tab.app.bundleId, spec, tab.ref.name))) {
+    throw new TabGoneError("No longer in the sidebar");
+  }
+}
+
 export function sidebarSource(spec: SidebarSpec): TabSource {
-  const source: TabSource<Ref> = {
+  const source: TabSource<SidebarRef> = {
     id: spec.id,
     bundleIds: [spec.bundleId],
     list: async (app, platform) => {
-      const [rows, active] = await Promise.all([
-        platform.sidebarRows(app.bundleId, spec),
-        spec.activeSuffix ? platform.labelWithSuffix(app.bundleId, spec.activeSuffix) : undefined,
-      ]);
-      const tabs = fromRows(app, spec, rows, active);
+      const tabs = await readSidebar(app, spec, platform);
       // Sidebar hidden or not found (e.g. the app's UI changed): offer its windows instead.
-      return tabs.length > 0 ? tabs : ((await windows.list(app, platform)) as Tab[] as Tab<Ref>[]);
+      return tabs.length > 0 ? tabs : ((await windows.list(app, platform)) as Tab[] as Tab<SidebarRef>[]);
     },
     // Fallback entries carry source "windows", so their selection is routed there, not here.
-    select: async (tab, platform) => {
-      if (!(await platform.openSidebarRow(tab.app.bundleId, spec, tab.ref.name))) {
-        throw new TabGoneError("No longer in the sidebar");
-      }
-    },
+    select: (tab, platform) => openSidebarEntry(tab, spec, platform),
   };
   return source;
 }

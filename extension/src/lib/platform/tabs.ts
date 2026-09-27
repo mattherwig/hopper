@@ -1,4 +1,8 @@
+import { open } from "@raycast/api";
 import { runAppleScript } from "@raycast/utils";
+import { readdir, readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import {
   accessibilityTrusted,
   appWindows,
@@ -25,4 +29,25 @@ export const macosTabPlatform: Platform = {
   openSidebarRow: (bundleId, query, name) =>
     openSidebar(bundleId, query.container, query.rowRole, name, query.namePattern ?? "", query.keyboard ?? false),
   labelWithSuffix: async (bundleId, suffix) => (await labelWithSuffix(bundleId, suffix)) ?? undefined,
+  homeDir: () => homedir(),
+  readFiles: async (dir, name, depth) => {
+    const paths = await findFiles(dir, name, depth);
+    const files = await Promise.all(
+      paths.map(async (path) => ({ path, text: await readFile(path, "utf8").catch(() => "") })),
+    );
+    return files.filter((f) => f.text !== "");
+  },
+  openUrl: (url) => open(url),
 };
+
+async function findFiles(dir: string, name: RegExp, depth: number): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  const nested = await Promise.all(
+    entries.map((e) => {
+      const path = join(dir, e.name);
+      if (e.isDirectory()) return depth > 0 ? findFiles(path, name, depth - 1) : [];
+      return name.test(e.name) ? [path] : [];
+    }),
+  );
+  return nested.flat();
+}

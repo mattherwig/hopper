@@ -68,6 +68,12 @@ export interface Platform {
   openSidebarRow(bundleId: string, query: SidebarQuery, name: string): Promise<boolean>;
   /** Description of the first element whose description ends with `suffix`, minus the suffix. */
   labelWithSuffix(bundleId: string, suffix: string): Promise<string | undefined>;
+  /** The user's home folder, for sources that read an app's own data files. */
+  homeDir(): string;
+  /** Text of the files under `dir` (up to `depth` levels down) whose name matches `name`. [] if `dir` is missing. */
+  readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string }[]>;
+  /** Open a URL with its registered app, e.g. an app's deep link. */
+  openUrl(url: string): Promise<void>;
 }
 
 export interface AppWindows {
