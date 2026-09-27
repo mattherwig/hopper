@@ -61,11 +61,12 @@ PROCESS = {"Ghostty": "ghostty"}
 # Keys shown in the GIF overlay: the owner's own bindings (Raycast Settings → Extensions → Hopper).
 # Commands are actually triggered by deeplink, since Raycast ignores synthetic hotkeys.
 HOTKEYS = {
-    "back": ["⇧", "⌘", "["],
-    "forward": ["⇧", "⌘", "]"],
+    "back": ["⌃", "⌘", "["],
+    "forward": ["⌃", "⌘", "]"],
     "toggle": ["⌘", "⌘"],  # double-tap ⌘
-    "history": ["⇧", "⌘"],
-    "tabs": ["⌃", "⌘"],
+    "history": ["⌃", "⌘"],
+    "tabs": ["⌃", "⌃"],  # double-tap ⌃
+    "agents": ["⌥", "⌘"],
 }
 
 NOTE = "Launch checklist\n\n- Screenshots\n- Demo GIF\n- Submit to the Raycast Store\n"
@@ -116,6 +117,14 @@ def frontmost() -> str:
     return osa('tell application "System Events" to get name of first process whose frontmost is true')
 
 
+def raycast_open() -> bool:
+    """True while Raycast has any window on screen, including the Request to run prompt."""
+    try:
+        return int(osa('tell application "System Events" to count windows of process "Raycast"')) > 0
+    except subprocess.CalledProcessError:
+        return False
+
+
 def raycast_window() -> tuple[int, int, int, int, int] | None:
     """(id, x, y, w, h) of Raycast's launcher window while it is on screen, else None."""
     out = subprocess.run(["swift", str(HERE / "raycast-window.swift")], capture_output=True, text=True)
@@ -148,20 +157,24 @@ class DemoApps:
         include_ghostty: bool = True,
         note_name: str = "Hopper.txt",
         preview_name: str | None = None,
+        apps: list | None = None,
+        note_text: str | None = None,
     ):
         self.frames = frames or {}  # staged app -> window rect (x, y, w, h), for the GIF
         self.before_staged = before_staged  # called once before the first staged app comes up (the backdrop)
         self.safari_tabs = safari_tabs or SAFARI_TABS
         self.include_ghostty = include_ghostty
         self.preview_name = preview_name  # window title for the Preview shot; copies the extension icon
+        self.apps = apps or DEMO_APPS
+        self.note_text = note_text or NOTE
         self.launched: list[str] = []
         self.safari_window: str | None = None
         self.note = TMP / note_name
         self.previous_app = frontmost()
 
     def __enter__(self):
-        self.note.write_text(NOTE)
-        for name, cmd, staged in DEMO_APPS:
+        self.note.write_text(self.note_text)
+        for name, cmd, staged in self.apps:
             process = PROCESS.get(name, name)
             if staged and self.before_staged:
                 self.before_staged()
@@ -344,39 +357,54 @@ def gif() -> None:
     close_raycast()
     frame = (rx - 120, max(ry - 50, 40), rw + 240, rh + 170)
     x, y, w, h = frame
-    staged = [n for n, _, st in DEMO_APPS if st]
+    video = TMP / "demo.mov"
+    back, fwd, hist, tog, tabs, agents = (HOTKEYS[c] for c in ("back", "forward", "history", "toggle", "tabs", "agents"))
+    # Queries are typed one character at a time, and never shown as keycaps: they are not Hopper commands.
+    # Copy is performed without a ⌘C label for the same reason.
+    tab_query, tab_target = "macos", "Safari"
+    agent_query, agent_target = "obsidian", "Claude"
+    copy_text = "Hopper"
+    card = {"card": "Hopper", "sub": "Built for context switchers"}
+    gif_apps = [
+        ("Notion", ["open", "-a", "Notion"], True),
+        ("Safari", None, True),
+        ("TextEdit", None, True),
+    ]
+    gif_tabs = [
+        "https://www.apple.com/os/macos/",
+        "https://www.google.com/",
+        "https://www.raycast.com/store",
+    ]
+    staged = [n for n, _, st in gif_apps if st]
     ww, wh = int(w * 0.6), int(h * 0.6)
     frames = {
         name: (x + int(w * (0.06 + 0.14 * i)), y + int(h * (0.05 + 0.15 * i)), ww, wh) for i, name in enumerate(staged)
     }
-    video = TMP / "demo.mov"
-    back, fwd, tog, hist, tabs = (HOTKEYS[c] for c in ("back", "forward", "toggle", "history", "tabs"))
-    # App order after setup: TextEdit (current), Preview, Safari. Back/Forward/Toggle cycle through those three;
-    # History ↓↓ lands on Safari. Tabs then pastes a fuzzy query for the owner's cmux workspace "github-pages" (cmux
-    # fills the screen, so it covers the recording area). Pasted, not typed: every prefix ("g", "gh") would briefly
-    # list matching private tabs. Tabs ranks matches across all apps (ADR-015); "github pages" ranks the cmux workspace first
-    # (check with a test run if the owner's tabs change). Checked after recording.
-    tab_query, tab_target = "github pages", "cmux"
-    card = {"card": "Hopper", "sub": "Jump to any app, tab, or session"}
-    # (overlay message, deeplink command or keystroke or None, seconds to hold)
+    # Claude is placed into this rect before the jump, so it is already the right size when it comes forward.
+    claude_frame = (x + 48, y + 36, w - 96, h - 140)
+    # (overlay message, action, seconds to hold). "…|App" checks the jump landed on App.
     timeline = [
-        (card, None, 2.6),
-        ({}, None, 0.3),
-        ({"keys": back, "title": "Back", "detail": "to the previous app"}, "back", 1.3),
-        ({"keys": back, "title": "Back", "detail": "and further back"}, "back", 1.4),
-        ({"keys": fwd, "title": "Forward", "detail": "retrace your steps"}, "forward", 1.3),
-        ({"keys": fwd, "title": "Forward", "detail": "back where you started"}, "forward", 1.4),
-        ({"keys": tog, "title": "Toggle", "detail": "flip between your last two apps"}, "toggle", 1.3),
-        ({"keys": tog, "title": "Toggle", "detail": "and back"}, "toggle", 1.4),
-        ({"keys": hist, "title": "History", "detail": "every running app, most recent first"}, "history", 1.8),
-        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.4),
-        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.7),
-        ({"keys": ["↩"], "title": "Switch to App", "detail": "jump straight there"}, "key code 36", 1.5),
-        ({"keys": tabs, "title": "Search", "detail": "tabs, sessions, and agents of every app"}, "tabs", 2.0),
-        ({"keys": [tab_query], "title": "Fuzzy search", "detail": "finds the github-pages workspace in cmux"}, f"paste:{tab_query}", 1.8),
-        ({"keys": ["↩"], "title": "Jump to Tab", "detail": "straight to that workspace"}, "key code 36", 2.0),
-        ({}, None, 0.3),
-        ({"card": "Hopper", "sub": "Free on the Raycast Store"}, None, 2.6),
+        (card, None, 2.0),
+        ({}, None, 0.25),
+        ({"keys": tabs, "title": "Search", "detail": "everything open, one list"}, "tabs", 0.9),
+        ({"keys": tabs, "title": "Search", "detail": "everything open, one list"}, f"type:{tab_query}", 0.65),
+        ({"keys": ["↩"], "title": "Jump to Tab", "detail": "the macOS page in Safari"}, f"key code 36|{tab_target}", 1.5),
+        ({"keys": agents, "title": "Agents", "detail": "every agent, wherever it runs"}, "agents", 0.9),
+        ({"keys": agents, "title": "Agents", "detail": "every agent, wherever it runs"}, f"type:{agent_query}", 0.6),
+        ({}, "place:Claude", 0.15),
+        ({"keys": ["↩"], "title": "Jump to Agent", "detail": "and land in that app"}, f"key code 36|{agent_target}", 1.7),
+        ({}, "close", 0.2),
+        ({}, "restage", 0.4),
+        ({"keys": hist, "title": "History", "detail": "the apps you actually use"}, "history", 1.7),
+        ({}, "close", 0.2),
+        ({"keys": back, "title": "Back", "detail": "to the previous app"}, "back", 1.2),
+        ({"keys": back, "title": "Back", "detail": "back to Notion"}, "back", 1.3),
+        ({"keys": fwd, "title": "Forward", "detail": "retrace that step"}, "forward", 1.1),
+        ({}, "copy-note", 0.7),
+        ({"keys": tog, "title": "Toggle", "detail": "over to the browser"}, "toggle", 1.0),
+        ({}, "paste-google", 1.5),
+        ({}, None, 0.25),
+        ({"card": "Hopper", "sub": "Free on the Raycast Store"}, None, 2.0),
     ]
     keycast = subprocess.Popen(
         ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(EXT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
@@ -390,50 +418,223 @@ def gif() -> None:
         overlay({"backdrop": True})
         time.sleep(5)  # keycast compiles on first run
 
-    with DemoApps(frames, before_staged=backdrop):
+    staged_names = set(frames)
+    parked: list[str] = []
 
-        # Warm Tabs' cache: it shows the last list first, which would otherwise be from the owner's own use.
-        deeplink("tabs")
-        time.sleep(3)
-        close_raycast()
-        for name in frames:  # the warm-up can shift the app order; staged apps must be the three most recent
+    def bring_staged() -> None:
+        for name in frames:
             subprocess.run(["open", "-a", name], check=True)
-            time.sleep(0.8)
-        # Park the pointer outside the recording area (screencapture -v records it).
-        subprocess.run(["swift", "-e", "import CoreGraphics; CGWarpMouseCursorPosition(CGPoint(x: 2, y: 2000))"])
-        overlay(card)
-        time.sleep(1)  # the card is up before recording starts
-        duration = sum(hold for *_, hold in timeline) + 1.5
-        rec = subprocess.Popen(
-            ["screencapture", "-x", "-v", "-V", str(int(duration) + 1), "-R", f"{x},{y},{w},{h}", str(video)]
+            time.sleep(0.35)
+
+    def place(process: str, rect: tuple[int, int, int, int]) -> None:
+        """Size and position a window before that app is activated. Leaves fullscreen first."""
+        fx, fy, fw, fh = (int(v) for v in rect)
+        result = subprocess.run(
+            [
+                "osascript",
+                "-e",
+                f'tell application "System Events" to tell process "{process}"\n'
+                "  if (count of windows) < 1 then error \"no window\"\n"
+                "  try\n"
+                '    set value of attribute "AXMinimized" of window 1 to false\n'
+                "  end try\n"
+                "  try\n"
+                '    set value of attribute "AXFullScreen" of window 1 to false\n'
+                "  end try\n"
+                "end tell\n"
+                "delay 0.3\n"
+                f'tell application "System Events" to tell process "{process}"\n'
+                "  set n to count of windows\n"
+                "  repeat with i from n to 2 by -1\n"
+                "    try\n"
+                '      set value of attribute "AXMinimized" of window i to true\n'
+                "    end try\n"
+                "  end repeat\n"
+                f"  set size of window 1 to {{{fw}, {fh}}}\n"
+                f"  set position of window 1 to {{{fx}, {fy}}}\n"
+                f"  set size of window 1 to {{{fw}, {fh}}}\n"
+                "end tell",
+            ],
+            capture_output=True,
+            text=True,
         )
-        time.sleep(1)  # screencapture startup; trimmed off below
-        checked: set[str] = set()
-        for message, action, hold in timeline:
-            overlay(message)
-            if action and action.startswith("paste:"):
-                paste(action.removeprefix("paste:"))
-            elif action and action.startswith(("key code", "keystroke")):
-                keys(action)
-            elif action:
-                deeplink(action)
-            time.sleep(hold)
-            no_view = action in ("back", "forward", "toggle")
-            if no_view and action not in checked and raycast_window() is not None:
-                # No-view commands only flash Raycast's window; if it is still up a second later,
-                # it's the "Request to run" prompt. The user must pick Always Run Command once.
-                time.sleep(1)
-                if raycast_window() is not None:
-                    rec.kill()
-                    keycast.kill()
-                    sys.exit(f"Raycast asked before running '{action}': choose Always Run Command, then rerun.")
-            if no_view:
-                checked.add(action)  # type: ignore[arg-type]
-        rec.wait()
-        keycast.stdin.close()
-        keycast.wait()
-        if frontmost() != tab_target:
-            print(f"warning: Tabs jump landed on {frontmost()}, expected {tab_target}: don't use this GIF", file=sys.stderr)
+        if result.returncode != 0:
+            print(f"warning: could not place {process}: {result.stderr.strip()}", file=sys.stderr)
+            return
+        got = osa(
+            f'tell application "System Events" to tell process "{process}" '
+            "to get {position of window 1, size of window 1}"
+        )
+        print(f"placed {process} -> {got}", file=sys.stderr)
+
+    def reframe() -> None:
+        for name, rect in frames.items():
+            place(PROCESS.get(name, name), rect)
+
+    def hide_other_apps() -> None:
+        """Minimize every other app's windows so they can't cover the backdrop. Restored at the end."""
+        # Claude stays unminimized: it was already sized, and minimizing would restore the old size on the jump.
+        keep = staged_names | {"Raycast", "swift", "keycast", "Claude"}
+        try:
+            raw = osa('tell application "System Events" to get name of every process whose background only is false')
+        except subprocess.CalledProcessError:
+            return
+        for name in (n.strip() for n in raw.split(",")):
+            if not name or name in keep or name in parked:
+                continue
+            parked.append(name)
+            subprocess.run(
+                [
+                    "osascript",
+                    "-e",
+                    f'tell application "System Events" to tell process "{name}"\n'
+                    "  repeat with w in windows\n"
+                    "    try\n"
+                    '      set value of attribute "AXMinimized" of w to true\n'
+                    "    end try\n"
+                    "  end repeat\n"
+                    "end tell",
+                ],
+                capture_output=True,
+            )
+
+    def clear_stage() -> None:
+        hide_other_apps()
+        reframe()
+
+    def restage() -> None:
+        """Hide whatever the agent jump raised, then put the staged apps back on top, newest last."""
+        current = frontmost()
+        if current not in staged_names and current != "Raycast":
+            parked.append(current)
+            subprocess.run(
+                [
+                    "osascript",
+                    "-e",
+                    f'tell application "System Events" to tell process "{current}"\n'
+                    "  repeat with w in windows\n"
+                    '    set value of attribute "AXMinimized" of w to true\n'
+                    "  end repeat\n"
+                    "end tell",
+                ],
+                capture_output=True,
+            )
+        # Size the cast in place. open -a would bring Notion forward at its old size first.
+        reframe()
+
+    def copy_note() -> None:
+        """Make the note and Safari the last two apps, then copy the note's line."""
+        subprocess.run(["open", "-a", "Safari"], check=True)
+        time.sleep(0.25)
+        subprocess.run(["open", "-a", "TextEdit"], check=True)
+        time.sleep(0.35)
+        osa(f'tell application "TextEdit" to set text of front document to "{copy_text}"')
+        keys('keystroke "a" using command down')
+        time.sleep(0.15)
+        keys('keystroke "c" using command down')
+
+    def paste_google() -> None:
+        """Paste the copied line into Safari's address bar and search. Default search is Google."""
+        keys('keystroke "l" using command down')
+        time.sleep(0.3)
+        keys('keystroke "v" using command down')
+        time.sleep(0.55)
+        keys("key code 36")
+
+    def restore_parked() -> None:
+        for name in parked:
+            subprocess.run(
+                [
+                    "osascript",
+                    "-e",
+                    f'tell application "System Events" to tell process "{name}"\n'
+                    "  repeat with w in windows\n"
+                    '    set value of attribute "AXMinimized" of w to false\n'
+                    "  end repeat\n"
+                    "end tell",
+                ],
+                capture_output=True,
+            )
+
+    with DemoApps(
+        frames,
+        before_staged=backdrop,
+        safari_tabs=gif_tabs,
+        include_ghostty=False,
+        apps=gif_apps,
+        note_text=copy_text + "\n",
+    ):
+        try:
+            # Warm the lists: each shows its cached copy first, which would otherwise be from the owner's own use.
+            for command in ("tabs", "agents"):
+                deeplink(command)
+                time.sleep(3)
+                close_raycast()
+            bring_staged()
+            clear_stage()
+            # Size Claude while it is still covered, then put the backdrop back over it.
+            place("Claude", claude_frame)
+            overlay({"backdrop": True})
+            time.sleep(0.3)
+            reframe()
+            # Park the pointer outside the recording area (screencapture -v records it).
+            subprocess.run(["swift", "-e", "import CoreGraphics; CGWarpMouseCursorPosition(CGPoint(x: 2, y: 2000))"])
+            overlay(card)
+            time.sleep(1)  # the card is up before recording starts
+            duration = sum(hold for *_, hold in timeline) + 16
+            rec = subprocess.Popen(
+                ["screencapture", "-x", "-v", "-V", str(int(duration) + 1), "-R", f"{x},{y},{w},{h}", str(video)]
+            )
+            time.sleep(1)  # screencapture startup; trimmed off below
+            misses: list[str] = []
+            for message, action, hold in timeline:
+                overlay(message)
+                expect = None
+                if action and "|" in action:
+                    action, expect = action.split("|", 1)
+                if action == "restage":
+                    restage()
+                elif action == "close":
+                    close_raycast()
+                elif action and action.startswith("place:"):
+                    who = action.removeprefix("place:")
+                    place(who, claude_frame if who == "Claude" else frames[who])
+                elif action and action.startswith("type:"):
+                    for ch in action.removeprefix("type:"):
+                        keys(f'keystroke "{ch}"')
+                        time.sleep(0.18)
+                elif action == "copy-note":
+                    copy_note()
+                elif action == "paste-google":
+                    paste_google()
+                elif action and action.startswith("paste:"):
+                    keys('keystroke "a" using command down')
+                    time.sleep(0.1)
+                    paste(action.removeprefix("paste:"))
+                elif action and action.startswith(("key code", "keystroke")):
+                    keys(action)
+                elif action:
+                    deeplink(action)
+                time.sleep(hold)
+                if expect and frontmost() != expect:
+                    misses.append(f"{expect} (landed on {frontmost()})")
+                no_view = action in ("back", "forward", "toggle")
+                if no_view and raycast_open():
+                    # No-view commands only flash Raycast. Still open after the hold means the
+                    # "Request to run" prompt. Always Run Command has to be chosen once.
+                    time.sleep(0.8)
+                    if raycast_open():
+                        rec.kill()
+                        keycast.kill()
+                        sys.exit(f"Raycast asked before running '{action}': choose Always Run Command, then rerun.")
+            rec.wait()
+        finally:
+            restore_parked()
+            if keycast.poll() is None:
+                keycast.stdin.close()
+                keycast.wait()
+        for miss in misses:
+            print(f"warning: jump missed {miss}: don't use this GIF", file=sys.stderr)
 
         out = EXT / "media"
         out.mkdir(exist_ok=True)

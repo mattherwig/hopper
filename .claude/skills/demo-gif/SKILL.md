@@ -1,15 +1,15 @@
 ---
 name: demo-gif
-description: Record Hopper's demo GIF (extension/media/demo.gif, shown at the top of the README and so on the Store page) by driving Back, Forward, Toggle, History, and Tabs on this Mac. Use when commands or their behavior change, or when asked to redo the demo/GIF/screencast.
+description: Record Hopper's demo GIF (extension/media/demo.gif, shown at the top of the README and so on the Store page) by driving Search, Agents, Back, Forward, and Toggle on this Mac. Use when commands or their behavior change, or when asked to redo the demo/GIF/screencast.
 ---
 
 # Demo GIF
 
-Produces `extension/media/demo.gif` (~24s, ~3 MB at 12 fps): a title card (the tagline), Back ×2, Forward ×2, Toggle ×2 (all cycling through the same three staged windows), History (↓↓ ↩), Tabs (paste the query "github pages" ↩, lands on the owner's cmux workspace `github-pages`), and an end card. Each step shows keycaps with the owner's hotkeys and a caption. `extension/README.md` embeds it as `![Hopper demo](media/demo.gif)`; Raycast requires README media in a `media/` folder at the extension's top level. The root GitHub README embeds it as `extension/media/demo.gif`. The same clip works as the PR screencast and for launch posts.
+Produces `extension/media/demo.gif` (~30s, under 5 MB): title card ("Built for context switchers"), Search, `macos` typed out, jump to that Safari tab, Agents, `obsidian` typed out, jump to Claude, History, Back ×2, Forward, copy the word Hopper, Toggle, paste it into Google, end card. `extension/README.md` embeds it as `![Hopper demo](media/demo.gif)`. The root README embeds `extension/media/demo.gif`. The same clip is the PR screencast.
 
 ## Before running
 
-Same prerequisites as the `store-screenshots` skill: warn the user and get a go-ahead (the screen is taken over for ~45s), one `ray develop` running, Accessibility + Screen Recording granted, and **Always Run Command** chosen once for each of `back`, `forward`, `toggle`, `history`, `tabs` (otherwise every deeplink stops at Raycast's "Request to run" prompt and nothing switches). Also needs `ffmpeg` (`brew install ffmpeg`).
+Same prerequisites as the `store-screenshots` skill: warn the user and get a go-ahead (the screen is taken over for about a minute), one `ray develop` running, Accessibility + Screen Recording granted, and **Always Run Command** chosen once for each of `back`, `forward`, `toggle`, `history`, `tabs`, `agents` (otherwise a deeplink stops on "Request to run"). Also needs `ffmpeg` (`brew install ffmpeg`). The script minimizes other apps' windows for the take and restores them after. Claude is resized, not quit.
 
 ## Run
 
@@ -19,20 +19,19 @@ From the repo root:
 python3 scripts/media/store_media.py gif
 ```
 
-What it does (`scripts/media/store_media.py`):
-- Opens History once to measure Raycast's window, and sets the recording area to that plus a margin.
-- Starts `keycast.swift` and brings up the demo apps (see `DEMO_APPS`). Before the first **staged** app (Safari with `SAFARI_TABS`, Preview on the icon, TextEdit on a scratch note), keycast puts up a dark Raycast-style **backdrop** at normal window level over the recording area: everything activated before it (the other demo apps, the owner's own windows) stays hidden behind it, and the staged windows come up above it, staggered from top left to bottom right, so each Back/Forward/Toggle visibly brings a different window forward. Then it re-activates the staged apps with `open -a` (again right before recording) so they're the three most recent.
-- **Only staged apps may become frontmost during the demo**: activating any other app raises all its windows over the backdrop. Finder was dropped from `DEMO_APPS` for this: it registered in the app order late, Back landed on it, and its sidebar showed the owner's home folder name.
-- **Ghostty is the owner's live session: never quit, close, or move it.** It's only activated (if already running) to fill a History row.
-- Parks the pointer outside the area. `keycast.swift` is an accessory-app overlay (never takes focus, so it doesn't disturb the app history being demoed) that draws the keycaps HUD and the full-frame title cards. Keys come from `HOTKEYS` in `store_media.py` (the owner's bindings, also the README's suggested hotkeys: change both together and rerun); commands are actually triggered by deeplink, as Raycast ignores synthetic hotkeys.
-- Stops if Raycast's window is still up a second after the first run of a no-view command: that is the "Request to run" prompt.
-- Tabs step: opens Tabs once before recording to warm its cache (it shows the cached list first; otherwise that would be from the owner's own use). Then it **pastes** `tab_query` ("github pages", matching the owner's cmux workspace `github-pages`; cmux fills the screen, so the jump covers the recording area). If the owner's tabs change, test candidate queries first (open Tabs, `paste()`, capture Raycast's window) and pick one whose top result is the target and whose other results show nothing private. Lessons from getting this wrong:
-  - Arrow keys are unreliable in Tabs: the selection after the cached list refreshes varies from run to run, and one run jumped to the owner's own Safari Start Page window, outside the recording area.
-  - Tabs ranks results across all apps with Fuse.js (ADR-015), not by section order: a query matching a Chrome tab title can put that section first. Abbreviations like "gh-pages" no longer match.
-  - Nothing showing the owner's name: no staged page or window with it (the staged GitHub tab is `raycast/extensions`, not the owner's repo).
-  - Typing letter by letter flashes every prefix's matches ("gol" showed a Gmail tab with the owner's address). Paste instead (`paste()` restores the clipboard's text).
-  - After recording, the script warns if the jump didn't land on `tab_target`: treat that GIF as bad.
-- Records the area with `screencapture -v -R`, converts with ffmpeg (12 fps, 960px wide, palette), cleans up the apps it launched.
+What it does (`scripts/media/store_media.py`, `gif()`):
+- The cast is three real apps, staggered on the backdrop: Notion, Safari (the macOS page, Google, the Raycast Store), and a TextEdit note whose only word is `Hopper`. No Chess, Dictionary, or other filler apps. History should show apps a person actually uses.
+- **Size every window before it comes forward.** Notion left at its real size covered the backdrop. Claude is placed in the frame while it is still covered, and placed again before Return, so the jump reveals it already fitted. `open -a` during the take brings the old size forward first; `place()` sets fullscreen off, then size, then position, before the command that activates the app.
+- Other apps' windows, and extra windows of a staged app (the owner's other Safari windows), are minimized for the take and restored after. Activating an app raises all of its windows over the backdrop.
+- **Keycaps are only Hopper commands** (Search, Agents, Back, Forward, Toggle, History, Return to jump). Do not label `macos`, `obsidian`, ⌘C, or ⌘V as commands. Copy still happens; the note coming forward is the cue. Paste still happens; the word landing in Google is the cue.
+- Queries are typed one character at a time (~0.18s), starting shortly after the list appears. A long hold after Search looks stuck. A second paste appends (`macosmacos`). Do not type `raycast`: the app name weighs most (ADR-015). Each prefix's matches flash; check the contact sheet for a private row.
+- Arrow keys in Search are unreliable. Return on the typed query. The script warns if a jump misses Safari or Claude.
+- `keycast.swift` draws the HUD and title cards and never takes focus. Commands are deeplinked; Raycast ignores synthetic hotkeys. Keys in the HUD are `HOTKEYS` (the README's suggested bindings).
+- Stops if Raycast's window is still up after a no-view command: that is "Request to run".
+- The recording length has to cover typing and `place()` time. A short `-V` cuts off Toggle, the paste, and the end card.
+- Records with `screencapture -v -R`, converts with ffmpeg (12 fps, 960px wide, palette).
+
+**Ghostty is the owner's live session: never quit, close, or move it.** The GIF cast does not include it. Finder was dropped from the old filler list: its sidebar shows the home folder name, and it registered in the app order late so Back landed on it.
 
 ## After running: review before committing (required)
 
@@ -44,10 +43,11 @@ ffmpeg -loglevel error -y -i extension/media/demo.gif -vf "select='not(mod(n\,30
 
 Check:
 - Every step actually switched app (the frontmost window changes); no Raycast "Request to run" dialog anywhere.
-- Nothing personal: only demo windows (including what's on screen in Ghostty), Raycast's History view, and labels. If a user window, notification, or menu shows up, delete the GIF and rerun (turn on Do Not Disturb).
+- Nothing personal: only the staged windows, Raycast's Search and Agents lists, the one agent jumped to, and labels. If a user window, notification, or menu shows up, delete the GIF and rerun (turn on Do Not Disturb).
 - Every Back/Forward/Toggle brings a staged window forward over the backdrop; no other app's window appears.
-- The Tabs step shows only staged rows before the query, the filtered results are harmless, and it ends on the cmux workspace.
-- Nowhere shows the owner's name (Finder sidebars, GitHub tabs) or email.
+- Search shows the list, then `macos` appearing character by character under the Search label (not as its own keycap), and lands on Safari. Agents does the same with `obsidian` and lands on a Claude window that already fits the frame. Notion is one of the three staggered windows, not a full-bleed page behind them.
+- The note says `Hopper`. No ⌘C or ⌘V keycap. Toggle is followed by that word in Google. The clip ends on the end card.
+- Nowhere shows the owner's name (Finder sidebars, Notion workspace name, GitHub tabs) or email.
 - Size stays reasonable (under ~5 MB); lower `fps` or `scale` in `gif()` if not.
 
 Then make sure `extension/README.md` starts with the demo image, `cd extension && npm run check`, commit `extension/media/demo.gif`.

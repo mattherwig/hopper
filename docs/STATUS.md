@@ -2,6 +2,11 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Demo GIF
+
+- `extension/media/demo.gif` retaken: Search and Agents typed out (not shown as commands), Claude sized before the jump, Notion / Safari / a one-word note as the cast, copy then Toggle into Google. Lessons are in the `demo-gif` skill.
+- Next: the site.
+
 ## 2026-09-27 — Obsidian tabs (ADR-027)
 
 - Obsidian 1.13.7 installed with Homebrew (`brew install --cask obsidian`); test vault `~/Obsidian/Hopper Test` registered in `obsidian.json`.
