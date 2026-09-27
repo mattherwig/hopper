@@ -91,6 +91,7 @@ docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
 scripts/smoke.py                              end-to-end smoke test in Raycast, suites nav/history/tabs, `--changed` picks them (skill: smoke-test)
 scripts/smoke_herdr.py                        end-to-end herdr smoke test (Search + Agents jumps into a throwaway herdr workspace; skill: smoke-test)
+scripts/smoke_claude.py                       end-to-end smoke test of Claude app Code sessions (Search + Agents jumps; skill: smoke-test)
 scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/; social-preview.sh renders the GitHub + og:image cards
 README.md                                     GitHub landing page; points to extension/README.md
 site/index.html                               landing page at https://addhopper.com (GitHub Pages custom domain; deployed by .github/workflows/pages.yml); its images (demo GIF, icon, hopper-1/-2/-3 screenshots) are symlinks into extension/; og-image.png (link previews) is rendered by scripts/media/social-preview.sh
