@@ -75,7 +75,8 @@ export function matchWord(word: string, text: string): number {
     }
     if (best <= allowed) return TYPO - 10 * best;
   }
-  if (word.length >= 3 && textWords.some((w) => isSubsequence(word, w))) return SUBSEQUENCE;
+  // Letters in order inside one word, starting with its first letter: "gh" finds "github", "gthb" too.
+  if (word.length >= 2 && textWords.some((w) => w[0] === word[0] && isSubsequence(word, w))) return SUBSEQUENCE;
   return 0;
 }
 

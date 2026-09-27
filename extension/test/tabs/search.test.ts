@@ -50,6 +50,11 @@ test("typos still find the tab, app first", () => {
   assert.deepEqual(titles(searchTabs(tabs, "githbu")), ["Google Chrome: GitHub"]);
 });
 
+test('abbreviated words, as in the demo GIF\'s "gh-pages"', () => {
+  const tabs = [tab(chrome, "GitHub"), tab(cmux, "github-pages"), tab(chrome, "Pages")];
+  assert.deepEqual(titles(searchTabs(tabs, "gh-pages")), ["cmux: github-pages"]);
+});
+
 test("every query word must match some field", () => {
   const tabs = [tab(chrome, "Pull requests", { url: "https://github.com/pulls" }), tab(chrome, "Pull up bar")];
   assert.deepEqual(titles(searchTabs(tabs, "pull github")), ["Google Chrome: Pull requests"]);
@@ -74,7 +79,9 @@ test("match levels", () => {
   assert.equal(matchWord("caude", "claude"), 50);
   assert.equal(matchWord("cluad", "claude"), 50);
   assert.equal(matchWord("gthb", "github"), 40);
-  // Short words need an exact substring: no typos, no scattered letters.
+  assert.equal(matchWord("gh", "github-pages"), 40);
+  assert.equal(matchWord("ae", "claude"), 0); // scattered letters must start at a word's first letter
+  // Short words: no typos.
   assert.equal(matchWord("cx", "claude"), 0);
   assert.equal(matchWord("xyz", "claude"), 0);
   assert.equal(matchWord("slack", "claude"), 0);
