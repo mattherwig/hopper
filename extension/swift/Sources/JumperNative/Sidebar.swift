@@ -75,6 +75,33 @@ func readLabel(bundleId: String, suffix: String) -> String? {
   return nil
 }
 
+struct WebPage: Codable {
+  /// The page's document title, e.g. "Looper" in Notion.
+  let title: String
+  let url: String
+}
+
+/// Title and URL of every web view showing an http(s) page, in all the app's windows. Notion keeps one per
+/// open tab (hidden tabs' views are moved off-screen, not removed). Page content isn't searched.
+func readWebPages(bundleId: String) -> [WebPage] {
+  guard let pid = pid(of: bundleId) else { return [] }
+  let app = appElement(pid)
+  AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+  var pages: [WebPage] = []
+  func visit(_ element: AXUIElement, _ depth: Int) {
+    if string(element, kAXRoleAttribute) == "AXWebArea" {
+      if let url = (attribute(element, kAXURLAttribute) as? URL)?.absoluteString, url.hasPrefix("http") {
+        pages.append(WebPage(title: string(element, kAXTitleAttribute) ?? "", url: url))
+      }
+      return
+    }
+    guard depth > 0 else { return }
+    for child in children(element) { visit(child, depth - 1) }
+  }
+  for window in children(app, kAXWindowsAttribute) { visit(window, 12) }
+  return pages
+}
+
 private func findContainer(_ pid: Int32, _ name: String) -> AXUIElement? {
   let app = appElement(pid)
   AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)

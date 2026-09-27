@@ -25,6 +25,8 @@ export interface Tab<Ref = unknown> {
   title: string;
   /** URL, working directory, or status. */
   detail?: string;
+  /** `detail` before shortening (e.g. a Notion page's full path): shown on hover and searched. */
+  detailFull?: string;
   url?: string;
   /** Selected tab of its window, or the open session. */
   active: boolean;
@@ -74,6 +76,10 @@ export interface Platform {
   readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string }[]>;
   /** Open a URL with its registered app, e.g. an app's deep link. */
   openUrl(url: string): Promise<void>;
+  /** Title and URL of each web page open in the app, through Accessibility (Notion: one per tab). */
+  webPages(bundleId: string): Promise<{ title: string; url: string }[]>;
+  /** Rows of a read-only query on an SQLite file, e.g. an app's local cache. Rejects if the file is missing. */
+  querySqlite(path: string, sql: string): Promise<Record<string, unknown>[]>;
 }
 
 export interface AppWindows {
