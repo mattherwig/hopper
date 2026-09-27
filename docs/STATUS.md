@@ -6,8 +6,8 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 
 - Architecture cleanup: agent hosts are a terminal process, a `place` (tab key + pane of a tab the tab level lists), or a `link` (Cursor, Codex app). `placeKey`, `Host` kind `herdr` and `Location.herdr` removed; `jumpToAgent` = select the tab with its source, else open the link. herdr's pane focus moved into its tab source (`selectPane`); Claude's deep link built once (`codeSessionUrl`).
 - Visible change: in Search, a herdr agent's status tag is on its herdr tab, not on the terminal tab running herdr.
-- Verified: 127 unit tests, lint, build. Not verified live: jumping to herdr and Claude Code agents from Search, Agents, Next Agent (smoke `tabs`).
-- Next: owner smoke test; merge.
+- Verified: 127 unit tests, lint, build; new `scripts/smoke_herdr.py` 6/6 live (herdr 0.9.1, clients in cmux + Ghostty: Search → herdr tab / workspace, Agents → Claude agent's herdr pane). Smoke `tabs` 2/3: the typo'd-title check was disturbed by typing during the run. Not verified live: Claude Code session in the Claude app from Search/Agents, Next Agent.
+- Next: rerun smoke `tabs` untouched; merge.
 
 ## 2026-09-27 — Store PR review fixes (raycast/extensions#31648)
 
