@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { toAgents as cliAgents } from "../../src/lib/agents/sources/cli.ts";
 import { codex, statusOf as codexStatus, terminalFor, threadsDb } from "../../src/lib/agents/sources/codex.ts";
 import {
+  cursor,
   parseHeaders,
   statusOf as cursorStatus,
   toAgents as cursorAgents,
@@ -52,9 +53,35 @@ test("cursor: blocked, working, done from Cursor's own flags; old idle and archi
   assert.deepEqual(agents[0].host, {
     kind: "link",
     bundleId: "com.todesktop.230313mzl4w4u92",
-    url: "/p/app",
+    url: "cursor://anysphere.cursor-deeplink/agent?id=a",
     label: "Cursor › app",
   });
+});
+
+test("cursor: headers from the composerHeaders table, the old blob when Cursor has no table", async () => {
+  const header = { id: "a", unread: 1, blocking: 0, updatedAt: 5, folder: "/p/app" };
+  const run = async (hasTable: boolean) => {
+    const queries: string[] = [];
+    const platform = fakePlatform({
+      querySqlite: async (_db, sql) => {
+        queries.push(sql);
+        if (sql.includes("from composerHeaders")) {
+          if (!hasTable) throw new Error("no such table: composerHeaders");
+          return [header];
+        }
+        if (sql.includes("allComposers")) return [header];
+        return [];
+      },
+    });
+    const agents = await cursor.list({
+      platform,
+      apps: [{ name: "Cursor", bundleId: "com.todesktop.230313mzl4w4u92", path: "/Applications/Cursor.app" }],
+      now: 10,
+    } as never);
+    return { ids: agents.map((a) => a.id), legacy: queries.some((q) => q.includes("allComposers")) };
+  };
+  assert.deepEqual(await run(true), { ids: ["a"], legacy: false });
+  assert.deepEqual(await run(false), { ids: ["a"], legacy: true });
 });
 
 const snapshot = {
@@ -178,7 +205,10 @@ test("codex: app threads open by link while the app runs; CLI threads need their
 });
 
 test("codex: the thread database is the highest-numbered state file", () => {
-  assert.equal(threadsDb(["logs_2.sqlite", "state_5.sqlite", "state_5.sqlite-wal", "state_12.sqlite"]), "state_12.sqlite");
+  assert.equal(
+    threadsDb(["logs_2.sqlite", "state_5.sqlite", "state_5.sqlite-wal", "state_12.sqlite"]),
+    "state_12.sqlite",
+  );
   assert.equal(threadsDb(["state.sqlite", "logs_2.sqlite"]), undefined);
 });
 
@@ -196,7 +226,12 @@ test("codex: falls back to the original columns when the schema changed, and to 
     },
     readTail: async () => "",
   });
-  const context = { platform, apps: [{ bundleId: "com.openai.codex", name: "ChatGPT", path: "/x" }], processes: [], now: 0 };
+  const context = {
+    platform,
+    apps: [{ bundleId: "com.openai.codex", name: "ChatGPT", path: "/x" }],
+    processes: [],
+    now: 0,
+  };
   assert.deepEqual(
     (await codex.list(context)).map((a) => a.id),
     ["t1"],
