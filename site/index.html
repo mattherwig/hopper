@@ -262,7 +262,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
         <div>
           <h3>Agents</h3>
           <ul class="facts">
-            <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, the Codex daemon, Cursor's flags, herdr's detection. No hooks to install.</li>
+            <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, Codex's thread log, Cursor's flags, herdr's detection. No hooks to install.</li>
             <li><strong>Done means finished since you last looked,</strong> in the agent's own app or by jumping to it from Jumper.</li>
             <li><strong>Jumping goes to where it runs:</strong> the exact iTerm split or cmux terminal, the herdr pane, the Claude session, the Cursor window.</li>
             <li><strong>Projects are git repositories;</strong> worktrees count as their main repository.</li>
@@ -297,11 +297,10 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
         <thead><tr><th>Agent</th><th>Status</th></tr></thead>
         <tbody>
           <tr><td>Claude Code (terminals, Claude app, IDEs)</td><td>Working, needs approval or input, done, idle</td></tr>
-          <tr><td>Codex (terminals, Codex app)</td><td>Working, needs approval or input, done, idle</td></tr>
+          <tr><td>Codex (Codex app, terminals)</td><td>Working, done, idle</td></tr>
           <tr><td>Cursor</td><td>Working, needs input, done, idle</td></tr>
           <tr><td>Any agent in herdr</td><td>herdr's own status</td></tr>
           <tr><td>Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs</td><td>Running</td></tr>
-          <tr><td>Claude Code on the web, Codex cloud, Jules, Devin, Cursor cloud agents (browser tabs)</td><td>Running</td></tr>
         </tbody>
       </table>
     </div>

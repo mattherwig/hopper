@@ -67,8 +67,8 @@ extension/                                    the Raycast extension; everything 
   src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-022)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
     registry.ts                               the agent sources — add new agent products here
-    sources/                                  claude (~/.claude/sessions + Claude app files), codex (app-server daemon), cursor (state.vscdb),
-                                              herdr (socket snapshot), cli (agent CLIs by process name), web (agent URLs in browser tabs)
+    sources/                                  claude (~/.claude/sessions + Claude app files), codex (state_5.sqlite + rollout files), cursor (state.vscdb),
+                                              herdr (socket snapshot), cli (agent CLIs by process name)
     locate.ts                                 host → app / tab / pane: process parent chain + tty against panes; herdr panes
     status.ts                                 done-until-seen, urgency order, Next Agent's pick
     load.ts                                   read all sources, merge one agent per session, locate, attach projects; jumpToAgent

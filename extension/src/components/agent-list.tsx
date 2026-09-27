@@ -28,7 +28,7 @@ const ALL = "all";
 
 /** Every agent, grouped by status, most urgent first. */
 export function AgentList() {
-  const { data, isLoading, revalidate } = useCachedPromise(() => loadAllAgents({ withWebAgents: true }), [], {
+  const { data, isLoading, revalidate } = useCachedPromise(() => loadAllAgents(), [], {
     keepPreviousData: true,
   });
   useEffect(() => {

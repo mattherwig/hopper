@@ -110,7 +110,7 @@
       "name": "agents",
       "title": "Agents",
       "subtitle": "Jumper",
-      "description": "List the AI agents running on this Mac (Claude Code, Cursor, Codex, herdr, web agents) by status, most urgent first, and jump to where one runs.",
+      "description": "List the AI agents running on this Mac (Claude Code, Codex, Cursor, herdr, agent CLIs) by status, most urgent first, and jump to where one runs.",
       "mode": "view",
       "keywords": [
         "claude code",
@@ -138,14 +138,12 @@
   "dependencies": {
     "@raycast/api": "^2.5.2",
     "@raycast/utils": "^2.3.2",
-    "fuse.js": "7.5.0",
-    "ws": "8.22.0"
+    "fuse.js": "7.5.0"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.2.0",
     "@types/node": "22.13.10",
     "@types/react": "19.0.10",
-    "@types/ws": "8.18.1",
     "eslint": "^9.22.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2"

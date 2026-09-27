@@ -2,7 +2,7 @@
 
 ## [Agents] - {PR_MERGE_DATE}
 
-- Agents command: every AI agent running on your Mac (Claude Code in terminals and the Claude app, Codex, Cursor, herdr, agent CLIs, web agents), grouped by Needs You, Done, Working, and Idle, filterable by project, and one step from where it runs.
+- Agents command: every AI agent running on your Mac (Claude Code in terminals and the Claude app, Codex, Cursor, herdr, agent CLIs), grouped by Needs You, Done, Working, and Idle, filterable by project, and one step from where it runs.
 - Next Agent command: jump to the agent that has waited longest for you; run again for the next.
 - Jumping to a terminal agent selects its exact iTerm split or cmux terminal.
 - Tabs is now **Search** (and Tabs in Current App is **Search Current App**): it shows an agent's status next to the tab it runs in, and lists agents that aren't in a tab. Your hotkeys keep working.

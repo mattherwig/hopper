@@ -57,7 +57,6 @@ export async function locate(
 
 function locationOf(agent: Agent, terminal: Terminal | undefined, tabs: Tab[], apps: App[]): Location | undefined {
   const { host } = agent;
-  if (host.kind === "tab") return { app: host.tab.app, label: host.tab.app.name, tab: host.tab };
   if (host.kind === "link") {
     const app = apps.find((a) => a.bundleId === host.bundleId);
     return app && { app, label: host.label ?? app.name, url: host.url };

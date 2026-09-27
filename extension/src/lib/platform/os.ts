@@ -1,12 +1,11 @@
 import { open } from "@raycast/api";
 import { runAppleScript } from "@raycast/utils";
 import { execFile } from "node:child_process";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { open as openFile, readdir, readFile, stat } from "node:fs/promises";
 import { createConnection } from "node:net";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
-import WebSocket from "ws";
 import {
   accessibilityTrusted,
   appWindows,
@@ -17,7 +16,7 @@ import {
   sidebarRows,
   webPages,
 } from "swift:../../../swift";
-import type { AppWindows, GitRepo, Platform, RpcConnection, SidebarRow } from "./model";
+import type { AppWindows, GitRepo, Platform, SidebarRow } from "./model";
 import { readJson, writeJson } from "./storage";
 
 /** An app that stops responding must not hold up the whole list. */
@@ -63,7 +62,7 @@ export const macosPlatform: Platform = {
   },
   processes: () => processes(),
   socketRequest,
-  connectRpc,
+  readTail,
   gitRepos: (dirs) => Promise.all(dirs.map((dir) => gitRepo(dir).catch(() => undefined))),
 };
 
@@ -105,50 +104,19 @@ function socketRequest(path: string, request: unknown): Promise<unknown> {
   });
 }
 
-/** JSON-RPC over a WebSocket on a Unix socket; requests are numbered from 1. */
-function connectRpc(path: string): Promise<RpcConnection> {
-  return new Promise((resolveConnection, reject) => {
-    const socket = new WebSocket(`ws+unix://${path}:/`, { handshakeTimeout: SOCKET_TIMEOUT });
-    const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
-    let next = 1;
-    socket.on("error", (error) => {
-      reject(error);
-      for (const p of pending.values()) p.reject(error);
-      pending.clear();
-    });
-    socket.on("message", (data) => {
-      let message: { id?: number; result?: unknown; error?: { message?: string } };
-      try {
-        message = JSON.parse(data.toString());
-      } catch {
-        return;
-      }
-      const waiting = typeof message.id === "number" ? pending.get(message.id) : undefined;
-      if (!waiting) return;
-      pending.delete(message.id!);
-      if (message.error) waiting.reject(new Error(message.error.message ?? "Request failed"));
-      else waiting.resolve(message.result);
-    });
-    socket.on("open", () =>
-      resolveConnection({
-        request: (method, params) =>
-          new Promise((resolve, rejectRequest) => {
-            const id = next++;
-            const timer = setTimeout(() => {
-              pending.delete(id);
-              rejectRequest(new Error(`No answer to ${method}`));
-            }, SOCKET_TIMEOUT);
-            pending.set(id, {
-              resolve: (v) => (clearTimeout(timer), resolve(v)),
-              reject: (e) => (clearTimeout(timer), rejectRequest(e)),
-            });
-            socket.send(JSON.stringify({ id, method, params }));
-          }),
-        notify: (method, params) => socket.send(JSON.stringify(params === undefined ? { method } : { method, params })),
-        close: () => socket.close(),
-      }),
-    );
-  });
+async function readTail(path: string, bytes: number): Promise<string> {
+  const file = await openFile(path, "r");
+  try {
+    const { size } = await file.stat();
+    const start = Math.max(0, size - bytes);
+    const buffer = Buffer.alloc(size - start);
+    await file.read(buffer, 0, buffer.length, start);
+    const text = buffer.toString("utf8");
+    // Drop the partial first line when the read starts mid-file.
+    return start === 0 ? text : text.slice(text.indexOf("\n") + 1);
+  } finally {
+    await file.close();
+  }
 }
 
 /**

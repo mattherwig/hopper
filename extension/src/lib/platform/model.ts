@@ -47,21 +47,10 @@ export interface Platform {
    * line. Rejects if nothing listens there or it doesn't answer in time.
    */
   socketRequest(path: string, request: unknown): Promise<unknown>;
-  /**
-   * A JSON-RPC connection over a WebSocket on a Unix socket (Codex's app-server daemon). Rejects if nothing
-   * listens there. The caller closes it.
-   */
-  connectRpc(path: string): Promise<RpcConnection>;
+  /** The last `bytes` bytes of a file as text (from a line start, when it's cut). Rejects if it's missing. */
+  readTail(path: string, bytes: number): Promise<string>;
   /** The git repository containing each folder (undefined if none), for grouping places into projects. */
   gitRepos(dirs: string[]): Promise<(GitRepo | undefined)[]>;
-}
-
-export interface RpcConnection {
-  /** Sends a request and resolves with its `result`; rejects with its `error`, or if no answer comes in time. */
-  request(method: string, params: unknown): Promise<unknown>;
-  /** Sends a notification (no answer). */
-  notify(method: string, params?: unknown): void;
-  close(): void;
 }
 
 export interface Process {

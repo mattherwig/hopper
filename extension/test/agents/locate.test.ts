@@ -114,9 +114,6 @@ test("loadAgents: sources in parallel, a failing one reported, projects attached
     listDir: async () => {
       throw new Error("disk on fire");
     },
-    connectRpc: async () => {
-      throw new Error("no daemon");
-    },
     gitRepos: async (dirs) => dirs.map(() => ({ root: "/r/app", mainRoot: "/r/app" })),
   });
   const result = await loadAgents([iterm, ghostty], platform, {

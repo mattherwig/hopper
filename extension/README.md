@@ -14,7 +14,7 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 - **History**: list running apps from most to least recently used and jump to any of them.
 - **Search**: search everything open on your Mac and jump straight to it: browser tabs, terminal tabs, herdr workspaces, Claude and Muse chat sessions, Notion tabs, any app's windows, and AI agents (with their status). A **Recently Closed** section reopens browser tabs, Notion pages, and documents you've closed.
 - **Search Current App**: the same, for the app you're in.
-- **Agents**: the AI agents running on your Mac (Claude Code, Codex, Cursor, herdr, agent CLIs, web agents), grouped by status: **Needs You**, **Done**, **Working**, **Idle**. Jump to where one runs: its terminal pane, its herdr pane, or its session in the Claude app or Cursor.
+- **Agents**: the AI agents running on your Mac (Claude Code, Codex, Cursor, herdr, agent CLIs), grouped by status: **Needs You**, **Done**, **Working**, **Idle**. Jump to where one runs: its terminal pane, its herdr pane, or its session in the Claude app or Cursor.
 - **Next Agent**: jump to the agent that has waited longest for you: one that needs your input or approval first, then one that finished a turn you haven't seen. Run it again for the next one.
 
 ## Setup
@@ -70,15 +70,14 @@ Apps are ordered by recent use; within an app, active tabs come first. herdr isn
 | Agent | Where it runs | Status from |
 |---|---|---|
 | Claude Code | Terminals, the Claude app's Code tab, IDEs | Claude Code's own list of running sessions (busy, waiting for approval or input, idle); the Claude app's record of what you've looked at |
-| Codex | Terminals, the Codex app | The Codex app-server daemon's thread status (working, waiting on approval or input, idle) |
+| Codex | The Codex app (ChatGPT), terminals | Codex's own thread list and log (working, idle; Codex doesn't record when it waits on you) |
 | Cursor | Cursor's agents | Cursor's own flags (waiting on you, generating, unread) |
 | herdr | Any agent in a herdr pane | herdr's own detection, over its socket |
 | Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs | Terminals | Not readable: listed as Running |
-| Claude Code on the web, Codex cloud, Jules, Devin, Cursor cloud agents | Browser tabs | Not readable: listed as Running |
 
 **Done** means an agent finished a turn since you last looked at it: in its own app (Claude records when you last opened a session), or by jumping to it from Jumper. Agents Jumper sees for the first time count as seen, so ones that were already sitting idle don't all show as done. **Needs You** is an agent stopped on a prompt: a permission request or a question.
 
-Jumping goes to where the agent runs: the exact iTerm split, cmux terminal, or Terminal tab of a terminal agent; the pane in herdr (and the terminal running herdr); the session in the Claude app; the agent's folder in Cursor (Cursor has no link to a single agent); the browser tab of a web agent. In Ghostty, which doesn't report which terminal a process runs in, Jumper picks the terminal in the agent's folder if only one is (else brings Ghostty forward), and finds herdr's terminal exactly by having herdr briefly set its title. **Copy Resume Command** copies `claude --resume <id>` or `codex resume <id>`. Filter by project with the dropdown: an agent's project is the git repository it works in (worktrees count as their main repository). Search shows an agent's status next to the tab it runs in (a Claude Code session, a terminal or herdr tab), and lists each agent as a row of its own in that app's section, so searching an agent's name finds it.
+Jumping goes to where the agent runs: the exact iTerm split, cmux terminal, or Terminal tab of a terminal agent; the pane in herdr (and the terminal running herdr); the session in the Claude app; the agent's folder in Cursor (Cursor has no link to a single agent). In Ghostty, which doesn't report which terminal a process runs in, Jumper picks the terminal in the agent's folder if only one is (else brings Ghostty forward), and finds herdr's terminal exactly by having herdr briefly set its title. **Copy Resume Command** copies `claude --resume <id>` or `codex resume <id>`. Filter by project with the dropdown: an agent's project is the git repository it works in (worktrees count as their main repository). Search shows an agent's status next to the tab it runs in (a Claude Code session, a terminal or herdr tab), and lists each agent as a row of its own in that app's section, so searching an agent's name finds it.
 
 ## Support
 

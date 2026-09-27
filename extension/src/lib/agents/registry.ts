@@ -1,4 +1,4 @@
-// PURE: the agent sources. Add new ones here. Web agents aren't a source: they're read from browser tabs (web.ts).
+// PURE: the agent sources. Add new ones here.
 
 import type { AgentSource } from "./model";
 import { claude } from "./sources/claude";

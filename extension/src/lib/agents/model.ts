@@ -1,6 +1,6 @@
 // PURE: types for the agent level. An agent is an AI agent (a Claude Code session, a Cursor agent, a Codex CLI...)
 // with a status, and a *host*: where it runs. It isn't a place of its own; jumping to it goes to its host: a
-// terminal pane, a herdr pane, a desktop app's deep link, a browser tab (ADR-022).
+// terminal pane, a herdr pane, a desktop app's deep link (ADR-022).
 //
 // A *source* knows one family of agents (sources/, listed in registry.ts). Sources report what the agent's own
 // files, processes, or APIs say; locate.ts then ties each host to the app and tab it's in, and status.ts turns
@@ -14,7 +14,7 @@ import type { Tab } from "../tabs/model";
  * - working: running a turn.
  * - done: finished a turn the user hasn't looked at yet (status.ts).
  * - idle: finished and seen, or waiting for a new prompt.
- * - unknown: running, but its state can't be read (CLIs without a status file, web agents).
+ * - unknown: running, but its state can't be read (CLIs without a status file).
  */
 export type AgentStatus = "blocked" | "working" | "done" | "idle" | "unknown";
 
@@ -54,8 +54,6 @@ export type Host =
   | { kind: "process"; pid: number; tty: string }
   /** Opened by URL (or a folder) with an app: desktop agents. */
   | { kind: "link"; bundleId: string; url: string; label?: string }
-  /** A tab already listed (web agents in a browser). */
-  | { kind: "tab"; tab: Tab }
   /** A pane of a herdr session, focused through its socket; the terminal running herdr comes forward. */
   | { kind: "herdr"; socket: string; paneId: string; label: string };
 

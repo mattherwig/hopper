@@ -9,7 +9,6 @@ import type { Agent, AgentContext, LocatedAgent } from "./model";
 import { AGENT_SOURCES } from "./registry";
 import { focusPane } from "./sources/herdr";
 import { revealClient } from "../tabs/sources/herdr";
-import { webAgents } from "./sources/web";
 import { applySeen, SEEN_KEY, sortAgents, type SeenMap } from "./status";
 
 export interface ListedAgent extends LocatedAgent {
@@ -25,14 +24,12 @@ export interface AgentLoadResult {
 export interface LoadOptions {
   /** Reads tabs of the given apps (terminal apps hosting agents), e.g. tabs/load.ts loadTabs. */
   loadTabs: (apps: App[]) => Promise<Tab[]>;
-  /** Browser tabs, to find web agents in (read while the sources are). */
-  tabs?: Promise<Tab[]>;
   now: number;
 }
 
 /** Every agent, most urgent first (status.ts), located, with its project. */
 export async function loadAgents(apps: App[], platform: Platform, options: LoadOptions): Promise<AgentLoadResult> {
-  const [processes, tabs] = await Promise.all([platform.processes(), options.tabs?.catch(() => []) ?? []]);
+  const processes = await platform.processes();
   const context: AgentContext = { platform, apps, processes, now: options.now };
   const failures: AgentLoadResult["failures"] = [];
   const lists = await Promise.all(
@@ -44,7 +41,7 @@ export async function loadAgents(apps: App[], platform: Platform, options: LoadO
     ),
   );
   const byPid = new Map(processes.map((p) => [p.pid, p]));
-  const merged = mergeAgents([...lists.flat(), ...webAgents(tabs)], (pid) => inHerdr(pid, byPid));
+  const merged = mergeAgents(lists.flat(), (pid) => inHerdr(pid, byPid));
 
   const seen = await platform.loadJson<SeenMap>(SEEN_KEY, {});
   const applied = applySeen(merged, seen, options.now);

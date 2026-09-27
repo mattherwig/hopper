@@ -34,7 +34,7 @@ export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { sc
     listDir: overrides.listDir ?? (async () => []),
     processes: overrides.processes ?? (async () => []),
     socketRequest: overrides.socketRequest ?? unexpected("socketRequest"),
-    connectRpc: overrides.connectRpc ?? unexpected("connectRpc"),
+    readTail: overrides.readTail ?? unexpected("readTail"),
     gitRepos: overrides.gitRepos ?? (async (dirs) => dirs.map(() => undefined)),
   };
 }

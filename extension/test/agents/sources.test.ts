@@ -9,7 +9,6 @@ import {
 } from "../../src/lib/agents/sources/cursor.ts";
 import { fromSnapshot, herdr } from "../../src/lib/agents/sources/herdr.ts";
 import { snapshotOf } from "../../src/lib/tabs/sources/herdr.ts";
-import { webAgents } from "../../src/lib/agents/sources/web.ts";
 import type { Tab } from "../../src/lib/tabs/model.ts";
 import { fakePlatform } from "../fake-platform.ts";
 import { proc } from "./helpers.ts";
@@ -123,14 +122,14 @@ test("herdr: asks every session's socket; one that doesn't answer is skipped", a
   assert.equal(agents.length, 2);
 });
 
-test("codex: status from the daemon's thread status", () => {
-  assert.deepEqual(codexStatus({ id: "t", status: { type: "active", activeFlags: ["waitingOnApproval"] } }), {
-    status: "blocked",
-    detail: "Needs approval",
-  });
-  assert.deepEqual(codexStatus({ id: "t", status: { type: "active", activeFlags: [] } }), { status: "working" });
-  assert.deepEqual(codexStatus({ id: "t", status: { type: "idle" } }), { status: "idle" });
-  assert.equal(codexStatus({ id: "t", status: { type: "notLoaded" } }), undefined);
+const event = (type: string) => JSON.stringify({ type: "event_msg", payload: { type } });
+
+test("codex: working while the rollout's last turn has started and not ended", () => {
+  const tail = [event("task_started"), JSON.stringify({ type: "response_item", payload: { type: "message" } })];
+  assert.equal(codexStatus(tail.join("\n")), "working");
+  assert.equal(codexStatus([...tail, event("task_complete")].join("\n")), "idle");
+  assert.equal(codexStatus([event("turn_started"), event("turn_aborted")].join("\n")), "idle");
+  assert.equal(codexStatus('{"partial'), "idle");
 });
 
 test("codex: a terminal thread's host is the one Codex process working in its folder", () => {
@@ -139,87 +138,40 @@ test("codex: a terminal thread's host is the one Codex process working in its fo
   assert.equal(terminalFor("/a", [...processes, proc(3, 0, "ttys003", "codex", { cwd: "/a" })]), undefined);
 });
 
-test("codex: lists the daemon's loaded threads, never loading or resuming any", async () => {
-  const methods: string[] = [];
+test("codex: app threads open by link while the app runs; CLI threads need their terminal", async () => {
+  const queries: string[] = [];
   const platform = fakePlatform({
-    connectRpc: async () => ({
-      request: async (method, params) => {
-        methods.push(method);
-        if (method === "thread/loaded/list") return { data: ["t1", "t2"], nextCursor: null };
-        if (method === "thread/read") {
-          const id = (params as { threadId: string }).threadId;
-          return {
-            thread: {
-              id,
-              name: id === "t1" ? "Fix login" : null,
-              preview: "Add tests\nmore",
-              cwd: "/a",
-              source: id === "t1" ? "cli" : "appServer",
-              updatedAt: 5,
-              status: { type: "active", activeFlags: id === "t1" ? ["waitingOnUserInput"] : [] },
-            },
-          };
-        }
-        return {};
-      },
-      notify: (method) => void methods.push(`notify ${method}`),
-      close: () => void methods.push("close"),
-    }),
+    querySqlite: async (_path, sql) => {
+      queries.push(sql);
+      return [
+        { id: "t1", source: "vscode", cwd: "/a", title: "Review\nmore", updatedAt: 5, rollout: "/r1" },
+        { id: "t2", source: "cli", cwd: "/a", title: null, updatedAt: 4, rollout: "/r2" },
+        { id: "t3", source: "cli", cwd: "/gone", title: "old", updatedAt: 3, rollout: "/r3" },
+      ];
+    },
+    readTail: async (path) => (path === "/r1" ? event("task_started") : event("task_complete")),
   });
+  const codexApp = { bundleId: "com.openai.codex", name: "ChatGPT", path: "/Applications/ChatGPT.app" };
   const agents = await codex.list({
     platform,
-    apps: [],
+    apps: [codexApp],
     processes: [proc(7, 0, "ttys001", "codex", { cwd: "/a" })],
-    now: 0,
+    now: 100_000_000,
   });
-  assert.deepEqual(methods, [
-    "initialize",
-    "notify initialized",
-    "thread/loaded/list",
-    "thread/read",
-    "thread/read",
-    "close",
-  ]);
+  assert.match(queries[0], /archived = 0 and source in \('cli', 'vscode', 'appServer'\)/);
   assert.deepEqual(
-    agents.map((a) => [a.title, a.status, a.statusDetail, a.host, a.resumeCommand]),
+    agents.map((a) => [a.title, a.status, a.host, a.resumeCommand]),
     [
-      ["Fix login", "blocked", "Needs input", { kind: "process", pid: 7, tty: "ttys001" }, "codex resume t1"],
       [
-        "Add tests",
+        "Review",
         "working",
-        undefined,
-        { kind: "link", bundleId: "com.openai.codex", url: "codex://threads/t2" },
-        "codex resume t2",
+        { kind: "link", bundleId: "com.openai.codex", url: "codex://threads/t1" },
+        "codex resume t1",
       ],
+      ["Codex", "idle", { kind: "process", pid: 7, tty: "ttys001" }, "codex resume t2"],
     ],
   );
-});
-
-test("web: agent sessions recognized by URL, one per session", () => {
-  const app = { bundleId: "com.google.Chrome", name: "Chrome", path: "/c" };
-  const tab = (url: string, title = "t"): Tab => ({
-    key: url,
-    app,
-    source: "chromium",
-    kind: "tab",
-    title,
-    active: false,
-    ref: {},
-    url,
-  });
-  const agents = webAgents([
-    tab("https://claude.ai/code/session_01ABC", "Fix CI"),
-    tab("https://chatgpt.com/codex/tasks/task_e_123"),
-    tab("https://jules.google.com/session/99"),
-    tab("https://claude.ai/code/session_01ABC?x=1"),
-    tab("https://example.com"),
-  ]);
-  assert.deepEqual(
-    agents.map((a) => [a.product, a.id, a.status]),
-    [
-      ["Claude Code", "session_01ABC", "unknown"],
-      ["Codex", "task_e_123", "unknown"],
-      ["Jules", "99", "unknown"],
-    ],
-  );
+  // Neither the app nor a Codex CLI running: nothing read.
+  assert.deepEqual(await codex.list({ platform, apps: [], processes: [], now: 0 }), []);
+  assert.equal(queries.length, 1);
 });
