@@ -3,7 +3,9 @@
 // Reads one JSON object per line on stdin:
 //   {"keys": ["⌃", "⌥", "["], "title": "Back", "detail": "to the previous app"}   keycaps HUD at the bottom
 //   {"card": "Jumper", "sub": "Back and Forward for your Mac apps"}               full-frame title card
-//   {}                                                                            hide everything
+//   {"backdrop": true}                                                            dark backdrop at normal window level
+//                                                                                 (stays until {"backdrop": false})
+//   {}                                                                            hide the HUD and card
 // EOF quits. Runs as an accessory app so it never takes focus (that would change the app history
 // being demoed).
 import AppKit
@@ -14,6 +16,7 @@ struct Message: Decodable {
   var detail: String?
   var card: String?
   var sub: String?
+  var backdrop: Bool?
 }
 
 let a = CommandLine.arguments.dropFirst().prefix(4).compactMap { Double($0) }
@@ -94,8 +97,47 @@ func show(_ panel: NSPanel, _ content: NSView, radius: CGFloat, padding: NSEdgeI
 
 let hud = makePanel()
 let card = makePanel()
+let backdrop = makePanel()
+
+/// A desktop for the demo: covers the recording area at normal window level, ordered front once before the demo
+/// apps are activated, so their windows come up above it while the owner's own windows stay hidden behind it.
+func showBackdrop() {
+  let view = NSView()
+  view.wantsLayer = true
+  let base = CAGradientLayer()
+  base.colors = [
+    NSColor(srgbRed: 0.05, green: 0.04, blue: 0.09, alpha: 1).cgColor,
+    NSColor(srgbRed: 0.13, green: 0.07, blue: 0.24, alpha: 1).cgColor,
+  ]
+  base.startPoint = CGPoint(x: 0, y: 1)
+  base.endPoint = CGPoint(x: 1, y: 0)
+  base.frame = NSRect(origin: .zero, size: area.size)
+  // Raycast-style glows: coral top left, violet bottom right.
+  for (color, center) in [
+    (NSColor(srgbRed: 1.0, green: 0.39, blue: 0.39, alpha: 0.35), CGPoint(x: 0.15, y: 0.85)),
+    (NSColor(srgbRed: 0.55, green: 0.35, blue: 0.95, alpha: 0.45), CGPoint(x: 0.85, y: 0.15)),
+  ] {
+    let glow = CAGradientLayer()
+    glow.type = .radial
+    glow.colors = [color.cgColor, color.withAlphaComponent(0).cgColor]
+    glow.startPoint = center
+    glow.endPoint = CGPoint(x: center.x + 0.6, y: center.y + 0.6)
+    glow.frame = base.frame
+    base.addSublayer(glow)
+  }
+  view.layer = base
+  backdrop.level = .normal
+  backdrop.hasShadow = false
+  backdrop.contentView = view
+  backdrop.setFrame(area, display: true)
+  backdrop.orderFrontRegardless()
+}
 
 func handle(_ m: Message) {
+  if let b = m.backdrop {
+    if b { showBackdrop() } else { backdrop.orderOut(nil) }
+    return
+  }
   if let keys = m.keys {
     let caps = NSStackView(views: keys.map(keycap))
     caps.spacing = 6

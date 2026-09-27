@@ -28,7 +28,10 @@ atexit.register(shutil.rmtree, TMP, ignore_errors=True)
 # Built-in apps with no personal content, activated oldest -> newest so they fill every visible
 # History row (about 10 on a 1352x878pt screen) and push the user's own apps out of view.
 # The last one is "Current".
-# `framed` apps get their window moved over the recording area for the GIF.
+# `staged` apps are the GIF's cast: their windows are placed staggered over the recording area, above a backdrop
+# that hides everything else (the other demo apps' windows and the owner's own). Back, Forward, and Toggle cycle
+# through them. Keep them last, and keep the owner's personal content out of them. No Finder: its sidebar shows
+# the home folder name, and it registered in the app order late, so Back landed on it instead of a staged app.
 DEMO_APPS = [
     ("Tips", ["open", "-a", "Tips"], False),
     ("Stocks", ["open", "-a", "Stocks"], False),
@@ -37,11 +40,10 @@ DEMO_APPS = [
     ("Dictionary", ["open", "dict://jump"], False),
     ("Font Book", ["open", "-a", "Font Book"], False),
     ("Chess", ["open", "-a", "Chess"], False),
-    ("Finder", None, True),  # opens a window on /System/Applications (Apple apps only), see setup_apps
-    ("Preview", ["open", "-a", "Preview", str(EXT / "assets/extension-icon.png")], True),
-    ("Ghostty", None, True),  # the owner's own session: used only if already running, never quit
+    ("Ghostty", None, False),  # the owner's own session: used only if already running, never quit or moved
     ("Safari", None, True),  # a new window with SAFARI_TABS; the owner's own windows are left alone
-    ("TextEdit", None, True),  # opens a scratch note, see setup_apps
+    ("Preview", ["open", "-a", "Preview", str(EXT / "assets/extension-icon.png")], True),
+    ("TextEdit", None, True),  # opens a scratch note
 ]
 
 # Public pages for the staged Safari window: the Tabs command's shots and GIF show these, with the owner's own
@@ -49,7 +51,7 @@ DEMO_APPS = [
 SAFARI_TABS = [
     "https://www.raycast.com/store",
     "https://www.apple.com/os/macos/",
-    "https://github.com/mattherwig/jumper",
+    "https://github.com/raycast/extensions",
     "https://developers.raycast.com/",
 ]
 
@@ -138,19 +140,21 @@ def wait_for_window(process: str, timeout: float = 10) -> None:
 class DemoApps:
     """Brings up DEMO_APPS in order and undoes it afterwards (quits only what it launched)."""
 
-    def __init__(self, frame: tuple[int, int, int, int] | None = None):
-        self.frame = frame
+    def __init__(self, frames: dict[str, tuple[int, int, int, int]] | None = None, before_staged=None):
+        self.frames = frames or {}  # staged app -> window rect (x, y, w, h), for the GIF
+        self.before_staged = before_staged  # called once before the first staged app comes up (the backdrop)
         self.launched: list[str] = []
-        self.finder_window: str | None = None
         self.safari_window: str | None = None
         self.note = TMP / "Jumper.txt"
         self.previous_app = frontmost()
-        self.restore: list[tuple[str, str]] = []  # (process, "x, y, w, h") of windows we moved but don't own
 
     def __enter__(self):
         self.note.write_text(NOTE)
-        for name, cmd, framed in DEMO_APPS:
+        for name, cmd, staged in DEMO_APPS:
             process = PROCESS.get(name, name)
+            if staged and self.before_staged:
+                self.before_staged()
+                self.before_staged = None
             if name == "Ghostty":
                 if not running(name):
                     print("note: Ghostty not running, leaving it out of the demo", file=sys.stderr)
@@ -168,32 +172,20 @@ class DemoApps:
                         "  set w to front window\n"
                         + "".join(f'  tell w to make new tab at end of tabs with properties {{URL:"{u}"}}\n' for u in SAFARI_TABS[1:])
                         + "  set current tab of w to tab 1 of w\n"
-                        "  activate\n"
                         "  return id of w\n"
                         "end tell"
                     )
+                    # `open -a`, not AppleScript activate: an AppleScript-activated app may not register in
+                    # macOS's app order.
+                    subprocess.run(["open", "-a", "Safari"], check=True)
                     time.sleep(3)  # let the pages load, so titles and favicons are real
-                elif name == "Finder":
-                    self.finder_window = osa(
-                        'tell application "Finder"\n'
-                        '  set w to make new Finder window to (POSIX file "/System/Applications" as alias)\n'
-                        "  activate\n"
-                        "  return id of w\n"
-                        "end tell"
-                    )
                 else:
                     subprocess.run(cmd, check=True)
             wait_for_window(process)
             time.sleep(0.8)
-            if self.frame and framed:
-                x, y, w, h = self.frame
+            if name in self.frames:
+                x, y, w, h = self.frames[name]
                 try:
-                    if name == "Ghostty":
-                        bounds = osa(
-                            f'tell application "System Events" to tell process "{process}" to '
-                            "get (position of window 1) & (size of window 1)"
-                        )
-                        self.restore.append((process, bounds))
                     osa(
                         f'tell application "System Events" to tell process "{process}"\n'
                         f"  set position of window 1 to {{{x}, {y}}}\n"
@@ -202,22 +194,19 @@ class DemoApps:
                     )
                 except subprocess.CalledProcessError as e:
                     print(f"warning: could not frame {name}: {e.stderr.strip()}", file=sys.stderr)
+        if self.frames:
+            # Make the staged apps the three most recent for sure: an app activated during setup can register in
+            # macOS's app order late (Finder did), and a Back into an unstaged app raises all its windows over the
+            # backdrop.
+            for name in self.frames:
+                subprocess.run(["open", "-a", name], check=True)
+                time.sleep(0.8)
         time.sleep(0.5)
         return self
 
     def __exit__(self, *exc):
-        for process, bounds in self.restore:
-            x, y, w, h = bounds.split(", ")
-            osa(
-                f'tell application "System Events" to tell process "{process}"\n'
-                f"  set position of window 1 to {{{x}, {y}}}\n"  # position first, or the size gets clipped
-                f"  set size of window 1 to {{{w}, {h}}}\n"
-                "end tell"
-            )
         if self.safari_window:
             subprocess.run(["osascript", "-e", f'tell application "Safari" to close (window id {self.safari_window})'])
-        if self.finder_window:
-            subprocess.run(["osascript", "-e", f'tell application "Finder" to close (window id {self.finder_window})'])
         subprocess.run(
             ["osascript", "-e", f'tell application "TextEdit" to close (every document whose name is "{self.note.name}") saving no']
         )
@@ -295,8 +284,8 @@ def gif() -> None:
     if not shutil.which("ffmpeg"):
         sys.exit("ffmpeg not found: brew install ffmpeg")
     close_raycast()
-    # Recording area: Raycast's window plus a margin; every demo window is placed exactly on it,
-    # so whatever is behind (the user's own windows) never shows.
+    # Recording area: Raycast's window plus a margin. A backdrop covers it; the staged apps' windows sit staggered on
+    # top (top left to bottom right), so each switch visibly brings a different window forward.
     deeplink("history")
     deadline = time.time() + 6
     while (window := raycast_window()) is None and time.time() < deadline:
@@ -308,55 +297,65 @@ def gif() -> None:
     close_raycast()
     frame = (rx - 120, max(ry - 50, 40), rw + 240, rh + 170)
     x, y, w, h = frame
+    staged = [n for n, _, st in DEMO_APPS if st]
+    ww, wh = int(w * 0.6), int(h * 0.6)
+    frames = {
+        name: (x + int(w * (0.06 + 0.14 * i)), y + int(h * (0.05 + 0.15 * i)), ww, wh) for i, name in enumerate(staged)
+    }
     video = TMP / "demo.mov"
     back, fwd, tog, hist, tabs = (HOTKEYS[c] for c in ("back", "forward", "toggle", "history", "tabs"))
-    # Tabs step: types a filter that matches only the staged apple.com tab ("macOS 27 Golden Gate"). Raycast ranks
-    # matches across all apps, so the query must not match any of the owner's tabs or sessions (a jump there lands
-    # outside the recording area). Arrow keys aren't reliable either: Tabs opens on its cached list and the
-    # selection after the refresh varies. The query is pasted, not typed: every prefix ("g", "go") would briefly
-    # list matching private tabs. Checked after recording.
-    tab_target = SAFARI_TABS[1]
+    # App order after setup: TextEdit (current), Preview, Safari. Back/Forward/Toggle cycle through those three;
+    # History ↓↓ lands on Safari. Tabs then pastes a fuzzy query for the owner's cmux workspace "github-pages" (cmux
+    # fills the screen, so it covers the recording area). Pasted, not typed: every prefix ("g", "gh") would briefly
+    # list matching private tabs. Raycast ranks matches across all apps; "gh-pages" ranks the cmux workspace first
+    # (check with a test run if the owner's tabs change). Checked after recording.
+    tab_query, tab_target = "gh-pages", "cmux"
     card = {"card": "Jumper", "sub": "Jump to any app, tab, or session"}
     # (overlay message, deeplink command or keystroke or None, seconds to hold)
     timeline = [
-        (card, None, 2.8),
-        ({}, None, 0.4),
-        ({"keys": back, "title": "Back", "detail": "to the previous app"}, "back", 1.7),
-        ({"keys": back, "title": "Back", "detail": "and again"}, "back", 1.7),
-        ({"keys": back, "title": "Back", "detail": "as far as you like"}, "back", 1.9),
-        ({"keys": fwd, "title": "Forward", "detail": "retrace your steps"}, "forward", 1.7),
-        ({"keys": fwd, "title": "Forward", "detail": "retrace your steps"}, "forward", 1.7),
-        ({"keys": fwd, "title": "Forward", "detail": "back where you started"}, "forward", 1.9),
-        ({"keys": tog, "title": "Toggle", "detail": "flip between your last two apps"}, "toggle", 1.7),
-        ({"keys": tog, "title": "Toggle", "detail": "and back"}, "toggle", 1.9),
-        ({"keys": hist, "title": "History", "detail": "every running app, most recent first"}, "history", 2.2),
-        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.5),
-        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.5),
-        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.9),
-        ({"keys": ["↩"], "title": "Switch to App", "detail": "jump straight there"}, "key code 36", 1.8),
-        ({"keys": tabs, "title": "Tabs", "detail": "every tab, window, and session"}, "tabs", 2.2),
-        ({"keys": ["golden gate"], "title": "Tabs", "detail": "search by title or URL"}, "paste:golden gate", 1.5),
-        ({"keys": ["↩"], "title": "Jump to Tab", "detail": "straight to that tab"}, "key code 36", 2.2),
-        ({}, None, 0.4),
-        ({"card": "Jumper", "sub": "Free on the Raycast Store"}, None, 2.8),
+        (card, None, 2.6),
+        ({}, None, 0.3),
+        ({"keys": back, "title": "Back", "detail": "to the previous app"}, "back", 1.3),
+        ({"keys": back, "title": "Back", "detail": "and further back"}, "back", 1.4),
+        ({"keys": fwd, "title": "Forward", "detail": "retrace your steps"}, "forward", 1.3),
+        ({"keys": fwd, "title": "Forward", "detail": "back where you started"}, "forward", 1.4),
+        ({"keys": tog, "title": "Toggle", "detail": "flip between your last two apps"}, "toggle", 1.3),
+        ({"keys": tog, "title": "Toggle", "detail": "and back"}, "toggle", 1.4),
+        ({"keys": hist, "title": "History", "detail": "every running app, most recent first"}, "history", 1.8),
+        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.4),
+        ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.7),
+        ({"keys": ["↩"], "title": "Switch to App", "detail": "jump straight there"}, "key code 36", 1.5),
+        ({"keys": tabs, "title": "Tabs", "detail": "tabs, windows, and sessions of every app"}, "tabs", 2.0),
+        ({"keys": [tab_query], "title": "Fuzzy search", "detail": "finds the github-pages workspace in cmux"}, f"paste:{tab_query}", 1.8),
+        ({"keys": ["↩"], "title": "Jump to Tab", "detail": "straight to that workspace"}, "key code 36", 2.0),
+        ({}, None, 0.3),
+        ({"card": "Jumper", "sub": "Free on the Raycast Store"}, None, 2.6),
     ]
-    with DemoApps(frame) as demo:
-        keycast = subprocess.Popen(
-            ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(EXT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
-        )
+    keycast = subprocess.Popen(
+        ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(EXT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
+    )
 
-        def overlay(message: dict) -> None:
-            keycast.stdin.write(json.dumps(message) + "\n")  # type: ignore[union-attr]
-            keycast.stdin.flush()  # type: ignore[union-attr]
+    def overlay(message: dict) -> None:
+        keycast.stdin.write(json.dumps(message) + "\n")  # type: ignore[union-attr]
+        keycast.stdin.flush()  # type: ignore[union-attr]
+
+    def backdrop() -> None:
+        overlay({"backdrop": True})
+        time.sleep(5)  # keycast compiles on first run
+
+    with DemoApps(frames, before_staged=backdrop):
 
         # Warm Tabs' cache: it shows the last list first, which would otherwise be from the owner's own use.
         deeplink("tabs")
         time.sleep(3)
         close_raycast()
+        for name in frames:  # the warm-up can shift the app order; staged apps must be the three most recent
+            subprocess.run(["open", "-a", name], check=True)
+            time.sleep(0.8)
         # Park the pointer outside the recording area (screencapture -v records it).
         subprocess.run(["swift", "-e", "import CoreGraphics; CGWarpMouseCursorPosition(CGPoint(x: 2, y: 2000))"])
         overlay(card)
-        time.sleep(4)  # keycast compiles on first run; the card is up before recording starts
+        time.sleep(1)  # the card is up before recording starts
         duration = sum(hold for *_, hold in timeline) + 1.5
         rec = subprocess.Popen(
             ["screencapture", "-x", "-v", "-V", str(int(duration) + 1), "-R", f"{x},{y},{w},{h}", str(video)]
@@ -386,9 +385,8 @@ def gif() -> None:
         rec.wait()
         keycast.stdin.close()
         keycast.wait()
-        landed = osa(f'tell application "Safari" to get URL of current tab of window id {demo.safari_window}')
-        if frontmost() != "Safari" or landed.rstrip("/") != tab_target.rstrip("/"):
-            print(f"warning: Tabs jump landed on {frontmost()} {landed}, expected Safari {tab_target}", file=sys.stderr)
+        if frontmost() != tab_target:
+            print(f"warning: Tabs jump landed on {frontmost()}, expected {tab_target}: don't use this GIF", file=sys.stderr)
 
         out = EXT / "media"
         out.mkdir(exist_ok=True)
