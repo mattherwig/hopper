@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hopper</title>
 <meta name="description" content="Jump to any app, tab, or session on your Mac. Browser-style Back and Forward for apps, plus one search across browser tabs, terminal tabs, and Claude sessions. A free Raycast extension.">
-<meta property="og:title" content="Hopper — Jump to any app, tab, or session">
+<meta property="og:title" content="Hopper — Hop to any app, tab, or agent">
 <meta property="og:description" content="Step back through recent apps like browser history, or search every tab, window, and session in one list.">
 <meta property="og:image" content="tabs.png">
 <link rel="icon" href="extension-icon.png">
@@ -76,7 +76,7 @@ nav .links a:hover { color: var(--text); }
   content: ""; position: absolute; inset: -40px 0 auto; height: 420px; z-index: -1; pointer-events: none;
   background: radial-gradient(600px 260px at 50% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
 }
-.hero img.icon { width: 88px; height: 88px; border-radius: 20px; box-shadow: var(--shadow); margin-bottom: 22px; }
+.hero img.icon { width: 112px; height: 112px; margin-bottom: 18px; }
 .hero h1 {
   font-size: clamp(36px, 6.4vw, 64px); line-height: 1.04; letter-spacing: -.04em;
   margin: 0 auto 18px; max-width: 13ch; font-weight: 800;
@@ -110,7 +110,9 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
 
 /* Two levels */
 .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.level.wide { grid-column: 1 / -1; }
+.level.wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr; align-items: center; gap: 24px; }
+.level-text { display: flex; flex-direction: column; gap: 18px; }
+.level-text > p { margin: -8px 0 0; color: var(--muted); font-size: 15px; }
 .level {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 22px; display: flex; flex-direction: column; gap: 18px;
@@ -122,22 +124,41 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
 .cmds li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--border); }
 .cmds b { font-size: 15px; }
 .cmds span { grid-column: 1 / -1; font-size: 14px; color: var(--muted); }
-.cmds kbd { font-size: 12px; align-self: center; }
+.cmds .keys { grid-column: auto; display: inline-flex; gap: 3px; align-self: center; font-size: inherit; color: inherit; }
+.keys i { width: 8px; }
+.cmds kbd { font-size: 12px; min-width: 1.9em; text-align: center; }
 
 /* How it works */
-.how { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .how h3 { font-size: 16px; margin: 0 0 12px; }
 .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .facts li { padding-left: 16px; position: relative; font-size: 15px; color: var(--muted); }
 .facts li::before { content: ""; position: absolute; left: 0; top: .6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.facts strong { color: var(--text); font-weight: 600; }
+.facts strong { display: block; color: var(--text); font-weight: 600; }
 
-/* Supported apps */
-table { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-th, td { text-align: left; padding: 12px 16px; border-top: 1px solid var(--border); vertical-align: top; }
-th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; border-top: 0; background: var(--surface-2); }
-td:last-child { color: var(--muted); }
-.fine { font-size: 13px; color: var(--muted); margin: 12px 0 0; max-width: 72ch; }
+/* Connectors */
+.marquee {
+  display: grid; gap: 16px; overflow: hidden; padding: 8px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee-row {
+  --size: 64px; --gap: 20px;
+  list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); width: max-content;
+  animation: marquee calc(var(--n) * 3.2s) linear infinite;
+}
+.marquee-row.rev { animation-direction: reverse; }
+.marquee-row img {
+  display: block; width: var(--size); height: var(--size);
+  filter: saturate(.25) contrast(.92) drop-shadow(0 2px 4px rgba(0,0,0,.18));
+  opacity: .8;
+}
+@keyframes marquee { to { transform: translateX(calc(-50% - var(--gap) / 2)); } }
+@media (prefers-reduced-motion: reduce) {
+  .marquee { -webkit-mask-image: none; mask-image: none; }
+  .marquee-row { animation: none; flex-wrap: wrap; width: auto; }
+  .marquee-row [aria-hidden] { display: none; }
+}
 
 /* Setup */
 .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; max-width: 700px; }
@@ -151,12 +172,11 @@ footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top:
 footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
 @media (max-width: 820px) {
-  .levels, .how { grid-template-columns: 1fr; }
+  .levels, .how, .level.wide { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   nav .links a.hide-sm { display: none; }
-  .hero img.icon { width: 72px; height: 72px; }
-  th, td { padding: 10px 12px; }
+  .hero img.icon { width: 88px; height: 88px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn:hover { transform: none; } }
 </style>
@@ -178,7 +198,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 <main>
   <div class="wrap hero">
     <img class="icon" src="extension-icon.png" alt="">
-    <h1>Jump to any <em>app, tab, or agent.</em></h1>
+    <h1>Hop to any <em>app, tab, or agent.</em></h1>
     <p>Step back through recent apps like browser history, search every tab and session in one list, and jump to the AI agent that needs you. Free for Raycast.</p>
     <div class="cta">
       <a class="btn primary" id="install" href="https://www.raycast.com/matt_herwig/hopper">Get it for Raycast</a>
@@ -195,38 +215,41 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
   <section id="features">
     <div class="wrap">
-      <p class="eyebrow">Three ways to jump</p>
+      <p class="eyebrow">Built for context switchers</p>
       <h2>Apps, search, and agents</h2>
-      <p class="lede">Move between apps with hotkeys, like Back and Forward in a browser. Open one list of everything open inside them and pick what you want. Or go straight to the AI agent that's waiting on you, wherever it runs.</p>
+      <p class="lede">Your AI tools change every month. The way you get around shouldn't.</p>
 
       <div class="levels">
-        <article class="level">
-          <header><h3>Apps</h3></header>
-          <p>Browser-style history for the apps you've been using.</p>
-          <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
-          <ul class="cmds">
-            <li><b>Back / Forward</b><kbd>⌃⌘[ ⌃⌘]</kbd><span>Step back to the app you used before this one, and keep going. Forward retraces.</span></li>
-            <li><b>Toggle</b><kbd>⌘ ⌘</kbd><span>Flip between your two most recent apps. Run again to flip back.</span></li>
-            <li><b>History</b><kbd>⌃⌘</kbd><span>Running apps from most to least recent. Jump to any of them, or remove and exclude apps.</span></li>
-          </ul>
+        <article class="level wide">
+          <div class="level-text">
+            <header><h3>Agents</h3></header>
+            <p>Every agent you pay for, in any terminal or app: Claude Code, Codex, Cursor, herdr.</p>
+            <ul class="cmds">
+              <li><b>All Agents</b><span class="keys"><kbd>⌥</kbd><kbd>⌘</kbd></span><span>One list, sorted by who needs you. Jump to the exact pane or session.</span></li>
+              <li><b>Next Agent</b><span class="keys"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>]</kbd></span><span>Go to the one that's waited longest. Again for the next.</span></li>
+            </ul>
+          </div>
+          <div class="shot"><img src="agents.png" alt="Agents command: Claude Code and Cursor agents grouped by Done, Working, and Idle" width="2000" height="1250" loading="lazy"></div>
         </article>
 
         <article class="level">
           <header><h3>Search</h3></header>
-          <p>One search across the tabs, windows, sessions, and agents of every running app.</p>
-          <div class="shot"><img src="tabs.png" alt="Search command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
+          <p>One search, whatever you use this month.</p>
+          <div class="shot"><img src="tabs.png" alt="Search command: Cursor, ChatGPT, and Claude sessions with agent status in one searchable list" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Search</b><kbd>⌃ ⌃</kbd><span>Search browser tabs, terminal tabs, herdr workspaces, Claude and Muse sessions, Notion and Obsidian tabs, any app's windows, and agents, then jump straight to one.</span></li>
-            <li><b>Search Current App</b><span>The same, for just the app you're in.</span></li>
+            <li><b>Search</b><span class="keys"><kbd>⌃</kbd><kbd>⌃</kbd></span><span>Browser and terminal tabs, AI sessions, Notion, Obsidian, any window.</span></li>
+            <li><b>Search Current App</b><span>Just the app you're in.</span></li>
           </ul>
         </article>
 
-        <article class="level wide">
-          <header><h3>Agents</h3></header>
-          <p>Claude Code, Codex, Cursor, herdr, and other agents, wherever they run, by what they need from you.</p>
+        <article class="level">
+          <header><h3>Apps</h3></header>
+          <p>A Back button for your Mac.</p>
+          <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Agents</b><kbd>⌥⌘</kbd><span>Every running agent grouped by Needs You, Done, Working, and Idle, filterable by project. Jump to its terminal pane, herdr pane, or session in the Claude app or Cursor.</span></li>
-            <li><b>Next Agent</b><kbd>⌥⌘]</kbd><span>Jump to the agent that has waited longest for you: needs input or approval first, then finished and unseen. Run again for the next.</span></li>
+            <li><b>Toggle</b><span class="keys"><kbd>⌘</kbd><kbd>⌘</kbd></span><span>Flip between your last two apps.</span></li>
+            <li><b>Back / Forward</b><span class="keys"><kbd>⌃</kbd><kbd>⌘</kbd><kbd>[</kbd><i></i><kbd>⌃</kbd><kbd>⌘</kbd><kbd>]</kbd></span><span>Step through recent apps like browser history.</span></li>
+            <li><b>History</b><span class="keys"><kbd>⌃</kbd><kbd>⌘</kbd></span><span>The whole trail, to pick from.</span></li>
           </ul>
         </article>
       </div>
@@ -237,73 +260,46 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="wrap">
       <p class="eyebrow">How it works</p>
       <h2>Browser rules for apps, one list for everything else</h2>
-      <p class="lede">Apps come from the order macOS already keeps for Cmd+Tab, so nothing runs in the background. Search reads each app when you open it.</p>
+      <p class="lede">Nothing runs in the background. Hopper reads what macOS and your apps already know, when you ask.</p>
       <div class="how">
         <div>
-          <h3>Apps</h3>
+          <h3>Agents</h3>
           <ul class="facts">
-            <li><strong>The first Back takes a snapshot</strong> of your app order and moves one step back. Further Backs go deeper; Forward retraces.</li>
-            <li><strong>Switching any other way starts fresh.</strong> Click an app or Cmd+Tab and the forward history is dropped, just like visiting a new page in a browser.</li>
-            <li><strong>You land where you left off.</strong> With Accessibility, an app comes back to the window you were in, like Cmd+Tab.</li>
-            <li><strong>Remove from History</strong> (<kbd>⌃X</kbd>) hides an app until you use it again; <strong>Exclude</strong> (<kbd>⌃⇧X</kbd>) hides it for good.</li>
+            <li><strong>Status straight from the agents</strong><span>No hooks to install, nothing to set up.</span></li>
+            <li><strong>Done means unseen</strong><span>Finished, and you haven't looked yet.</span></li>
+            <li><strong>Lands in the exact place</strong><span>Right to the split, pane, or session.</span></li>
           </ul>
         </div>
         <div>
           <h3>Search</h3>
           <ul class="facts">
-            <li><strong>Apps are ordered by recent use;</strong> within an app, active tabs come first.</li>
-            <li><strong>Search forgives typos</strong> ("caude" finds Claude) and matches app names first: an app's own tabs before tabs that mention it.</li>
-            <li><strong>Picking an entry selects it</strong> in its app and brings the app to the front.</li>
-            <li><strong>Copy URL</strong> and <strong>Copy Title</strong> are in the action panel.</li>
-            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, Obsidian notes, and documents closed since Search last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
-            <li><strong>Apps Hopper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
+            <li><strong>Fuzzy finds everything</strong><span>Typos and partial words still match.</span></li>
+            <li><strong>Recently Closed</strong><span>Reopen tabs and notes from last week.</span></li>
+            <li><strong>Private stays private</strong><span>Incognito windows never show up.</span></li>
           </ul>
         </div>
         <div>
-          <h3>Agents</h3>
+          <h3>Apps</h3>
           <ul class="facts">
-            <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, Codex's thread log, Cursor's flags, herdr's detection. No hooks to install.</li>
-            <li><strong>Done means finished since you last looked,</strong> in the agent's own app or by jumping to it from Hopper.</li>
-            <li><strong>Jumping goes to where it runs:</strong> the exact iTerm split or cmux terminal, the herdr pane, the Claude session, the Cursor agent.</li>
-            <li><strong>Projects are git repositories;</strong> worktrees count as their main repository.</li>
+            <li><strong>Back works like a browser</strong><span>Switch any other way to reset Forward.</span></li>
+            <li><strong>Picks up where you left off</strong><span>Back to the window you were in.</span></li>
+            <li><strong>Your trail, your rules</strong><span>Remove or Exclude apps from History.</span></li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <section>
+  <section id="connectors">
     <div class="wrap">
-      <p class="eyebrow">Supported apps</p>
-      <h2>What Search finds</h2>
-      <table>
-        <thead><tr><th>App</th><th>Lists</th></tr></thead>
-        <tbody>
-          <tr><td>Chrome, Brave, Edge, Vivaldi, Chromium, Safari</td><td>Tabs (never incognito or private windows)</td></tr>
-          <tr><td>iTerm, Terminal</td><td>Tabs, with the status of an agent running in them</td></tr>
-          <tr><td>cmux</td><td>Workspaces and their terminals, with the status of an agent running in them</td></tr>
-          <tr><td>Ghostty (1.3+)</td><td>Tabs, with the status of an agent running in them</td></tr>
-          <tr><td>herdr</td><td>Workspaces and their named tabs, under the terminal running herdr, with their agents' status</td></tr>
-          <tr><td>Claude</td><td>Code sessions with their status, plus Chat and Cowork conversations, even with the sidebar hidden</td></tr>
-          <tr><td>Muse</td><td>Main chat and side chats while the side chats panel is open</td></tr>
-          <tr><td>Notion</td><td>Tabs of the front window with each page's parent pages, then its other windows</td></tr>
-          <tr><td>Obsidian</td><td>Tabs of every open vault, in all its windows, with each note's folder</td></tr>
-          <tr><td>Any other app</td><td>Windows, and tabs if the window has a native tab bar</td></tr>
-        </tbody>
-      </table>
-      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar Notion and Obsidian from their tab bars, so an app update can change what Hopper finds; if nothing is found, the app's windows are listed instead.</p>
-
-      <h2>What Agents finds</h2>
-      <table>
-        <thead><tr><th>Agent</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Claude Code (terminals, Claude app, IDEs)</td><td>Working, needs approval or input, done, idle</td></tr>
-          <tr><td>Codex (Codex app, terminals)</td><td>Working, done, idle</td></tr>
-          <tr><td>Cursor</td><td>Working, needs input, done, idle</td></tr>
-          <tr><td>Any agent in herdr</td><td>herdr's own status</td></tr>
-          <tr><td>Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs</td><td>Running</td></tr>
-        </tbody>
-      </table>
+      <p class="eyebrow">Connectors</p>
+      <h2>Works with what you already use</h2>
+      <p class="lede">Browsers, terminals, and AI agents, down to the tab and pane. Every other app by its windows.</p>
+      <div class="marquee">
+        <ul class="marquee-row" style="--n:10"><li><img src="icons/safari.png" alt="Safari" title="Safari" width="64" height="64"></li><li><img src="icons/chrome.png" alt="Chrome" title="Chrome" width="64" height="64"></li><li><img src="icons/brave.png" alt="Brave" title="Brave" width="64" height="64"></li><li><img src="icons/edge.png" alt="Edge" title="Edge" width="64" height="64"></li><li><img src="icons/vivaldi.png" alt="Vivaldi" title="Vivaldi" width="64" height="64"></li><li><img src="icons/chromium.png" alt="Chromium" title="Chromium" width="64" height="64"></li><li><img src="icons/iterm.png" alt="iTerm" title="iTerm" width="64" height="64"></li><li><img src="icons/terminal.png" alt="Terminal" title="Terminal" width="64" height="64"></li><li><img src="icons/ghostty.png" alt="Ghostty" title="Ghostty" width="64" height="64"></li><li><img src="icons/cmux.png" alt="cmux" title="cmux" width="64" height="64"></li><li aria-hidden="true"><img src="icons/safari.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/chrome.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/brave.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/edge.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/vivaldi.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/chromium.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/iterm.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/terminal.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/ghostty.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/cmux.png" alt="" width="64" height="64"></li></ul>
+        <ul class="marquee-row rev" style="--n:11"><li><img src="icons/claude.png" alt="Claude" title="Claude" width="64" height="64"></li><li><img src="icons/codex.png" alt="Codex" title="Codex" width="64" height="64"></li><li><img src="icons/cursor.png" alt="Cursor" title="Cursor" width="64" height="64"></li><li><img src="icons/gemini.png" alt="Gemini CLI" title="Gemini CLI" width="64" height="64"></li><li><img src="icons/opencode.png" alt="OpenCode" title="OpenCode" width="64" height="64"></li><li><img src="icons/amp.png" alt="Amp" title="Amp" width="64" height="64"></li><li><img src="icons/aider.png" alt="Aider" title="Aider" width="64" height="64"></li><li><img src="icons/herdr.png" alt="herdr" title="herdr" width="64" height="64"></li><li><img src="icons/muse.png" alt="Muse" title="Muse" width="64" height="64"></li><li><img src="icons/notion.png" alt="Notion" title="Notion" width="64" height="64"></li><li><img src="icons/obsidian.png" alt="Obsidian" title="Obsidian" width="64" height="64"></li><li aria-hidden="true"><img src="icons/claude.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/codex.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/cursor.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/gemini.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/opencode.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/amp.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/aider.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/herdr.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/muse.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/notion.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/obsidian.png" alt="" width="64" height="64"></li></ul>
+        <ul class="marquee-row" style="--n:16"><li><img src="icons/finder.png" alt="Finder" title="Finder" width="64" height="64"></li><li><img src="icons/vscode.png" alt="VS Code" title="VS Code" width="64" height="64"></li><li><img src="icons/xcode.png" alt="Xcode" title="Xcode" width="64" height="64"></li><li><img src="icons/slack.png" alt="Slack" title="Slack" width="64" height="64"></li><li><img src="icons/discord.png" alt="Discord" title="Discord" width="64" height="64"></li><li><img src="icons/mail.png" alt="Mail" title="Mail" width="64" height="64"></li><li><img src="icons/messages.png" alt="Messages" title="Messages" width="64" height="64"></li><li><img src="icons/notes.png" alt="Notes" title="Notes" width="64" height="64"></li><li><img src="icons/calendar.png" alt="Calendar" title="Calendar" width="64" height="64"></li><li><img src="icons/preview.png" alt="Preview" title="Preview" width="64" height="64"></li><li><img src="icons/word.png" alt="Word" title="Word" width="64" height="64"></li><li><img src="icons/keynote.png" alt="Keynote" title="Keynote" width="64" height="64"></li><li><img src="icons/pages.png" alt="Pages" title="Pages" width="64" height="64"></li><li><img src="icons/numbers.png" alt="Numbers" title="Numbers" width="64" height="64"></li><li><img src="icons/zoom.png" alt="Zoom" title="Zoom" width="64" height="64"></li><li><img src="icons/blender.png" alt="Blender" title="Blender" width="64" height="64"></li><li aria-hidden="true"><img src="icons/finder.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/vscode.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/xcode.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/slack.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/discord.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/mail.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/messages.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/notes.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/calendar.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/preview.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/word.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/keynote.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/pages.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/numbers.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/zoom.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/blender.png" alt="" width="64" height="64"></li></ul>
+      </div>
     </div>
   </section>
 
