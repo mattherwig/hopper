@@ -47,7 +47,7 @@ extension/                                    the Raycast extension; everything 
   src/history.tsx                             view command: List of running apps by recency
   src/tabs.tsx, src/app-tabs.tsx              Search / Search Current App (names `tabs` / `app-tabs`, ADR-022), thin; render SearchList
   src/agents.tsx, src/next-agent.ts           Agents (view, thin; renders AgentList) and Next Agent (no-view: jump to the longest-waiting agent)
-  src/components/                             shared UI: search-list.tsx (Search: tabs + agents), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
+  src/components/                             shared UI: search-list.tsx (Search: tabs and agents, grouped by app), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
     navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
     history.ts                                PURE filters on the app list (exclude, remove), unit-tested
