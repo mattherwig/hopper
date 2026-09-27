@@ -110,7 +110,9 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
 
 /* Two levels */
 .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.level.wide { grid-column: 1 / -1; }
+.level.wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr; align-items: center; gap: 24px; }
+.level-text { display: flex; flex-direction: column; gap: 18px; }
+.level-text > p { margin: -8px 0 0; color: var(--muted); font-size: 15px; }
 .level {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 22px; display: flex; flex-direction: column; gap: 18px;
@@ -125,7 +127,7 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
 .cmds kbd { font-size: 12px; align-self: center; }
 
 /* How it works */
-.how { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .how h3 { font-size: 16px; margin: 0 0 12px; }
 .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .facts li { padding-left: 16px; position: relative; font-size: 15px; color: var(--muted); }
@@ -151,7 +153,7 @@ footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; border-top:
 footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
 @media (max-width: 820px) {
-  .levels, .how { grid-template-columns: 1fr; }
+  .levels, .how, .level.wide { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   nav .links a.hide-sm { display: none; }
@@ -195,38 +197,41 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
   <section id="features">
     <div class="wrap">
-      <p class="eyebrow">Three ways to jump</p>
+      <p class="eyebrow">Built for context switchers</p>
       <h2>Apps, search, and agents</h2>
-      <p class="lede">Move between apps with hotkeys, like Back and Forward in a browser. Open one list of everything open inside them and pick what you want. Or go straight to the AI agent that's waiting on you, wherever it runs.</p>
+      <p class="lede">Your AI tools change every month. The way you get around shouldn't.</p>
 
       <div class="levels">
-        <article class="level">
-          <header><h3>Apps</h3></header>
-          <p>Browser-style history for the apps you've been using.</p>
-          <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
-          <ul class="cmds">
-            <li><b>Back / Forward</b><kbd>⌃⌘[ ⌃⌘]</kbd><span>Step back to the app you used before this one, and keep going. Forward retraces.</span></li>
-            <li><b>Toggle</b><kbd>⌘ ⌘</kbd><span>Flip between your two most recent apps. Run again to flip back.</span></li>
-            <li><b>History</b><kbd>⌃⌘</kbd><span>Running apps from most to least recent. Jump to any of them, or remove and exclude apps.</span></li>
-          </ul>
+        <article class="level wide">
+          <div class="level-text">
+            <header><h3>Agents</h3></header>
+            <p>Track every agent you pay for, wherever it runs: Claude Code, Codex, Cursor, herdr.</p>
+            <ul class="cmds">
+              <li><b>Agents</b><kbd>⌥⌘</kbd><span>One list, sorted by who needs you. Jump to the exact pane or session.</span></li>
+              <li><b>Next Agent</b><kbd>⌥⌘]</kbd><span>Go to the one that's waited longest. Again for the next.</span></li>
+            </ul>
+          </div>
+          <div class="shot"><img src="agents.png" alt="Agents command: Claude Code and Cursor agents grouped by Done, Working, and Idle" width="2000" height="1250" loading="lazy"></div>
         </article>
 
         <article class="level">
           <header><h3>Search</h3></header>
-          <p>One search across the tabs, windows, sessions, and agents of every running app.</p>
-          <div class="shot"><img src="tabs.png" alt="Search command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
+          <p>One search, whatever you use this month.</p>
+          <div class="shot"><img src="tabs.png" alt="Search command: Cursor, ChatGPT, and Claude sessions with agent status in one searchable list" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Search</b><kbd>⌃ ⌃</kbd><span>Search browser tabs, terminal tabs, herdr workspaces, Claude and Muse sessions, Notion and Obsidian tabs, any app's windows, and agents, then jump straight to one.</span></li>
-            <li><b>Search Current App</b><span>The same, for just the app you're in.</span></li>
+            <li><b>Search</b><kbd>⌃ ⌃</kbd><span>Browser and terminal tabs, AI sessions, Notion, Obsidian, any window.</span></li>
+            <li><b>Search Current App</b><span>Just the app you're in.</span></li>
           </ul>
         </article>
 
-        <article class="level wide">
-          <header><h3>Agents</h3></header>
-          <p>Claude Code, Codex, Cursor, herdr, and other agents, wherever they run, by what they need from you.</p>
+        <article class="level">
+          <header><h3>Apps</h3></header>
+          <p>A Back button for your Mac.</p>
+          <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Agents</b><kbd>⌥⌘</kbd><span>Every running agent grouped by Needs You, Done, Working, and Idle, filterable by project. Jump to its terminal pane, herdr pane, or session in the Claude app or Cursor.</span></li>
-            <li><b>Next Agent</b><kbd>⌥⌘]</kbd><span>Jump to the agent that has waited longest for you: needs input or approval first, then finished and unseen. Run again for the next.</span></li>
+            <li><b>Toggle</b><kbd>⌘ ⌘</kbd><span>Flip between your last two apps.</span></li>
+            <li><b>Back / Forward</b><kbd>⌃⌘[ ⌃⌘]</kbd><span>Step through recent apps like browser history.</span></li>
+            <li><b>History</b><kbd>⌃⌘</kbd><span>The whole trail, to pick from.</span></li>
           </ul>
         </article>
       </div>
@@ -237,35 +242,30 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="wrap">
       <p class="eyebrow">How it works</p>
       <h2>Browser rules for apps, one list for everything else</h2>
-      <p class="lede">Apps come from the order macOS already keeps for Cmd+Tab, so nothing runs in the background. Search reads each app when you open it.</p>
+      <p class="lede">Nothing runs in the background. Hopper reads what macOS and your apps already know, when you ask.</p>
       <div class="how">
         <div>
-          <h3>Apps</h3>
+          <h3>Agents</h3>
           <ul class="facts">
-            <li><strong>The first Back takes a snapshot</strong> of your app order and moves one step back. Further Backs go deeper; Forward retraces.</li>
-            <li><strong>Switching any other way starts fresh.</strong> Click an app or Cmd+Tab and the forward history is dropped, just like visiting a new page in a browser.</li>
-            <li><strong>You land where you left off.</strong> With Accessibility, an app comes back to the window you were in, like Cmd+Tab.</li>
-            <li><strong>Remove from History</strong> (<kbd>⌃X</kbd>) hides an app until you use it again; <strong>Exclude</strong> (<kbd>⌃⇧X</kbd>) hides it for good.</li>
+            <li><strong>Status comes from the agents themselves.</strong> No hooks to install.</li>
+            <li><strong>Done means finished since you last looked.</strong></li>
+            <li><strong>Jumps land in the exact place:</strong> the terminal split, herdr pane, or Claude or Cursor session.</li>
           </ul>
         </div>
         <div>
           <h3>Search</h3>
           <ul class="facts">
-            <li><strong>Apps are ordered by recent use;</strong> within an app, active tabs come first.</li>
-            <li><strong>Search forgives typos</strong> ("caude" finds Claude) and matches app names first: an app's own tabs before tabs that mention it.</li>
-            <li><strong>Picking an entry selects it</strong> in its app and brings the app to the front.</li>
-            <li><strong>Copy URL</strong> and <strong>Copy Title</strong> are in the action panel.</li>
-            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, Obsidian notes, and documents closed since Search last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
-            <li><strong>Apps Hopper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
+            <li><strong>Forgives typos:</strong> "caude" finds Claude.</li>
+            <li><strong>Recently Closed</strong> reopens tabs, pages, and notes from the past week.</li>
+            <li><strong>Private windows never show up.</strong></li>
           </ul>
         </div>
         <div>
-          <h3>Agents</h3>
+          <h3>Apps</h3>
           <ul class="facts">
-            <li><strong>Status comes from the agents themselves:</strong> Claude Code's list of running sessions, Codex's thread log, Cursor's flags, herdr's detection. No hooks to install.</li>
-            <li><strong>Done means finished since you last looked,</strong> in the agent's own app or by jumping to it from Hopper.</li>
-            <li><strong>Jumping goes to where it runs:</strong> the exact iTerm split or cmux terminal, the herdr pane, the Claude session, the Cursor agent.</li>
-            <li><strong>Projects are git repositories;</strong> worktrees count as their main repository.</li>
+            <li><strong>Back works like a browser:</strong> switch any other way and forward history resets.</li>
+            <li><strong>You land in the window you left.</strong></li>
+            <li><strong>Remove or Exclude</strong> apps you don't want in History.</li>
           </ul>
         </div>
       </div>
