@@ -2,7 +2,7 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
-## 2026-09-26 — Tab level on `feature/tabs` (ADR-013)
+## 2026-09-26 — Tab level merged to main (ADR-013)
 
 Done:
 - Tabs + Tabs in Current App commands: Chromium browsers, Safari, cmux, iTerm, Terminal (AppleScript), Claude + Muse sidebars and any app's windows / native tabs (Accessibility).
@@ -12,6 +12,11 @@ Done:
 - Owner smoke-tested the app-level commands on this branch (History uses the new shared SwitchAction): good.
 
 Not done: Messages (probed, out: rows are unlabeled groups whose only text is "name, preview, time", and group names contain commas); Cursor (descoped, needs a spike); tab Back/Forward (needs a switch recorder); demo GIF / Store screenshots (#11).
+
+## 2026-09-26 — GitHub Pages landing page (branch `site/github-pages`)
+
+- `site/index.html`: hero, demo GIF, commands, how it works, setup. (An interactive in-browser playground was prototyped and dropped: the GIF shows the real thing.) Deployed by `.github/workflows/pages.yml` on push to `main`; Pages source set to GitHub Actions.
+- Store button points at the not-yet-live listing: follow-up in #8.
 
 ## 2026-09-26 — v1 submitted to the Raycast Store (#1)
 
