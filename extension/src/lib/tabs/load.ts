@@ -97,5 +97,7 @@ export function describeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   if (/-1743|not authori[sz]ed/i.test(message)) return "Raycast isn't allowed to control this app (Automation)";
   if (/timed out|timeout/i.test(message)) return "The app didn't respond in time";
-  return message.split("\n")[0];
+  // osascript's own error ("…: execution error: Ghostty got an error: …") rather than "Command failed…".
+  const scriptError = /execution error: (.+)/.exec(message)?.[1];
+  return scriptError ?? message.split("\n")[0];
 }

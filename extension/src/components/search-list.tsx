@@ -47,8 +47,8 @@ async function load(scope: Scope) {
 
 /**
  * Search: tabs, windows, sessions, and agents of every running app (or only the current one), grouped by app.
- * Agents shown on a tab (a Claude Code session, a terminal running an agent) are a status on that tab; others
- * (Cursor agents, Codex app threads...) get their own section.
+ * An agent's status shows on the tab it runs in (a Claude Code session, a terminal or herdr tab), and every agent
+ * also has a row in the Agents section.
  */
 export function SearchList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
@@ -67,12 +67,11 @@ export function SearchList({ scope }: { scope: Scope }) {
       return key ? [[key, a] as const] : [];
     }),
   );
-  const tabKeys = new Set(tabs.map((t) => t.key));
-  const otherAgents = (agentData?.agents ?? []).filter((a) => {
-    const key = placeOf(a);
-    const inScope = scope === "all" || a.location?.app.bundleId === current?.bundleId;
-    return a.location && inScope && !(key && tabKeys.has(key));
-  });
+  // Every located agent also has a row of its own (after the apps), so searching an agent's name finds it.
+  const agents = (agentData?.agents ?? []).filter(
+    (a) => a.location && (scope === "all" || a.location.app.bundleId === current?.bundleId),
+  );
+
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
 
@@ -85,13 +84,6 @@ export function SearchList({ scope }: { scope: Scope }) {
         scope === "current" && current ? `Search ${current.name}` : "Search apps, tabs, sessions, and agents"
       }
     >
-      {otherAgents.length > 0 && (
-        <List.Section title="Agents" subtitle={String(otherAgents.length)}>
-          {searchTabs(otherAgents.map(searchableAgent), query).map(({ agent }) => (
-            <AgentItem key={agent.key} agent={agent} onRefresh={reloadAgents} />
-          ))}
-        </List.Section>
-      )}
       {groupByApp(searchTabs(tabs, query)).map(({ app, tabs }) => (
         <List.Section key={app.bundleId} title={app.name} subtitle={String(tabs.length)}>
           {tabs.map((tab) => (
@@ -99,6 +91,13 @@ export function SearchList({ scope }: { scope: Scope }) {
           ))}
         </List.Section>
       ))}
+      {agents.length > 0 && (
+        <List.Section title="Agents" subtitle={String(agents.length)}>
+          {searchTabs(agents.map(searchableAgent), query).map(({ agent }) => (
+            <AgentItem key={agent.key} agent={agent} onRefresh={reloadAgents} />
+          ))}
+        </List.Section>
+      )}
       {closed.length > 0 && (
         <List.Section title="Recently Closed" subtitle={String(closed.length)}>
           {searchTabs(closed, query).map((entry) => (

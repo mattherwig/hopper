@@ -136,24 +136,11 @@ test("cmux: a workspace with several terminals lists each by name; terminals are
   );
   const tabs = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}fix-bug${F}true${F}/p${F}P1,P2${F}P2${R}`, panels);
   assert.deepEqual(
-    tabs.map((t) => [t.key, t.title, t.detail, t.active, t.ref, t.panes]),
+    tabs.map((t) => [t.key, t.kind, t.title, t.detail, t.active, t.ref.terminalId, t.panes]),
     [
-      [
-        "com.cmuxterm.app:T1:P1",
-        "fix-bug-1",
-        "fix-bug",
-        false,
-        { windowId: "W1", tabId: "T1", terminalId: "P1" },
-        [{ id: "P1", tty: "ttys003" }],
-      ],
-      [
-        "com.cmuxterm.app:T1:P2",
-        "fix-bug-2",
-        "fix-bug",
-        true,
-        { windowId: "W1", tabId: "T1", terminalId: "P2" },
-        [{ id: "P2", tty: "ttys020" }],
-      ],
+      ["com.cmuxterm.app:T1", "workspace", "fix-bug", "/p", false, undefined, undefined],
+      ["com.cmuxterm.app:T1:P1", "tab", "fix-bug-1", "fix-bug", false, "P1", [{ id: "P1", tty: "ttys003" }]],
+      ["com.cmuxterm.app:T1:P2", "tab", "fix-bug-2", "fix-bug", true, "P2", [{ id: "P2", tty: "ttys020" }]],
     ],
   );
   assert.equal(cmux.parsePanels("{").size, 0);
@@ -162,7 +149,7 @@ test("cmux: a workspace with several terminals lists each by name; terminals are
 test("cmux: selecting a terminal (or a pane) focuses it", async () => {
   const platform = fakePlatform({ runAppleScript: async () => "ok" });
   const tabs = cmux.parse(app("com.cmuxterm.app"), `W1${F}T1${F}fix-bug${F}true${F}/p${F}P1,P2${F}P1${R}`);
-  await cmux.cmux.select(tabs[1], platform);
+  await cmux.cmux.select(tabs[2], platform);
   assert.match(platform.scripts[0], /if \(id of term\) is "P2" then[\s\S]*focus term/);
 });
 

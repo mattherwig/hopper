@@ -3,7 +3,7 @@
 // herdr's socket, then the terminal running herdr comes forward (locate.ts; ADR-021, ADR-022).
 
 import type { Agent, AgentContext, AgentSource, AgentStatus } from "../model";
-import { herdrTabKey, readSnapshots, workspaceName, type Snapshot } from "../../tabs/sources/herdr";
+import { herdrPlaceKey, readSnapshots, workspaceName, type Snapshot } from "../../tabs/sources/herdr";
 
 export { focusPane } from "../../tabs/sources/herdr";
 
@@ -29,7 +29,7 @@ export function fromSnapshot(snapshot: Snapshot, socket: string): Agent[] {
         cwd: a.foreground_cwd || a.cwd,
         status,
         host: { kind: "herdr", socket, paneId: a.pane_id, label: `herdr › ${place}` },
-        ...(a.tab_id ? { placeKey: herdrTabKey(socket, a.tab_id) } : {}),
+        ...(a.tab_id ? { placeKey: herdrPlaceKey(snapshot, socket, a.tab_id) } : {}),
         ...(session ? { sessionIds: [session] } : {}),
       },
     ];

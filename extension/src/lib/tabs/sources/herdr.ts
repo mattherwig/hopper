@@ -1,5 +1,5 @@
 // herdr (herdr.dev), a terminal multiplexer: workspace → tab → pane, inside whatever terminal runs a herdr client.
-// It isn't an app, so it's a *discovered* source (registry.ts): its tabs are listed under the terminal app running
+// Listed: each workspace, and its tabs that have their own name. It isn't an app, so it's a *discovered* source (registry.ts): its tabs are listed under the terminal app running
 // herdr, found through the client process's parent chain; in terminals that report panes (iTerm, cmux, Terminal)
 // the client's tty also finds the terminal tab holding herdr, which is selected with it (Tab.within). One `session.snapshot` request on herdr's local socket
 // (one per named session) returns every workspace, tab, pane and agent; `tab.focus` / `pane.focus` switch herdr's
@@ -11,12 +11,11 @@ import type { App, Platform, Tab, TabSource } from "../model";
 
 const CONFIG_DIR = ".config/herdr";
 
-interface Ref {
-  socket: string;
-  tabId: string;
-}
+/** A workspace entry, or a tab entry. */
+type Ref = { socket: string; workspaceId: string; tabId?: undefined } | { socket: string; tabId: string };
 
 export interface Snapshot {
+  focused_workspace_id?: string;
   focused_tab_id?: string;
   workspaces?: { workspace_id?: string; label?: string; number?: number }[];
   tabs?: { tab_id?: string; workspace_id?: string; label?: string; number?: number; pane_count?: number }[];
@@ -75,37 +74,76 @@ export async function readSnapshots(platform: Platform): Promise<{ socket: strin
   return results.flat();
 }
 
-/** Key of a herdr tab's entry; agents in it point at it (Agent.placeKey) so Search shows their status there. */
+export const herdrWorkspaceKey = (socket: string, workspaceId: string) => `herdr:${socket}:${workspaceId}`;
 export const herdrTabKey = (socket: string, tabId: string) => `herdr:${socket}:${tabId}`;
 
-/** "Workspace › Tab" names, with herdr's numbers for unnamed ones. */
+/** "1", "2"... are herdr's own labels for tabs the user didn't name. */
+const isUnnamed = (label?: string) => !label || /^\d+$/.test(label);
+
+/** "Workspace 2" for workspaces the user didn't name. */
 export function workspaceName(snapshot: Snapshot, workspaceId?: string): string {
   const w = snapshot.workspaces?.find((x) => x.workspace_id === workspaceId);
   return w?.label || (w?.number !== undefined ? `Workspace ${w.number}` : "Workspace");
 }
 
-/** One entry per herdr tab, under the terminal app running herdr. Unnamed tabs (herdr labels them "1", "2"...) are
- * named by their workspace. */
+/** Whether a tab gets an entry of its own: it's named, or its workspace has other tabs. */
+function listsTab(snapshot: Snapshot, tab: NonNullable<Snapshot["tabs"]>[number]): boolean {
+  const siblings = (snapshot.tabs ?? []).filter((t) => t.workspace_id === tab.workspace_id);
+  return !isUnnamed(tab.label) || siblings.length > 1;
+}
+
+/**
+ * Key of the entry that shows a tab: its own, or its workspace's when it has none. Agents in herdr point at it
+ * (Agent.placeKey), so Search shows their status there.
+ */
+export function herdrPlaceKey(snapshot: Snapshot, socket: string, tabId: string): string | undefined {
+  const tab = snapshot.tabs?.find((t) => t.tab_id === tabId);
+  if (!tab) return undefined;
+  if (listsTab(snapshot, tab)) return herdrTabKey(socket, tabId);
+  return tab.workspace_id ? herdrWorkspaceKey(socket, tab.workspace_id) : undefined;
+}
+
+/**
+ * herdr's places under the terminal app running herdr: each workspace, then its tabs that have a name of their own
+ * (or all of them, when it has several).
+ */
 export function fromSnapshot(app: App, socket: string, snapshot: Snapshot, hostTty?: string): Tab<Ref>[] {
-  return (snapshot.tabs ?? []).flatMap((t): Tab<Ref>[] => {
-    if (!t.tab_id) return [];
-    const workspace = workspaceName(snapshot, t.workspace_id);
-    const unnamed = !t.label || /^\d+$/.test(t.label);
-    const pane = snapshot.panes?.find((p) => p.tab_id === t.tab_id);
-    const cwd = pane?.foreground_cwd || pane?.cwd;
+  const cwdOf = (tabId?: string) => {
+    const pane = snapshot.panes?.find((p) => p.tab_id === tabId);
+    return pane?.foreground_cwd || pane?.cwd;
+  };
+  const host = hostTty ? { hostTty } : {};
+  return (snapshot.workspaces ?? []).flatMap((w): Tab<Ref>[] => {
+    if (!w.workspace_id) return [];
+    const workspace = workspaceName(snapshot, w.workspace_id);
+    const tabs = (snapshot.tabs ?? []).filter((t) => t.workspace_id === w.workspace_id && t.tab_id);
     return [
       {
-        key: herdrTabKey(socket, t.tab_id),
+        key: herdrWorkspaceKey(socket, w.workspace_id),
         app,
         source: herdr.id,
         kind: "workspace",
-        title: unnamed ? workspace : t.label!,
-        detail: unnamed ? "herdr" : `herdr › ${workspace}`,
-        detailFull: cwd,
-        active: t.tab_id === snapshot.focused_tab_id,
-        ref: { socket, tabId: t.tab_id },
-        ...(hostTty ? { hostTty } : {}),
+        title: workspace,
+        detail: "herdr",
+        detailFull: cwdOf(tabs[0]?.tab_id),
+        active: w.workspace_id === snapshot.focused_workspace_id,
+        ref: { socket, workspaceId: w.workspace_id },
+        ...host,
       },
+      ...tabs
+        .filter((t) => listsTab(snapshot, t))
+        .map((t): Tab<Ref> => ({
+          key: herdrTabKey(socket, t.tab_id!),
+          app,
+          source: herdr.id,
+          kind: "tab",
+          title: isUnnamed(t.label) ? `${workspace} ${t.label ?? ""}`.trim() : t.label!,
+          detail: `herdr › ${workspace}`,
+          detailFull: cwdOf(t.tab_id),
+          active: t.tab_id === snapshot.focused_tab_id,
+          ref: { socket, tabId: t.tab_id! },
+          ...host,
+        })),
     ];
   });
 }
@@ -154,7 +192,9 @@ export const herdr: TabSource<Ref> = {
     return snapshots.flatMap(({ socket, snapshot }) => fromSnapshot(app, socket, snapshot, client.tty));
   },
   select: async (tab, platform) => {
-    await focus(platform, tab.ref.socket, "tab.focus", { tab_id: tab.ref.tabId });
-    if (!tab.within) await revealClient(platform, tab.ref.socket, tab.app);
+    const { ref } = tab;
+    if (ref.tabId !== undefined) await focus(platform, ref.socket, "tab.focus", { tab_id: ref.tabId });
+    else await focus(platform, ref.socket, "workspace.focus", { workspace_id: ref.workspaceId });
+    if (!tab.within) await revealClient(platform, ref.socket, tab.app);
   },
 };

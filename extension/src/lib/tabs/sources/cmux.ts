@@ -1,5 +1,5 @@
 // cmux: window → workspace (the sidebar entry; "tab" in its AppleScript dictionary) → terminals (splits, and tabs
-// inside a split). A workspace with one terminal is one entry; one with several lists each terminal by its name,
+// inside a split). Each workspace is an entry; one with several terminals also lists each terminal by its name,
 // with the workspace as detail. Terminals are also the panes agents are located in. AppleScript gives terminal
 // ids but neither their tty nor their names (all "Terminal"); cmux's own session file (autosaved on change) has
 // both for each terminal ("panel", same id).
@@ -79,21 +79,23 @@ export function parse(app: App, out: string, panels: Map<string, Panel> = new Ma
       const tty = panels.get(id)?.tty;
       return tty ? [{ id, tty }] : [];
     };
-    if (ids.length > 1) {
-      return ids.map((id, i): Tab<Ref> => ({
-        key: `${app.bundleId}:${tabId}:${id}`,
-        app,
-        source: cmux.id,
-        kind: "tab",
-        title: panels.get(id)?.title || `${workspace} ${i + 1}`,
-        detail: workspace,
-        detailFull: tildify(cwd) || undefined,
-        active: isTrue(selected) && id === focusedId,
-        ref: { windowId, tabId, terminalId: id },
-        panes: pane(id),
-      }));
-    }
-    const panes = ids.flatMap(pane);
+    const terminals =
+      ids.length > 1
+        ? ids.map((id, i): Tab<Ref> => ({
+            key: `${app.bundleId}:${tabId}:${id}`,
+            app,
+            source: cmux.id,
+            kind: "tab",
+            title: panels.get(id)?.title || `${workspace} ${i + 1}`,
+            detail: workspace,
+            detailFull: tildify(cwd) || undefined,
+            active: isTrue(selected) && id === focusedId,
+            ref: { windowId, tabId, terminalId: id },
+            panes: pane(id),
+          }))
+        : [];
+    // With terminal entries, agents are located in those; the workspace keeps its panes only when it's one terminal.
+    const panes = terminals.length > 0 ? [] : ids.flatMap(pane);
     return [
       {
         key: `${app.bundleId}:${tabId}`,
@@ -102,10 +104,11 @@ export function parse(app: App, out: string, panels: Map<string, Panel> = new Ma
         kind: "workspace",
         title: workspace,
         detail: tildify(cwd) || undefined,
-        active: isTrue(selected),
+        active: isTrue(selected) && terminals.length === 0,
         ref: { windowId, tabId },
         ...(panes.length > 0 ? { panes } : {}),
       },
+      ...terminals,
     ];
   });
 }

@@ -5,8 +5,12 @@
 
 import { isTrue, listScript, parseRecords, quote, runSelect, tildify } from "../applescript";
 import type { App, Pane, Platform, Tab, TabSource } from "../model";
+import { windows } from "./windows";
 
 export const GHOSTTY = "com.mitchellh.ghostty";
+
+/** AppleScript errors of an app without these terms: -1708 (doesn't understand), -1728 (can't get). */
+const NOT_SCRIPTABLE = /-1708|-1728|doesn.t understand|Can.t get/;
 
 interface Ref {
   windowId: string;
@@ -97,7 +101,16 @@ return "missing"`);
 export const ghostty: TabSource<Ref> = {
   id: "ghostty",
   bundleIds: [GHOSTTY],
-  list: async (app, platform) => parse(app, await platform.runAppleScript(listScript(app.bundleId, LIST))),
+  list: async (app, platform) => {
+    try {
+      return parse(app, await platform.runAppleScript(listScript(app.bundleId, LIST)));
+    } catch (error) {
+      // Ghostty before 1.3 has no scripting ("doesn't understand"): list its windows, as for any other app.
+      if (!NOT_SCRIPTABLE.test(error instanceof Error ? error.message : String(error))) throw error;
+      return (await windows.list(app, platform)) as Tab[] as Tab<Ref>[];
+    }
+  },
+  // Fallback entries carry source "windows", so their selection is routed there, not here.
   select: (tab, platform) => runSelect(platform, tab.app.bundleId, select(tab.ref)),
   selectPane: (tab, paneId, platform) =>
     runSelect(platform, tab.app.bundleId, focusTerminal(`(id of term) is ${quote(paneId)}`)),

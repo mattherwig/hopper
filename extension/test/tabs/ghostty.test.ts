@@ -24,3 +24,28 @@ test("Ghostty: selecting a pane focuses that terminal", async () => {
   await ghostty.selectPane!(tab, "A", platform);
   assert.match(platform.scripts[0], /if \(id of term\) is "A" then[\s\S]*focus term/);
 });
+
+test("Ghostty without scripting (before 1.3) lists its windows; other errors still surface", async () => {
+  const notScriptable = new Error(
+    "Command failed with exit code 1: osascript\n205:733: execution error: Ghostty got an error: every window doesn’t understand the “count” message. (-1708)",
+  );
+  const platform = fakePlatform({
+    runAppleScript: async () => {
+      throw notScriptable;
+    },
+    windows: async () => [
+      { bundleId: ghosttyApp.bundleId, windows: [{ index: 1, title: "~", minimized: false, tabs: [] }] },
+    ],
+  });
+  const tabs = await ghostty.list(ghosttyApp, platform);
+  assert.deepEqual(
+    tabs.map((t) => [t.source, t.title]),
+    [["windows", "~"]],
+  );
+  const denied = fakePlatform({
+    runAppleScript: async () => {
+      throw new Error("Not authorized to send Apple events to Ghostty. (-1743)");
+    },
+  });
+  await assert.rejects(ghostty.list(ghosttyApp, denied), /-1743/);
+});

@@ -1,12 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadTabs, selectTab } from "../../src/lib/tabs/load.ts";
-import { fromSnapshot, herdr } from "../../src/lib/tabs/sources/herdr.ts";
+import { fromSnapshot, herdr, herdrPlaceKey } from "../../src/lib/tabs/sources/herdr.ts";
 import { app, fakePlatform } from "../fake-platform.ts";
 import { proc } from "../agents/helpers.ts";
 
 const ghostty = { ...app("com.mitchellh.ghostty", "Ghostty"), pid: 50 };
 const snapshot = {
+  focused_workspace_id: "w1",
   focused_tab_id: "w1:t1",
   workspaces: [
     { workspace_id: "w1", label: "jumper", number: 1 },
@@ -19,15 +20,19 @@ const snapshot = {
   panes: [{ pane_id: "w1:p1", tab_id: "w1:t1", foreground_cwd: "/p/jumper" }],
 };
 
-test("herdr tabs are listed under the terminal running herdr; unnamed tabs take their workspace's name", () => {
+test("herdr: every workspace, then its tabs that have their own name, under the terminal running herdr", () => {
   const tabs = fromSnapshot(ghostty, "/s", snapshot);
   assert.deepEqual(
-    tabs.map((t) => [t.key, t.app.name, t.title, t.detail, t.detailFull, t.active]),
+    tabs.map((t) => [t.key, t.app.name, t.kind, t.title, t.detail, t.active]),
     [
-      ["herdr:/s:w1:t1", "Ghostty", "agents", "herdr › jumper", "/p/jumper", true],
-      ["herdr:/s:w2:t1", "Ghostty", "Workspace 2", "herdr", undefined, false],
+      ["herdr:/s:w1", "Ghostty", "workspace", "jumper", "herdr", true],
+      ["herdr:/s:w1:t1", "Ghostty", "tab", "agents", "herdr › jumper", true],
+      ["herdr:/s:w2", "Ghostty", "workspace", "Workspace 2", "herdr", false],
     ],
   );
+  // An agent's status goes on its tab's entry, or its workspace's when the tab has none.
+  assert.equal(herdrPlaceKey(snapshot, "/s", "w1:t1"), "herdr:/s:w1:t1");
+  assert.equal(herdrPlaceKey(snapshot, "/s", "w2:t1"), "herdr:/s:w2");
 });
 
 test("discovered through the herdr client's terminal; selecting focuses the tab in herdr", async () => {
@@ -52,7 +57,7 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
   const { tabs } = await loadTabs([ghostty], platform);
   assert.deepEqual(
     tabs.filter((t) => t.source === "herdr").map((t) => t.title),
-    ["agents", "Workspace 2"],
+    ["jumper", "agents", "Workspace 2"],
   );
   await selectTab(
     tabs.find((t) => t.title === "Workspace 2")!,
@@ -60,7 +65,7 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
   );
   // Ghostty doesn't report ttys: herdr titles its terminal with a marker, Ghostty's terminal with it is focused.
   const [focusTab, setTitle, clearTitle] = requests.slice(-3);
-  assert.equal(focusTab, 'tab.focus {"tab_id":"w2:t1"}');
+  assert.equal(focusTab, 'workspace.focus {"workspace_id":"w2"}');
   const marker = /"title":"(jumper-[^"]+)"/.exec(setTitle)?.[1];
   assert.ok(marker && setTitle.startsWith("client.window_title.set"));
   assert.equal(clearTitle, "client.window_title.clear {}");

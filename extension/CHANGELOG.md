@@ -8,7 +8,8 @@
 - Tabs is now **Search** (and Tabs in Current App is **Search Current App**): it shows an agent's status next to the tab it runs in, and lists agents that aren't in a tab. Your hotkeys keep working.
 - herdr workspaces and tabs are listed in Search under the terminal running herdr, and agents in herdr panes open in their pane.
 - Ghostty tabs are listed in Search (Ghostty 1.3+), and herdr running in Ghostty is brought forward in its own tab.
-- cmux workspaces with several terminals list each terminal by its name.
+- cmux workspaces with several terminals also list each terminal by its name; herdr lists workspaces and their named tabs.
+- Search lists every agent in an Agents section, and shows AppleScript's own error for apps it can't read.
 - Claude Code sessions that haven't started yet (e.g. waiting to trust a folder) are listed as running.
 - Copy Resume Command for Claude Code and Codex sessions.
 
