@@ -7,7 +7,8 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 - Architecture cleanup: agent hosts are a terminal process, a `place` (tab key + pane of a tab the tab level lists), or a `link` (Cursor, Codex app). `placeKey`, `Host` kind `herdr` and `Location.herdr` removed; `jumpToAgent` = select the tab with its source, else open the link. herdr's pane focus moved into its tab source (`selectPane`); Claude's deep link built once (`codeSessionUrl`).
 - Visible change: in Search, a herdr agent's status tag is on its herdr tab, not on the terminal tab running herdr.
 - Verified: 127 unit tests, lint, build; `scripts/smoke_herdr.py` 6/6 live (herdr 0.9.1, clients in cmux + Ghostty); new `scripts/smoke_claude.py` 4/4 (Search and Agents jumps to Claude app Code sessions). Smoke `tabs` 2/3, and the same on `main`: the typo'd-title check ("OS - macOS 27 Glden Gate - Apple") lands on Safari tab 3, not 2; pre-existing, own issue. Not verified live: Next Agent.
-- Next: fix the `tabs` typo check.
+- Smoke `tabs` fixed (#43): Hopper was right, the check wasn't. Other Safari windows had the same Apple page open (leftovers from a media run, or the owner's own), and Search jumped to one of those. The staged tabs' URLs now carry a one-off `#smokeNNNNN` fragment, and the Safari queries include it. 3/3 twice.
+- Next: Next Agent live check.
 
 ## 2026-09-27 — Store PR review fixes (raycast/extensions#31648)
 
