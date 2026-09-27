@@ -69,7 +69,7 @@ extension/                                    the Raycast extension; everything 
     registry.ts                               the agent sources — add new agent products here
     sources/                                  claude (~/.claude/sessions + Claude app files), codex (state_5.sqlite + rollout files), cursor (state.vscdb),
                                               herdr (socket snapshot), cli (agent CLIs by process name)
-    locate.ts                                 host → app / tab / pane: process parent chain + tty against panes; herdr panes
+    locate.ts                                 host → app / tab / pane: process parent chain + tty against panes; places by tab key (ADR-028)
     status.ts                                 done-until-seen, urgency order, Next Agent's pick
     load.ts                                   read all sources, merge one agent per session, locate, attach projects; jumpToAgent
   src/lib/projects/project.ts                 PURE: projects = git repositories (worktrees under their main checkout); a grouping, not a level
