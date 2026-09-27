@@ -307,9 +307,9 @@ def gif() -> None:
     # App order after setup: TextEdit (current), Preview, Safari. Back/Forward/Toggle cycle through those three;
     # History ↓↓ lands on Safari. Tabs then pastes a fuzzy query for the owner's cmux workspace "github-pages" (cmux
     # fills the screen, so it covers the recording area). Pasted, not typed: every prefix ("g", "gh") would briefly
-    # list matching private tabs. Tabs ranks matches across all apps (ADR-015); "gh-pages" ranks the cmux workspace first
+    # list matching private tabs. Tabs ranks matches across all apps (ADR-015); "github pages" ranks the cmux workspace first
     # (check with a test run if the owner's tabs change). Checked after recording.
-    tab_query, tab_target = "gh-pages", "cmux"
+    tab_query, tab_target = "github pages", "cmux"
     card = {"card": "Jumper", "sub": "Jump to any app, tab, or session"}
     # (overlay message, deeplink command or keystroke or None, seconds to hold)
     timeline = [
