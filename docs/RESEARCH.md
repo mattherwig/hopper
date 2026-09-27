@@ -40,4 +40,4 @@ Dropped: "alt tab" and "cmd tab" (web-search terms, not how people search a Stor
 
 ## Pitch (README / posts)
 
-**Jumper**: Your Mac gets a browser-style Back button for apps. Cmd+Tab only knows "most recent" and reshuffles every time you switch, so walking back three apps is guesswork. Bind **Back** and **Forward** to hotkeys (e.g. ⌃⌥[ and ⌃⌥]) and step through your recent apps exactly like Safari or VS Code history. **History** lists the trail so you can jump anywhere. No setup, no permissions, no background process.
+**Jumper**: Your Mac gets a browser-style Back button for apps. Cmd+Tab only knows "most recent" and reshuffles every time you switch, so walking back three apps is guesswork. Bind **Back** and **Forward** to hotkeys (e.g. ⌃⌘[ and ⌃⌘]; recommended set in `extension/README.md` Setup) and step through your recent apps exactly like Safari or VS Code history. **History** lists the trail so you can jump anywhere. No setup, no permissions, no background process.
