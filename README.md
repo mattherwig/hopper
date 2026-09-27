@@ -1,6 +1,6 @@
-# Jumper
+# Hopper
 
-![Jumper demo: Back, Forward, Toggle, History, and Tabs](extension/media/demo.gif)
+![Hopper demo: Back, Forward, Toggle, History, and Tabs](extension/media/demo.gif)
 
 Jump to any app, tab, or session on your Mac: a [Raycast](https://www.raycast.com) extension that steps back and forward through your recently used apps, like browser history, and searches the tabs, windows, and sessions of every running app.
 

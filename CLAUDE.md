@@ -1,7 +1,7 @@
-# CLAUDE.md — Jumper (Raycast extension)
+# CLAUDE.md — Hopper (Raycast extension)
 
 Browser-style Back / Forward for macOS apps, tab search across apps, and jumping to AI agents wherever they run; shipped as a Raycast Store extension.
-Store slug `jumper`, title "Jumper".
+Store slug `hopper`, title "Hopper".
 
 ## Start here
 
@@ -13,7 +13,7 @@ Store slug `jumper`, title "Jumper".
 
 ## Tasks
 
-Work is tracked in GitHub Issues on https://github.com/mattherwig/jumper (the task system; don't keep TODO lists in docs).
+Work is tracked in GitHub Issues on https://github.com/mattherwig/hopper (the task system; don't keep TODO lists in docs).
 
 - `gh issue list` — open tasks. `gh issue view <n>` — full instructions (issues are written to be executable by an agent).
 - Labels: `release` (Store publishing), `decision` (needs owner input before work), `enhancement`, `bug`.
@@ -80,7 +80,7 @@ extension/                                    the Raycast extension; everything 
     macos.ts                                  getRecentApps() (calls Swift, apps with pid) + activateApp() (Cmd+Tab-style via Accessibility, open() as fallback)
     processes.ts                              PURE: process-tree helpers (app of a process, herdr client)
     agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Search
-  swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift, Activate.swift (app level);
+  swift/Sources/HopperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift, Activate.swift (app level);
                                               AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level); Processes.swift (agent level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
@@ -92,7 +92,7 @@ scripts/bench.swift                           end-to-end latency bench (see docs
 scripts/smoke.py                              end-to-end smoke test in Raycast, suites nav/history/tabs, `--changed` picks them (skill: smoke-test)
 scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
 README.md                                     GitHub landing page; points to extension/README.md
-site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); its images (demo GIF, icon, jumper-1/-5 screenshots) are symlinks into extension/
+site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); its images (demo GIF, icon, hopper-1/-5 screenshots) are symlinks into extension/
 ```
 
 ## Invariants (don't break)
@@ -117,7 +117,7 @@ site/index.html                               GitHub Pages landing page (deploye
 With `npm run dev` running (in `extension/`), trigger commands via deeplink and inspect frontmost app:
 
 ```bash
-open -g "raycast://extensions/matt_herwig/jumper/back"
+open -g "raycast://extensions/matt_herwig/hopper/back"
 osascript -l JavaScript -e 'ObjC.import("AppKit"); $.NSWorkspace.sharedWorkspace.frontmostApplication.bundleIdentifier.js'
 ```
 

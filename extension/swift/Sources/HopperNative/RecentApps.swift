@@ -14,7 +14,7 @@ struct RunningApp: Codable {
 /// Primary source: LaunchServices' private `_LSCopyApplicationArrayInFrontToBackOrder`, the same
 /// front-to-back order Cmd+Tab uses (no permissions needed). Fallback if the private symbol ever
 /// disappears: on-screen window z-order, which only sees the current Space. See ADR-001 in
-/// https://github.com/mattherwig/jumper/blob/main/docs/DECISIONS.md.
+/// https://github.com/mattherwig/hopper/blob/main/docs/DECISIONS.md.
 ///
 /// Kept free of Raycast macros so it compiles with plain `swiftc` for quick checks.
 func readRecentApps() -> [RunningApp] {

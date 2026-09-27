@@ -141,7 +141,7 @@ test("jumping selects the pane, opens links, focuses herdr, and marks the agent 
     openUrl: async (url) => void calls.push(`open ${url}`),
     socketRequest: async (_path, request) => {
       calls.push(`herdr ${(request as { method: string }).method}`);
-      return { id: "jumper", result: {} };
+      return { id: "hopper", result: {} };
     },
   });
   const location = {

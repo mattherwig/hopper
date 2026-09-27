@@ -10,14 +10,14 @@ const snapshot = {
   focused_workspace_id: "w1",
   focused_tab_id: "w1:t1",
   workspaces: [
-    { workspace_id: "w1", label: "jumper", number: 1 },
+    { workspace_id: "w1", label: "hopper", number: 1 },
     { workspace_id: "w2", label: "", number: 2 },
   ],
   tabs: [
     { tab_id: "w1:t1", workspace_id: "w1", label: "agents" },
     { tab_id: "w2:t1", workspace_id: "w2", label: "1" },
   ],
-  panes: [{ pane_id: "w1:p1", tab_id: "w1:t1", foreground_cwd: "/p/jumper" }],
+  panes: [{ pane_id: "w1:p1", tab_id: "w1:t1", foreground_cwd: "/p/hopper" }],
 };
 
 test("herdr: every workspace, then its tabs that have their own name, under the terminal running herdr", () => {
@@ -25,8 +25,8 @@ test("herdr: every workspace, then its tabs that have their own name, under the 
   assert.deepEqual(
     tabs.map((t) => [t.key, t.app.name, t.kind, t.title, t.detail, t.active]),
     [
-      ["herdr:/s:w1", "Ghostty", "workspace", "jumper", "herdr", true],
-      ["herdr:/s:w1:t1", "Ghostty", "tab", "agents", "herdr › jumper", true],
+      ["herdr:/s:w1", "Ghostty", "workspace", "hopper", "herdr", true],
+      ["herdr:/s:w1:t1", "Ghostty", "tab", "agents", "herdr › hopper", true],
       ["herdr:/s:w2", "Ghostty", "workspace", "Workspace 2", "herdr", false],
     ],
   );
@@ -42,7 +42,7 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
     socketRequest: async (_path, request) => {
       const { method, params } = request as { method: string; params: object };
       requests.push(`${method} ${JSON.stringify(params)}`);
-      return method === "session.snapshot" ? { id: "jumper", result: { snapshot } } : { id: "jumper", result: {} };
+      return method === "session.snapshot" ? { id: "hopper", result: { snapshot } } : { id: "hopper", result: {} };
     },
     // Ghostty (50) → login (51, root) → zsh (52) → herdr client (53); herdr server (54) has no tty.
     processes: async () => [
@@ -57,7 +57,7 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
   const { tabs } = await loadTabs([ghostty], platform);
   assert.deepEqual(
     tabs.filter((t) => t.source === "herdr").map((t) => t.title),
-    ["jumper", "agents", "Workspace 2"],
+    ["hopper", "agents", "Workspace 2"],
   );
   await selectTab(
     tabs.find((t) => t.title === "Workspace 2")!,
@@ -66,7 +66,7 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
   // Ghostty doesn't report ttys: herdr titles its terminal with a marker, Ghostty's terminal with it is focused.
   const [focusTab, setTitle, clearTitle] = requests.slice(-3);
   assert.equal(focusTab, 'workspace.focus {"workspace_id":"w2"}');
-  const marker = /"title":"(jumper-[^"]+)"/.exec(setTitle)?.[1];
+  const marker = /"title":"(hopper-[^"]+)"/.exec(setTitle)?.[1];
   assert.ok(marker && setTitle.startsWith("client.window_title.set"));
   assert.equal(clearTitle, "client.window_title.clear {}");
   assert.ok(platform.scripts.some((s) => s.includes(`(name of term as text) is "${marker}"`)));
@@ -87,7 +87,7 @@ test("a herdr tab in iTerm also selects the iTerm split running herdr", async ()
   const scripts: string[] = [];
   const platform = fakePlatform({
     listDir: async (dir) => (dir.endsWith(".config/herdr") ? ["herdr.sock"] : []),
-    socketRequest: async () => ({ id: "jumper", result: { snapshot } }),
+    socketRequest: async () => ({ id: "hopper", result: { snapshot } }),
     processes: async () => [proc(61, 60, "ttys007", "login"), proc(62, 61, "ttys007", "herdr")],
     runAppleScript: async (script) => {
       scripts.push(script);

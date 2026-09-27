@@ -60,7 +60,7 @@ export type Host =
 /** Where to jump for an agent: the app to bring forward and what to select or open in it. */
 export interface Location {
   app: App;
-  /** Shown in the list: "iTerm", "cmux › jumper", "Claude". */
+  /** Shown in the list: "iTerm", "cmux › hopper", "Claude". */
   label: string;
   tab?: Tab;
   paneId?: string;

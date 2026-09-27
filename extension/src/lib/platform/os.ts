@@ -28,7 +28,7 @@ const execFileAsync = promisify(execFile);
 
 /**
  * The Platform on macOS: AppleScript through Raycast, Accessibility and the process table through the Swift
- * helper (swift/Sources/JumperNative), files and sockets through Node.
+ * helper (swift/Sources/HopperNative), files and sockets through Node.
  */
 export const macosPlatform: Platform = {
   runAppleScript: (script) => runAppleScript(script, { timeout: APPLESCRIPT_TIMEOUT }),

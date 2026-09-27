@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""End-to-end smoke test for Jumper: drives the real extension in Raycast and checks which app ends up frontmost.
+"""End-to-end smoke test for Hopper: drives the real extension in Raycast and checks which app ends up frontmost.
 
   python3 scripts/smoke.py                  # every suite, against the running dev build (`cd extension && npm run dev`)
   python3 scripts/smoke.py --only tabs      # some suites: nav, history, tabs (comma-separated)
@@ -27,7 +27,7 @@ STEP = 1.3  # seconds for a command to switch apps
 
 
 class Model:
-    """What Jumper should do, per navigation.ts / history.ts. Apps are process names, most recent first."""
+    """What Hopper should do, per navigation.ts / history.ts. Apps are process names, most recent first."""
 
     def __init__(self, mru: list[str]):
         self.mru = mru
@@ -92,7 +92,7 @@ class Smoke:
         self.check(label or command.capitalize(), expected)
 
     def manual(self, app: str) -> None:
-        """Switch app the way a user would (not through Jumper)."""
+        """Switch app the way a user would (not through Hopper)."""
         name = next(n for n, *_ in sm.DEMO_APPS if sm.PROCESS.get(n, n) == app)
         if name == "Ghostty":
             sm.osa('tell application "Ghostty" to activate')
@@ -259,11 +259,11 @@ AFFECTS: list[tuple[str, list[str]]] = [
     ("extension/src/lib/projects/", ["tabs"]),
     ("extension/src/agents.tsx", []),
     ("extension/src/next-agent.ts", []),
-    ("extension/swift/Sources/JumperNative/RecentApps.swift", ["nav", "history"]),
-    ("extension/swift/Sources/JumperNative/AX.swift", ["tabs"]),
-    ("extension/swift/Sources/JumperNative/Windows.swift", ["tabs"]),
-    ("extension/swift/Sources/JumperNative/Sidebar.swift", ["tabs"]),
-    ("extension/swift/Sources/JumperNative/Processes.swift", ["tabs"]),
+    ("extension/swift/Sources/HopperNative/RecentApps.swift", ["nav", "history"]),
+    ("extension/swift/Sources/HopperNative/AX.swift", ["tabs"]),
+    ("extension/swift/Sources/HopperNative/Windows.swift", ["tabs"]),
+    ("extension/swift/Sources/HopperNative/Sidebar.swift", ["tabs"]),
+    ("extension/swift/Sources/HopperNative/Processes.swift", ["tabs"]),
     ("extension/test/", []),
     ("extension/metadata/", []),
     ("extension/media/", []),
@@ -299,7 +299,7 @@ def build_dist() -> None:
 
 
 def restart_dev() -> None:
-    log = Path(tempfile.gettempdir()) / "jumper-dev.log"
+    log = Path(tempfile.gettempdir()) / "hopper-dev.log"
     subprocess.Popen(
         'source ~/.nvm/nvm.sh >/dev/null && nvm use >/dev/null && npm run dev',
         shell=True, cwd=EXT, executable="/bin/zsh", start_new_session=True,

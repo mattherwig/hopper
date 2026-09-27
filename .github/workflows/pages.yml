@@ -5,7 +5,7 @@ name: Pages
 on:
   push:
     branches: [main]
-    paths: [site/**, extension/assets/extension-icon.png, extension/media/demo.gif, extension/metadata/jumper-1.png, extension/metadata/jumper-5.png, .github/workflows/pages.yml]
+    paths: [site/**, extension/assets/extension-icon.png, extension/media/demo.gif, extension/metadata/hopper-1.png, extension/metadata/hopper-5.png, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:

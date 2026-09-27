@@ -10,7 +10,7 @@ const session = (sessionId: string, title: string, lastFocusedAt: number, extra:
   text: JSON.stringify({
     sessionId,
     title,
-    cwd: "/Users/me/Projects/jumper",
+    cwd: "/Users/me/Projects/hopper",
     lastFocusedAt,
     isArchived: false,
     ...extra,
@@ -21,7 +21,7 @@ test("parses session files; skips archived and unreadable ones; untitled falls b
   assert.deepEqual(parseSession(session("local_1", "tabs", 5).text), {
     sessionId: "local_1",
     title: "tabs",
-    cwd: "/Users/me/Projects/jumper",
+    cwd: "/Users/me/Projects/hopper",
     lastFocusedAt: 5,
   });
   assert.equal(parseSession(session("local_2", "old", 1, { isArchived: true }).text), undefined);
@@ -45,9 +45,9 @@ test("Code sessions come from the files, most recently focused first, with the s
   assert.deepEqual(
     tabs.map((t) => [t.title, t.detail, t.active]),
     [
-      ["tabs", "~/Projects/jumper", false],
-      ["main", "~/Projects/jumper", true],
-      ["donate", "~/Projects/jumper", false],
+      ["tabs", "~/Projects/hopper", false],
+      ["main", "~/Projects/hopper", true],
+      ["donate", "~/Projects/hopper", false],
     ],
   );
 });
