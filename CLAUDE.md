@@ -92,7 +92,7 @@ scripts/bench.swift                           end-to-end latency bench (see docs
 scripts/smoke.py                              end-to-end smoke test in Raycast, suites nav/history/tabs, `--changed` picks them (skill: smoke-test)
 scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
 README.md                                     GitHub landing page; points to extension/README.md
-site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); its images (demo GIF, icon, hopper-1/-3 screenshots) are symlinks into extension/
+site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); its images (demo GIF, icon, hopper-1/-5 screenshots) are symlinks into extension/
 ```
 
 ## Invariants (don't break)
