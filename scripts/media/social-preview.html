@@ -1,6 +1,7 @@
 <!doctype html>
-<!-- GitHub social preview (Settings → Social preview). 1280x640, content kept inside
-     the 80px safe border. Render: scripts/media/social-preview.sh → .github/social-preview.png -->
+<!-- Social cards, sized by the window. 1280x640: GitHub social preview (Settings → Social preview),
+     content kept inside the 80px safe border. 1200x630: the landing page's og:image (1.91:1).
+     Render both: scripts/media/social-preview.sh → .github/social-preview.png, site/og-image.png -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -12,7 +13,7 @@
   --accent: #6d3fe0; --accent-2: #b04fd8;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; width: 1280px; height: 640px; overflow: hidden; }
+html, body { margin: 0; width: 100vw; height: 100vh; overflow: hidden; }
 body {
   font-family: Inter, system-ui, sans-serif; color: var(--text); background: var(--bg);
   -webkit-font-smoothing: antialiased; position: relative;
@@ -26,6 +27,7 @@ body::before {
 .card {
   position: absolute; inset: 80px; display: flex; align-items: center; gap: 56px;
 }
+@media (max-width: 1200px) { .card { inset: 60px 64px; gap: 48px; } }
 .icon { width: 340px; height: 340px; flex: none; filter: drop-shadow(0 18px 30px rgba(60, 20, 140, .18)); }
 .copy { min-width: 0; }
 .name {
@@ -66,7 +68,7 @@ p { margin: 0 0 30px; font-size: 23px; line-height: 1.4; color: var(--muted); ma
       <img src="../../site/icons/iterm.png" alt="">
       <img src="../../site/icons/claude.png" alt="">
       <img src="../../site/icons/cursor.png" alt="">
-      <img src="../../site/icons/chatgpt.png" alt="">
+      <img src="../../site/icons/codex.png" alt="">
       <img src="../../site/icons/notion.png" alt="">
       <img src="../../site/icons/obsidian.png" alt="">
     </div>
