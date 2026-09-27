@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { toAgents as cliAgents } from "../../src/lib/agents/sources/cli.ts";
-import { codex, statusOf as codexStatus, terminalFor } from "../../src/lib/agents/sources/codex.ts";
+import { codex, statusOf as codexStatus, terminalFor, threadsDb } from "../../src/lib/agents/sources/codex.ts";
 import {
   parseHeaders,
   statusOf as cursorStatus,
@@ -141,6 +141,7 @@ test("codex: a terminal thread's host is the one Codex process working in its fo
 test("codex: app threads open by link while the app runs; CLI threads need their terminal", async () => {
   const queries: string[] = [];
   const platform = fakePlatform({
+    listDir: async () => ["state_5.sqlite"],
     querySqlite: async (_path, sql) => {
       queries.push(sql);
       return [
@@ -174,4 +175,34 @@ test("codex: app threads open by link while the app runs; CLI threads need their
   // Neither the app nor a Codex CLI running: nothing read.
   assert.deepEqual(await codex.list({ platform, apps: [], processes: [], now: 0 }), []);
   assert.equal(queries.length, 1);
+});
+
+test("codex: the thread database is the highest-numbered state file", () => {
+  assert.equal(threadsDb(["logs_2.sqlite", "state_5.sqlite", "state_5.sqlite-wal", "state_12.sqlite"]), "state_12.sqlite");
+  assert.equal(threadsDb(["state.sqlite", "logs_2.sqlite"]), undefined);
+});
+
+test("codex: falls back to the original columns when the schema changed, and to nothing after that", async () => {
+  const paths: string[] = [];
+  const queries: string[] = [];
+  let failures = 1;
+  const platform = fakePlatform({
+    listDir: async () => ["state_5.sqlite", "state_6.sqlite"],
+    querySqlite: async (path, sql) => {
+      paths.push(path);
+      queries.push(sql);
+      if (failures-- > 0) throw new Error("no such column: updated_at_ms");
+      return [{ id: "t1", source: "vscode", cwd: "/a", title: "T", updatedAt: 5000, rollout: "/r1" }];
+    },
+    readTail: async () => "",
+  });
+  const context = { platform, apps: [{ bundleId: "com.openai.codex", name: "ChatGPT", path: "/x" }], processes: [], now: 0 };
+  assert.deepEqual(
+    (await codex.list(context)).map((a) => a.id),
+    ["t1"],
+  );
+  assert.equal(paths[0], "/Users/me/.codex/state_6.sqlite");
+  assert.match(queries[1], /updated_at \* 1000/);
+  failures = 2;
+  assert.deepEqual(await codex.list(context), []);
 });

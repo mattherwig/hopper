@@ -1,5 +1,5 @@
 // Codex: the Codex app (ChatGPT.app, `com.openai.codex`) and the Codex CLI keep every thread in
-// ~/.codex/state_5.sqlite (id, folder, name, source, last update) and log each thread's events to its rollout file.
+// ~/.codex/state_<N>.sqlite (id, folder, name, source, last update) and log each thread's events to its rollout file.
 // A rollout records when a turn starts and ends, so a thread is working while its last turn has started and not
 // ended. Approval and input requests are never logged (Codex's rollout policy), so Codex agents are never
 // "blocked" here; the app's live state is only on its private app-server pipe and internal IPC bus, which aren't
@@ -12,7 +12,7 @@
 import type { Process } from "../../platform/model";
 import type { Agent, AgentContext, AgentSource, AgentStatus, Host } from "../model";
 
-const DB = ".codex/state_5.sqlite";
+const DIR = ".codex";
 const CODEX_APP = "com.openai.codex";
 /** App threads older than this aren't listed: the list is for what's going on now. */
 const RECENT_MS = 24 * 60 * 60 * 1000;
@@ -25,6 +25,26 @@ const threadsQuery = (since: number) => `select id, source, cwd,
 from threads
 where archived = 0 and source in ('cli', 'vscode', 'appServer') and updated_at_ms > ${Math.floor(since)}
 order by updated_at_ms desc limit 50`;
+
+/** The same from the columns the table was created with, for when Codex renames or drops a later one. */
+const baseThreadsQuery = (since: number) => `select id, source, cwd, nullif(title, '') as title,
+  updated_at * 1000 as updatedAt, rollout_path as rollout
+from threads
+where archived = 0 and source in ('cli', 'vscode', 'appServer') and updated_at > ${Math.floor(since / 1000)}
+order by updated_at desc limit 50`;
+
+/**
+ * Codex's thread database file, from the names in ~/.codex. Its number is the schema version, which Codex bumps on
+ * a breaking change (starting a new file), so the highest one is current; an older one can be left behind.
+ */
+export function threadsDb(names: string[]): string | undefined {
+  let best: { name: string; version: number } | undefined;
+  for (const name of names) {
+    const version = Number(/^state_(\d+)\.sqlite$/.exec(name)?.[1]);
+    if (version >= (best?.version ?? 0)) best = { name, version };
+  }
+  return best?.name;
+}
 
 export interface Thread {
   id: string;
@@ -129,9 +149,17 @@ export const codex: AgentSource = {
     const appRunning = apps.some((a) => a.bundleId === CODEX_APP);
     const cliRunning = processes.some((p) => p.name === "codex" && p.tty);
     if (!appRunning && !cliRunning) return [];
+    const dir = `${platform.homeDir()}/${DIR}`;
+    const db = threadsDb(await platform.listDir(dir));
+    // No Codex database: Codex was never used here.
+    if (!db) return [];
+    const path = `${dir}/${db}`;
+    const since = now - RECENT_MS;
+    // The schema is Codex's own and grows often: if the full query fails, fall back to the original columns;
+    // if that fails too, no Codex agents rather than an error.
     const rows = await platform
-      .querySqlite(`${platform.homeDir()}/${DB}`, threadsQuery(now - RECENT_MS))
-      // No Codex database: Codex was never used here.
+      .querySqlite(path, threadsQuery(since))
+      .catch(() => platform.querySqlite(path, baseThreadsQuery(since)))
       .catch(() => []);
     const threads = parseThreads(rows);
     const tails = new Map(

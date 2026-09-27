@@ -120,7 +120,10 @@ test("loadAgents: sources in parallel, a failing one reported, projects attached
     loadTabs: async () => [tab("zsh", [{ id: "S1", tty: "ttys004" }])],
     now: 1000,
   });
-  assert.deepEqual(result.failures, [{ source: "herdr", message: "disk on fire" }]);
+  assert.deepEqual(result.failures, [
+    { source: "codex", message: "disk on fire" },
+    { source: "herdr", message: "disk on fire" },
+  ]);
   assert.deepEqual(
     result.agents.map((a) => [a.product, a.status, a.location?.label, a.project?.name]),
     [
