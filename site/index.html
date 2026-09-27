@@ -148,13 +148,11 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
   animation: marquee calc(var(--n) * 3.2s) linear infinite;
 }
 .marquee-row.rev { animation-direction: reverse; }
-.marquee:hover .marquee-row { animation-play-state: paused; }
 .marquee-row img {
   display: block; width: var(--size); height: var(--size);
   filter: saturate(.25) contrast(.92) drop-shadow(0 2px 4px rgba(0,0,0,.18));
-  opacity: .8; transition: filter .25s, opacity .25s, transform .25s;
+  opacity: .8;
 }
-.marquee-row img:hover { filter: none; opacity: 1; transform: scale(1.08); }
 @keyframes marquee { to { transform: translateX(calc(-50% - var(--gap) / 2)); } }
 @media (prefers-reduced-motion: reduce) {
   .marquee { -webkit-mask-image: none; mask-image: none; }
