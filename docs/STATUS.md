@@ -15,6 +15,7 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 - Notion source (`sources/notion.ts`) reuses the sidebar reader on Notion's "Tab Bar" web view: tabs are AXButtons titled with the page name; AXPress switches tabs (verified live, Notion 7.35.1). No AXSelected on tabs, so the active tab is the one matching the window title.
 - Only the front window's tab bar is read; other Notion windows are listed as windows. Tabs with the same page title appear once.
 - `notion://www.notion.so/<id>` deep links exist but navigate the *current* tab, so they aren't used for switching. `state.json` holds tabs only as saved at quit, not live.
+- Parent pages (ADR-016): each tab's web view URL gives its page id; one `sqlite3 -readonly` query on `notion.db` walks parents. Shown nearest-first within 36 chars (`… / Pinterest / Jordan Convo 2`), full path on hover and searched. Verified against the live cache (23ms for 6 pages); pages whose database isn't cached get no path.
 - Not done: live run through Raycast (smoke test not run).
 
 ## 2026-09-26 — Claude Code sessions without the sidebar (ADR-014)

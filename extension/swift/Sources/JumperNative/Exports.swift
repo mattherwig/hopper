@@ -39,3 +39,8 @@ import RaycastSwiftMacros
 @raycast func labelWithSuffix(bundleId: String, suffix: String) -> String? {
   readLabel(bundleId: bundleId, suffix: suffix)
 }
+
+/// Title and URL of each web page open in the app (Notion: one per tab).
+@raycast func webPages(bundleId: String) -> [WebPage] {
+  readWebPages(bundleId: bundleId)
+}

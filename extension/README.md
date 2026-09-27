@@ -51,10 +51,10 @@ An app Jumper can't read shows under **Unavailable**, with a shortcut to the rig
 | iTerm, Terminal | Tabs |
 | Claude | Code sessions (all projects, most recent first, even with the sidebar hidden); Chat conversations shown in the sidebar |
 | Muse | Main chat and side chats |
-| Notion | Tabs of the front window, then its other windows |
+| Notion | Tabs of the front window with each page's parent pages, then its other windows |
 | Any other app | Windows, and tabs if the window has a native tab bar |
 
-Apps are ordered by recent use; within an app, active tabs come first. Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar, so they only appear while the sidebar is visible; Notion tabs are read from its tab bar. An app update can change what Jumper finds; if nothing is found, the app's windows are listed instead.
+Apps are ordered by recent use; within an app, active tabs come first. Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar, so they only appear while the sidebar is visible; Notion tabs are read from its tab bar, and their parent pages from Notion's local cache (full path on hover; searching a parent's name finds its pages). An app update can change what Jumper finds; if nothing is found, the app's windows are listed instead.
 
 ## Support
 
