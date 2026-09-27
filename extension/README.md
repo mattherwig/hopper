@@ -2,7 +2,7 @@
 
 ![Hopper demo: Back, Forward, Toggle, History, and Search](media/demo.gif)
 
-Jump to any app, tab, or agent on your Mac.
+Jump to any app, tab, or agent on your Mac. [addhopper.com](https://addhopper.com)
 
 Cmd+Tab only knows "most recent" and reshuffles every time you switch, so getting back to the app you were in three switches ago is guesswork. Hopper lets you step back through your recently used apps, and forward again, exactly like history in Safari or VS Code. And when what you want is a browser tab, a terminal tab, or a Claude session, search them all in one list and jump straight there. And when you have AI agents going in several places (Claude Code in a terminal and in the Claude app, Cursor, Codex, herdr), see which ones need you and jump to the one waiting longest.
 

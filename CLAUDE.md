@@ -90,9 +90,9 @@ extension/                                    the Raycast extension; everything 
 docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
 scripts/smoke.py                              end-to-end smoke test in Raycast, suites nav/history/tabs, `--changed` picks them (skill: smoke-test)
-scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
+scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/; social-preview.sh renders the GitHub + og:image cards
 README.md                                     GitHub landing page; points to extension/README.md
-site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); its images (demo GIF, icon, hopper-1/-2/-3 screenshots) are symlinks into extension/, plus social-preview.png (link previews) into .github/
+site/index.html                               landing page at https://addhopper.com (GitHub Pages custom domain; deployed by .github/workflows/pages.yml); its images (demo GIF, icon, hopper-1/-2/-3 screenshots) are symlinks into extension/; og-image.png (link previews) is rendered by scripts/media/social-preview.sh
 ```
 
 ## Invariants (don't break)
