@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Store PR review fixes (raycast/extensions#31648)
+
+- Store PR re-published with everything on `main` (it lacked Obsidian and the new media), then again with fixes for Greptile's four P1s: same-titled windows / native tabs raised by position; Codex terminals host only their folder's latest thread since they started; herdr sessions paired with their own client via the kernel's socket peer paths (checked live with a throwaway named session); same-titled Notion tabs of different pages listed separately. ADR-016/020/023/025 notes updated.
+- Verified: 125 unit tests, lint, build; herdr client ↔ session socket read live. Not verified in Raycast: any of the four fixes (smoke `tabs` suite).
+- Next: triage Greptile's re-review; owner smoke test; fill the PR template and mark it ready.
+
 ## 2026-09-27 — Demo GIF
 
 - `extension/media/demo.gif` retaken: Search and Agents typed out (not shown as commands), Claude sized before the jump, Notion / Safari / a one-word note as the cast, copy then Toggle into Google. Lessons are in the `demo-gif` skill.
