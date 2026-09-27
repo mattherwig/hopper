@@ -40,7 +40,17 @@ DEMO_APPS = [
     ("Finder", None, True),  # opens a window on /System/Applications (Apple apps only), see setup_apps
     ("Preview", ["open", "-a", "Preview", str(EXT / "assets/extension-icon.png")], True),
     ("Ghostty", None, True),  # the owner's own session: used only if already running, never quit
+    ("Safari", None, True),  # a new window with SAFARI_TABS; the owner's own windows are left alone
     ("TextEdit", None, True),  # opens a scratch note, see setup_apps
+]
+
+# Public pages for the staged Safari window: the Tabs command's shots and GIF show these, with the owner's own
+# apps' tabs pushed below the visible rows (Tabs lists apps most recent first). The first one is current.
+SAFARI_TABS = [
+    "https://www.raycast.com/store",
+    "https://www.apple.com/os/macos/",
+    "https://github.com/mattherwig/jumper",
+    "https://developers.raycast.com/",
 ]
 
 # Apps whose process name differs from the app name.
@@ -53,6 +63,7 @@ HOTKEYS = {
     "forward": ["⇧", "⌘", "]"],
     "toggle": ["⌘", "⌘"],  # double-tap ⌘
     "history": ["⇧", "⌘"],
+    "tabs": ["⌃", "⌘"],
 }
 
 NOTE = "Launch checklist\n\n- Screenshots\n- Demo GIF\n- Submit to the Raycast Store\n"
@@ -80,6 +91,15 @@ def close_raycast() -> None:
             return
         escape()
     raise RuntimeError("Raycast window did not close")
+
+
+def paste(text: str) -> None:
+    """Pastes `text` into the focused field in one go, then puts the owner's clipboard text back."""
+    saved = subprocess.run(["pbpaste"], capture_output=True).stdout
+    subprocess.run(["pbcopy"], input=text.encode(), check=True)
+    keys('keystroke "v" using command down')
+    time.sleep(0.3)
+    subprocess.run(["pbcopy"], input=saved, check=True)
 
 
 def deeplink(command: str) -> None:
@@ -122,6 +142,7 @@ class DemoApps:
         self.frame = frame
         self.launched: list[str] = []
         self.finder_window: str | None = None
+        self.safari_window: str | None = None
         self.note = TMP / "Jumper.txt"
         self.previous_app = frontmost()
         self.restore: list[tuple[str, str]] = []  # (process, "x, y, w, h") of windows we moved but don't own
@@ -140,6 +161,18 @@ class DemoApps:
                     self.launched.append(name)
                 if name == "TextEdit":
                     subprocess.run(["open", "-a", "TextEdit", str(self.note)], check=True)
+                elif name == "Safari":
+                    self.safari_window = osa(
+                        'tell application "Safari"\n'
+                        f'  make new document with properties {{URL:"{SAFARI_TABS[0]}"}}\n'
+                        "  set w to front window\n"
+                        + "".join(f'  tell w to make new tab at end of tabs with properties {{URL:"{u}"}}\n' for u in SAFARI_TABS[1:])
+                        + "  set current tab of w to tab 1 of w\n"
+                        "  activate\n"
+                        "  return id of w\n"
+                        "end tell"
+                    )
+                    time.sleep(3)  # let the pages load, so titles and favicons are real
                 elif name == "Finder":
                     self.finder_window = osa(
                         'tell application "Finder"\n'
@@ -181,6 +214,8 @@ class DemoApps:
                 f"  set size of window 1 to {{{w}, {h}}}\n"
                 "end tell"
             )
+        if self.safari_window:
+            subprocess.run(["osascript", "-e", f'tell application "Safari" to close (window id {self.safari_window})'])
         if self.finder_window:
             subprocess.run(["osascript", "-e", f'tell application "Finder" to close (window id {self.finder_window})'])
         subprocess.run(
@@ -231,7 +266,15 @@ def screenshots() -> None:
         time.sleep(1.5)
         close_raycast()
 
-    # 4. Root search for "jumper": every command, Back selected to show its hotkey. Raycast ignores a synthetic
+        # 5. Tabs, from the staged Safari window: its tabs on top, then the other demo apps' windows.
+        subprocess.run(["open", "-a", "Safari"], check=True)
+        time.sleep(1)
+        deeplink("tabs")
+        time.sleep(3.5)  # the list first shows the cached copy, then refreshes
+        capture(out / "jumper-5.png")
+        close_raycast()
+
+    # 4. Root search for "jumper": every command, the second row selected to show its hotkey (Raycast ranks by use). Raycast ignores a synthetic
     # ⌘Space, but Escape from a command's view pops to root search. Matching files from the
     # user's disk show below the commands; review them before committing.
     deeplink("history")
@@ -242,7 +285,7 @@ def screenshots() -> None:
         raise RuntimeError("root search did not open")
     keys('keystroke "jumper"')
     time.sleep(1.5)
-    keys("key code 125")  # select Back: Raycast shows the hotkey of the selected row only
+    keys("key code 125")  # Raycast shows the hotkey of the selected row only
     time.sleep(0.6)
     capture(out / "jumper-4.png")
     close_raycast()
@@ -255,14 +298,25 @@ def gif() -> None:
     # Recording area: Raycast's window plus a margin; every demo window is placed exactly on it,
     # so whatever is behind (the user's own windows) never shows.
     deeplink("history")
-    time.sleep(1.5)
+    deadline = time.time() + 6
+    while (window := raycast_window()) is None and time.time() < deadline:
+        time.sleep(0.3)
+    if window is None:
+        sys.exit("History did not open: is `ray develop` running?")
+    time.sleep(0.5)  # let it settle at its final size
     _, rx, ry, rw, rh = raycast_window()  # type: ignore[misc]
     close_raycast()
     frame = (rx - 120, max(ry - 50, 40), rw + 240, rh + 170)
     x, y, w, h = frame
     video = TMP / "demo.mov"
-    back, fwd, tog, hist = (HOTKEYS[c] for c in ("back", "forward", "toggle", "history"))
-    card = {"card": "Jumper", "sub": "Back and Forward for your Mac apps"}
+    back, fwd, tog, hist, tabs = (HOTKEYS[c] for c in ("back", "forward", "toggle", "history", "tabs"))
+    # Tabs step: types a filter that matches only the staged apple.com tab ("macOS 27 Golden Gate"). Raycast ranks
+    # matches across all apps, so the query must not match any of the owner's tabs or sessions (a jump there lands
+    # outside the recording area). Arrow keys aren't reliable either: Tabs opens on its cached list and the
+    # selection after the refresh varies. The query is pasted, not typed: every prefix ("g", "go") would briefly
+    # list matching private tabs. Checked after recording.
+    tab_target = SAFARI_TABS[1]
+    card = {"card": "Jumper", "sub": "Jump to any app, tab, or session"}
     # (overlay message, deeplink command or keystroke or None, seconds to hold)
     timeline = [
         (card, None, 2.8),
@@ -280,10 +334,13 @@ def gif() -> None:
         ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.5),
         ({"keys": ["↓"], "title": "History", "detail": "pick any app"}, "key code 125", 0.9),
         ({"keys": ["↩"], "title": "Switch to App", "detail": "jump straight there"}, "key code 36", 1.8),
+        ({"keys": tabs, "title": "Tabs", "detail": "every tab, window, and session"}, "tabs", 2.2),
+        ({"keys": ["golden gate"], "title": "Tabs", "detail": "search by title or URL"}, "paste:golden gate", 1.5),
+        ({"keys": ["↩"], "title": "Jump to Tab", "detail": "straight to that tab"}, "key code 36", 2.2),
         ({}, None, 0.4),
         ({"card": "Jumper", "sub": "Free on the Raycast Store"}, None, 2.8),
     ]
-    with DemoApps(frame):
+    with DemoApps(frame) as demo:
         keycast = subprocess.Popen(
             ["swift", str(HERE / "keycast.swift"), *map(str, frame), str(EXT / "assets/extension-icon.png")], stdin=subprocess.PIPE, text=True
         )
@@ -292,6 +349,10 @@ def gif() -> None:
             keycast.stdin.write(json.dumps(message) + "\n")  # type: ignore[union-attr]
             keycast.stdin.flush()  # type: ignore[union-attr]
 
+        # Warm Tabs' cache: it shows the last list first, which would otherwise be from the owner's own use.
+        deeplink("tabs")
+        time.sleep(3)
+        close_raycast()
         # Park the pointer outside the recording area (screencapture -v records it).
         subprocess.run(["swift", "-e", "import CoreGraphics; CGWarpMouseCursorPosition(CGPoint(x: 2, y: 2000))"])
         overlay(card)
@@ -304,7 +365,9 @@ def gif() -> None:
         checked: set[str] = set()
         for message, action, hold in timeline:
             overlay(message)
-            if action and action.startswith("key code"):
+            if action and action.startswith("paste:"):
+                paste(action.removeprefix("paste:"))
+            elif action and action.startswith(("key code", "keystroke")):
                 keys(action)
             elif action:
                 deeplink(action)
@@ -323,13 +386,16 @@ def gif() -> None:
         rec.wait()
         keycast.stdin.close()
         keycast.wait()
+        landed = osa(f'tell application "Safari" to get URL of current tab of window id {demo.safari_window}')
+        if frontmost() != "Safari" or landed.rstrip("/") != tab_target.rstrip("/"):
+            print(f"warning: Tabs jump landed on {frontmost()} {landed}, expected Safari {tab_target}", file=sys.stderr)
 
         out = EXT / "media"
         out.mkdir(exist_ok=True)
         subprocess.run(
             [
                 "ffmpeg", "-y", "-loglevel", "error", "-ss", "1", "-i", str(video),
-                "-vf", "fps=15,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];"
+                "-vf", "fps=12,scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];"
                 "[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle",
                 str(out / "demo.gif"),
             ],
