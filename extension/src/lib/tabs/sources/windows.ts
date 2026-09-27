@@ -10,8 +10,12 @@ interface Ref {
   tab?: string;
 }
 
+/** Private-browsing windows of browsers without a dedicated source (Firefox, Safari's own suffix...): skipped. */
+const PRIVATE_WINDOW = /(?:Private Browsing|Incognito|InPrivate)\)?$/;
+
 export function fromWindows(app: App, appWindows: AppWindows["windows"]): Tab<Ref>[] {
   return appWindows.flatMap((w, i): Tab<Ref>[] => {
+    if (PRIVATE_WINDOW.test(w.title)) return [];
     const front = i === 0;
     const detail = w.minimized ? "Minimized" : undefined;
     if (w.tabs.length > 1) {

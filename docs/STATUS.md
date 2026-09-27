@@ -7,6 +7,7 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 - Muse 4.1 hid its Side chats list, so Tabs had silently fallen back to Muse's window. `SidebarQuery.reveal` presses Muse's "Open chat and side chats" button in the background, reads, and closes it again (~0.25s, 28 chats); opening leaves it to Muse. Open chat named by that button. Verified live against the real Swift code (list, open, missing row closes the panel, restore).
 - Claude: page URL (`webPage` Swift call, ~3ms) teaches title → `chat/<uuid>` / `cowork/<cse_id>`; those open by `claude://claude.ai/<path>` (tested live), and stay listed with the sidebar hidden (20 most recent). Archived Code sessions' deep link lands on the Code home screen: still skipped.
 - Reopen capabilities for all sources researched and tested live: #21 (Recently Closed). Limits and stress test: #22. New app issues: Messages #15, Codex #16, Cursor #17, Notes #18, Notion #19.
+- Incognito/private windows left out of Tabs entirely (ADR-017): Chromium by `mode`, Safari by AX title matched to AppleScript windows (fails closed; Safari now needs Accessibility), fallback by title. Chrome script verified live (25 tabs, 0 incognito).
 - Not yet run in Raycast (dev build) or through the smoke test.
 
 ## 2026-09-26 — Tabs search: typo-tolerant, app first (ADR-015, branch `feature/tab-search-ranking`)

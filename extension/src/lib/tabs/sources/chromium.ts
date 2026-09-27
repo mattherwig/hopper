@@ -1,4 +1,5 @@
-// Chromium browsers share Chrome's AppleScript dictionary. Tab ids are stable until the tab closes.
+// Chromium browsers share Chrome's AppleScript dictionary. Tab ids are stable until the tab closes. Incognito
+// windows are skipped entirely: never listed, cached, or jumped to (ADR-017).
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";
 import type { App, Tab, TabSource } from "../model";
@@ -9,13 +10,19 @@ interface Ref {
 
 // Bulk property reads: one Apple Event per property per window instead of several per tab (~1s -> ~0.1s for 25 tabs).
 const LIST = `repeat with win in windows
-  set activeId to id of active tab of win
-  set ids to id of tabs of win
-  set titles to title of tabs of win
-  set urls to URL of tabs of win
-  repeat with i from 1 to count ids
-    set out to out & (item i of ids) & F & (item i of titles) & F & (item i of urls) & F & ((item i of ids) = activeId) & R
-  end repeat
+  set winMode to "normal"
+  try
+    set winMode to mode of win
+  end try
+  if winMode is not "incognito" then
+    set activeId to id of active tab of win
+    set ids to id of tabs of win
+    set titles to title of tabs of win
+    set urls to URL of tabs of win
+    repeat with i from 1 to count ids
+      set out to out & (item i of ids) & F & (item i of titles) & F & (item i of urls) & F & ((item i of ids) = activeId) & R
+    end repeat
+  end if
 end repeat`;
 
 const select = (tabId: string) => `repeat with win in windows
@@ -57,5 +64,6 @@ export const chromium: TabSource<Ref> = {
     "com.vivaldi.Vivaldi",
   ],
   list: async (app, platform) => parse(app, await platform.runAppleScript(listScript(app.bundleId, LIST))),
+  // Selecting goes by tab id, and incognito tabs are never listed, so they can't be selected.
   select: (tab, platform) => runSelect(platform, tab.app.bundleId, select(tab.ref.tabId)),
 };

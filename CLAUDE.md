@@ -83,6 +83,7 @@ site/index.html                               GitHub Pages landing page (deploye
 ## Invariants (don't break)
 
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`) are permanent once published: users' hotkeys bind to them.
+- Incognito / private browser windows never reach the tab list (ADR-017): filter them in the source, not the UI.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
 - Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`) free of Raycast/Node imports so `npm test` works without Raycast. Tab sources reach the OS only through `Platform` (ADR-013).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.

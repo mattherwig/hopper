@@ -8,6 +8,7 @@
 - Claude Code sessions are listed from Claude's session files (all projects, most recent first, sidebar hidden or not) and open via Claude's deep link.
 - Claude Chat and Cowork conversations you've opened open via Claude's deep link, and stay listed with the sidebar hidden.
 - Muse side chats are listed and opened even when Muse's side chats panel is closed (Muse 4.1).
+- Incognito and private browser windows are left out of Tabs entirely.
 
 ## [Initial Version] - {PR_MERGE_DATE}
 
