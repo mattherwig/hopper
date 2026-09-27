@@ -1,11 +1,11 @@
 # Deploys the landing page in site/ to GitHub Pages.
-# site/demo.gif and site/extension-icon.png are symlinks into extension/; cp -L copies the real files.
+# site/'s images (demo GIF, icon, Store screenshots) are symlinks into extension/; cp -L copies the real files.
 name: Pages
 
 on:
   push:
     branches: [main]
-    paths: [site/**, extension/assets/extension-icon.png, extension/media/demo.gif, .github/workflows/pages.yml]
+    paths: [site/**, extension/assets/extension-icon.png, extension/media/demo.gif, extension/metadata/jumper-1.png, extension/metadata/jumper-5.png, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
