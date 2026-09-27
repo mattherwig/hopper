@@ -12,7 +12,7 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 - **Forward**: retrace a Back step.
 - **Toggle**: flip between your two most recent apps. Run it again to switch back.
 - **History**: list running apps from most to least recently used and jump to any of them.
-- **Tabs**: search the tabs, windows, and sessions of every running app and jump straight to one: browser tabs, terminal tabs, Claude and Muse chat sessions, and any app's windows.
+- **Tabs**: search the tabs, windows, and sessions of every running app and jump straight to one: browser tabs, terminal tabs, Claude and Muse chat sessions, and any app's windows. A **Recently Closed** section reopens browser tabs and documents you've closed.
 - **Tabs in Current App**: the same, for the app you're in.
 
 ## Setup
@@ -54,6 +54,8 @@ An app Jumper can't read shows under **Unavailable**, with a shortcut to the rig
 | Any other app | Windows, and tabs if the window has a native tab bar |
 
 Apps are ordered by recent use; within an app, active tabs come first. Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar (Claude conversations you've opened open by link even with the sidebar hidden), so an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead. Incognito and private browser windows are never listed, cached, or jumped to.
+
+**Recently Closed** lists browser tabs and documents (TextEdit, Preview, Pages...) that were open the last time Tabs looked and are gone now, newest first, for a week (up to 100). **Reopen** opens the page in the same browser or the file in the same app; **Remove from Recently Closed** and **Clear Recently Closed** tidy it. Jumper only notices what it saw: a tab opened and closed between two uses of Tabs isn't there. Terminals, chats, and private windows are never recorded.
 
 ## Support
 

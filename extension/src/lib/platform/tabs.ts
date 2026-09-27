@@ -42,7 +42,7 @@ export const macosTabPlatform: Platform = {
     );
     return files.filter((f) => f.text !== "");
   },
-  openUrl: (url) => open(url),
+  openUrl: (url, appPath) => open(url, appPath),
 };
 
 async function findFiles(dir: string, name: RegExp, depth: number): Promise<string[]> {

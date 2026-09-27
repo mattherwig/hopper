@@ -2,6 +2,7 @@
 // windows are skipped entirely: never listed, cached, or jumped to (ADR-017).
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";
+import { webReopenTarget } from "../reopen";
 import type { App, Tab, TabSource } from "../model";
 
 interface Ref {
@@ -66,4 +67,5 @@ export const chromium: TabSource<Ref> = {
   list: async (app, platform) => parse(app, await platform.runAppleScript(listScript(app.bundleId, LIST))),
   // Selecting goes by tab id, and incognito tabs are never listed, so they can't be selected.
   select: (tab, platform) => runSelect(platform, tab.app.bundleId, select(tab.ref.tabId)),
+  reopenTarget: (tab) => webReopenTarget(tab.url),
 };

@@ -14,6 +14,8 @@ struct AXWindowInfo: Codable {
   let index: Int
   let title: String
   let minimized: Bool
+  /// The window's AXDocument URL: the open file (TextEdit, Preview...), a folder (Terminal), or a page; nil if none.
+  let document: String?
   let tabs: [AXTabInfo]
 }
 
@@ -32,6 +34,7 @@ func readWindows(bundleIds: [String]) -> [AppWindows] {
         index: i + 1,
         title: string(window, kAXTitleAttribute) ?? "",
         minimized: bool(window, kAXMinimizedAttribute),
+        document: string(window, kAXDocumentAttribute),
         tabs: nativeTabs(window).map { AXTabInfo(title: string($0, kAXTitleAttribute) ?? "", selected: isSelected($0)) }
       )
     }

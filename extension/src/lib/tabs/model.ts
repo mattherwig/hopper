@@ -42,6 +42,18 @@ export interface TabSource<Ref = unknown> {
   listAll?(apps: App[], platform: Platform): Promise<Tab<Ref>[]>;
   /** Select the tab inside its app. The caller brings the app to the front afterwards. Throws TabGoneError. */
   select(tab: Tab<Ref>, platform: Platform): Promise<void>;
+  /**
+   * How to open `tab` again once it's closed, for Recently Closed (history.ts); undefined if it can't be
+   * reopened cleanly. Sources without it never show in Recently Closed.
+   */
+  reopenTarget?(tab: Tab<Ref>): ReopenTarget | undefined;
+}
+
+/** Something to open again: a URL (in the tab's app) or a file (with the tab's app). */
+export interface ReopenTarget {
+  kind: "url" | "file";
+  /** The URL, or the file's absolute path. */
+  target: string;
 }
 
 /** The tab disappeared (closed, moved) between listing and selecting. */
@@ -77,8 +89,8 @@ export interface Platform {
   homeDir(): string;
   /** Text of the files under `dir` (up to `depth` levels down) whose name matches `name`. [] if `dir` is missing. */
   readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string }[]>;
-  /** Open a URL with its registered app, e.g. an app's deep link. */
-  openUrl(url: string): Promise<void>;
+  /** Open a URL or file path with `appPath` (an .app path), or with its registered app if omitted. */
+  openUrl(url: string, appPath?: string): Promise<void>;
 }
 
 export interface AppWindows {
@@ -91,6 +103,8 @@ export interface AXWindow {
   index: number;
   title: string;
   minimized: boolean;
+  /** AXDocument URL: the open file (file://...), a folder (Terminal), or a page; absent if none. */
+  document?: string;
   tabs: { title: string; selected: boolean }[];
 }
 

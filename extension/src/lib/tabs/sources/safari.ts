@@ -3,6 +3,7 @@
 // title can ("<page>, Private Browsing"), so the two window lists are matched by title in front-to-back order.
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";
+import { webReopenTarget } from "../reopen";
 import type { App, AXWindow, Platform, Tab, TabSource } from "../model";
 
 interface Ref {
@@ -110,4 +111,5 @@ export const safari: TabSource<Ref> = {
   bundleIds: ["com.apple.Safari"],
   list,
   select: (tab, platform) => runSelect(platform, tab.app.bundleId, select(tab.ref)),
+  reopenTarget: (tab) => webReopenTarget(tab.url),
 };

@@ -1,6 +1,7 @@
 // Fallback for apps without a dedicated source: their windows through Accessibility, one entry per window,
 // or per tab when the window has a native macOS tab bar (Ghostty, Finder, TextEdit...).
 
+import { fileReopenTarget } from "../reopen";
 import { TabGoneError, type App, type AppWindows, type Platform, type Tab, type TabSource } from "../model";
 
 interface Ref {
@@ -8,6 +9,8 @@ interface Ref {
   title: string;
   /** Native tab to select in the window. */
   tab?: string;
+  /** The window's document URL (see AXWindow.document), kept for Recently Closed. */
+  document?: string;
 }
 
 /** Private-browsing windows of browsers without a dedicated source (Firefox, Safari's own suffix...): skipped. */
@@ -27,7 +30,13 @@ export function fromWindows(app: App, appWindows: AppWindows["windows"]): Tab<Re
         title: t.title || app.name,
         detail,
         active: front && t.selected,
-        ref: { index: w.index, title: w.title, tab: t.title },
+        // The window's document is its selected tab's.
+        ref: {
+          index: w.index,
+          title: w.title,
+          tab: t.title,
+          ...(t.selected && w.document ? { document: w.document } : {}),
+        },
       }));
     }
     return [
@@ -39,7 +48,7 @@ export function fromWindows(app: App, appWindows: AppWindows["windows"]): Tab<Re
         title: w.title || app.name,
         detail,
         active: front,
-        ref: { index: w.index, title: w.title },
+        ref: { index: w.index, title: w.title, ...(w.document ? { document: w.document } : {}) },
       },
     ];
   });
@@ -66,4 +75,5 @@ export const windows: TabSource<Ref> = {
       throw new TabGoneError("Window no longer exists");
     }
   },
+  reopenTarget: (tab) => fileReopenTarget(tab.ref.document),
 };
