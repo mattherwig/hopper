@@ -74,7 +74,7 @@ extension/                                    the Raycast extension; everything 
   test/setup.mjs                              lets Node resolve extensionless imports ("./model") to .ts in tests
 docs/                                         dev docs (not shipped)
 scripts/bench.swift                           end-to-end latency bench (see docs/PERFORMANCE.md)
-scripts/smoke.py                              end-to-end smoke test of every feature in Raycast (skill: smoke-test)
+scripts/smoke.py                              end-to-end smoke test in Raycast, suites nav/history/tabs, `--changed` picks them (skill: smoke-test)
 scripts/media/                                Store media generator: store_media.py drives Raycast (skills below), writes into extension/
 README.md                                     GitHub landing page; points to extension/README.md
 site/index.html                               GitHub Pages landing page (deployed by .github/workflows/pages.yml); its images (demo GIF, icon, jumper-1/-5 screenshots) are symlinks into extension/

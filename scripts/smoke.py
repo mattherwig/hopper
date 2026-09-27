@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """End-to-end smoke test for Jumper: drives the real extension in Raycast and checks which app ends up frontmost.
 
-  python3 scripts/smoke.py          # against the running dev build (`cd extension && npm run dev`)
-  python3 scripts/smoke.py --dist   # builds `ray build -e dist` into Raycast first, then restores dev mode
+  python3 scripts/smoke.py                  # every suite, against the running dev build (`cd extension && npm run dev`)
+  python3 scripts/smoke.py --only tabs      # some suites: nav, history, tabs (comma-separated)
+  python3 scripts/smoke.py --changed        # the suites this branch's changes touch (vs origin/main, plus uncommitted)
+  python3 scripts/smoke.py --changed --list # just print them
+  python3 scripts/smoke.py --dist           # builds `ray build -e dist` into Raycast first, then restores dev mode
 
 Commands run by deeplink (Raycast ignores synthetic hotkeys). Expected results come from a small model of the rules
 in extension/src/lib/apps/navigation.ts and history.ts, fed with the app order this script sets up itself. Takes over the
-screen for ~2 minutes. See .claude/skills/smoke-test/SKILL.md.
+screen for ~2½ minutes (all suites). See .claude/skills/smoke-test/SKILL.md.
 """
 
+import re
 import subprocess
 import sys
 import tempfile
@@ -68,11 +72,12 @@ class Smoke:
         self.results: list[tuple[str, str, str, bool]] = []
         self.prompt_checked: set[str] = set()
 
-    def check(self, step: str, expected: str) -> None:
-        got = sm.frontmost()
+    def check(self, step: str, expected: str, got: str | None = None) -> None:
+        """Compares `got` (default: the frontmost app) with `expected`."""
+        got = sm.frontmost() if got is None else got
         self.results.append((step, expected, got, got == expected))
         mark = "✓" if got == expected else "✗"
-        print(f"  {mark} {step:<44} expected {expected:<12} got {got}")
+        print(f"  {mark} {step:<44} expected {expected:<14} got {got}")
 
     def run(self, command: str, label: str | None = None) -> None:
         expected = self.m.nav(command)
@@ -121,8 +126,23 @@ class Smoke:
         self.m.activate(expected)  # History doesn't touch nav state; the next Back starts fresh
         self.check(f"History ↓×{index} ↩", expected)
 
+    def tab_search(self, query: str, app: str, label: str, tab=None, expected_tab: int | None = None) -> None:
+        """Opens Tabs, pastes `query`, and jumps to the top result: `app` should be frontmost, and if given, `tab()`
+        (index of Safari's current tab) should be `expected_tab`."""
+        sm.deeplink("tabs")
+        time.sleep(3)  # fresh list, not the cached one
+        sm.paste(query)
+        time.sleep(1.2)
+        sm.keys("key code 36")
+        time.sleep(STEP + 0.5)
+        self.m.activate(app)
+        if tab is None:
+            self.check(f"Tabs: {label}", app)
+        else:
+            self.check(f"Tabs: {label}", f"{app} tab {expected_tab}", f"{sm.frontmost()} tab {tab()}")
 
-def scenarios(s: Smoke) -> None:
+
+def nav(s: Smoke) -> None:
     print("Back / Forward walk")
     s.run("back"), s.run("back"), s.run("back")
     s.run("forward"), s.run("forward"), s.run("forward")
@@ -161,6 +181,8 @@ def scenarios(s: Smoke) -> None:
     else:
         print("  - skipped: no app launched by this script to quit")
 
+
+def history(s: Smoke) -> None:
     print("History")
     s.pick_in_history(2)
     s.pick_in_history(1)
@@ -189,6 +211,75 @@ def scenarios(s: Smoke) -> None:
     s.run("forward")
 
 
+def tabs(s: Smoke) -> None:
+    """Tabs search and jump, on the staged Safari window's tabs and TextEdit (the owner's own tabs are ignored)."""
+    window = s.demo.safari_window
+    if not window:
+        print("  - skipped: no staged Safari window")
+        return
+    title = lambda i: sm.osa(f'tell application "Safari" to get name of tab {i} of window id {window}')  # noqa: E731
+    current = lambda: sm.osa(f'tell application "Safari" to get index of current tab of window id {window}')  # noqa: E731
+
+    print("Tabs")
+    s.tab_search(title(3), "Safari", "exact title", current, 3)
+    s.tab_search("textedt", "TextEdit", "app name with a typo ('textedt')")
+    query = typo(title(2))
+    s.tab_search(query, "Safari", f"title with a typo ('{query[:12]}…')", current, 2)
+
+
+def typo(text: str) -> str:
+    """`text` with the second letter of its longest word dropped: "Raycast Store" -> "Rycast Store"."""
+    word = max(re.findall(r"\w+", text), key=len)
+    return text.replace(word, word[0] + word[2:], 1) if len(word) >= 4 else text
+
+
+SUITES = {"nav": nav, "history": history, "tabs": tabs}
+
+# Which suites a changed file needs, first matching prefix wins. [] = nothing to smoke-test (unit tests, docs, media).
+# Any other file under extension/ (manifest, shared glue) runs everything.
+AFFECTS: list[tuple[str, list[str]]] = [
+    ("extension/src/lib/apps/history.ts", ["history"]),
+    ("extension/src/lib/apps/load-history.ts", ["nav", "history"]),
+    ("extension/src/lib/apps/", ["nav"]),
+    ("extension/src/back.ts", ["nav"]),
+    ("extension/src/forward.ts", ["nav"]),
+    ("extension/src/toggle.ts", ["nav"]),
+    ("extension/src/history.tsx", ["history"]),
+    ("extension/src/components/switch-action.tsx", ["history", "tabs"]),
+    ("extension/src/components/tab-list.tsx", ["tabs"]),
+    ("extension/src/tabs.tsx", ["tabs"]),
+    ("extension/src/app-tabs.tsx", ["tabs"]),
+    ("extension/src/lib/tabs/", ["tabs"]),
+    ("extension/src/lib/platform/tabs.ts", ["tabs"]),
+    ("extension/swift/Sources/JumperNative/RecentApps.swift", ["nav", "history"]),
+    ("extension/swift/Sources/JumperNative/AX.swift", ["tabs"]),
+    ("extension/swift/Sources/JumperNative/Windows.swift", ["tabs"]),
+    ("extension/swift/Sources/JumperNative/Sidebar.swift", ["tabs"]),
+    ("extension/test/", []),
+    ("extension/metadata/", []),
+    ("extension/media/", []),
+    ("extension/assets/", []),
+    ("extension/README.md", []),
+    ("extension/CHANGELOG.md", []),
+    ("extension/", list(SUITES)),
+    ("scripts/smoke.py", list(SUITES)),
+    ("scripts/media/store_media.py", list(SUITES)),
+]
+
+
+def suites_for(paths: list[str]) -> list[str]:
+    needed: set[str] = set()
+    for path in paths:
+        needed.update(next((suites for prefix, suites in AFFECTS if path.startswith(prefix)), []))
+    return [name for name in SUITES if name in needed]
+
+
+def changed_files() -> list[str]:
+    git = lambda *args: subprocess.run(["git", *args], cwd=sm.ROOT, capture_output=True, text=True, check=True).stdout  # noqa: E731
+    base = git("merge-base", "origin/main", "HEAD").strip()
+    return sorted(set(git("diff", "--name-only", base).split()) | set(git("ls-files", "--others", "--exclude-standard").split()))
+
+
 def build_dist() -> None:
     subprocess.run(["pkill", "-f", "ray develop"])
     time.sleep(1)
@@ -209,7 +300,22 @@ def restart_dev() -> None:
 
 
 def main() -> None:
-    dist = "--dist" in sys.argv
+    args = sys.argv[1:]
+    dist = "--dist" in args
+    if "--only" in args:
+        suites = args[args.index("--only") + 1].split(",")
+        if unknown := [n for n in suites if n not in SUITES]:
+            sys.exit(f"Unknown suite(s): {', '.join(unknown)}. Suites: {', '.join(SUITES)}")
+    elif "--changed" in args:
+        suites = suites_for(changed_files())
+    else:
+        suites = list(SUITES)
+    if "--list" in args:
+        print(" ".join(suites) or "nothing to smoke-test")
+        return
+    if not suites:
+        print("Nothing to smoke-test: no changed file affects Raycast behavior.")
+        return
     if dist:
         build_dist()
     elif subprocess.run(["pgrep", "-f", "ray develop"], capture_output=True).returncode != 0:
@@ -220,8 +326,9 @@ def main() -> None:
         with sm.DemoApps() as demo:
             order = [sm.PROCESS.get(n, n) for n, *_ in reversed(sm.DEMO_APPS) if sm.running(n)]
             s = Smoke(demo, order)
-            print(f"Build: {'dist' if dist else 'dev'}. Starting order: {', '.join(order[:6])}, …")
-            scenarios(s)
+            print(f"Build: {'dist' if dist else 'dev'}. Suites: {', '.join(suites)}. Starting order: {', '.join(order[:6])}, …")
+            for name in suites:
+                SUITES[name](s)
     finally:
         if dist:
             restart_dev()
