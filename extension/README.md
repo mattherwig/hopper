@@ -24,7 +24,7 @@ Back, Forward, Toggle, and Tabs are meant to be used with hotkeys:
 
 `⇧⌘[` and `⇧⌘]` also switch tabs in browsers, Terminal, and many editors; a Raycast hotkey takes priority, so pick something like `⌃⌥[` / `⌃⌥]` if you rely on those.
 
-Back, Forward, Toggle, and History need no permissions and no background process: they read the order macOS already keeps for Cmd+Tab.
+Back, Forward, Toggle, and History need no permissions and no background process: they read the order macOS already keeps for Cmd+Tab. With Accessibility granted to Raycast (see below), they also switch like Cmd+Tab, so an app comes back to the window you left; without it, they switch like a Dock click.
 
 Tabs and Tabs in Current App ask for permissions the first time:
 
@@ -39,6 +39,7 @@ An app Jumper can't read shows under **Unavailable**, with a shortcut to the rig
 - Pressing Back again goes further; **Forward** retraces.
 - Switching apps any other way (click, Cmd+Tab) starts a fresh history, just like visiting a new page in a browser clears the forward history.
 - Apps you quit are skipped.
+- An app comes back to the window you left, like Cmd+Tab (needs Accessibility; otherwise it's like a Dock click, which in some apps shows their main window instead).
 - In **History**, **Remove from History** (`⌃X`) hides an app (including the one you're in, once you leave it), for example one you closed all windows of but didn't quit. It comes back once you use it again.
 - **Exclude from History** (`⌃⇧X`) hides an app for good. Excluded apps are listed at the bottom of History; **Include in History** brings one back.
 

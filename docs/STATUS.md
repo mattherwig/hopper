@@ -2,6 +2,11 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Switch apps like Cmd+Tab (ADR-021)
+
+- Bug: Back to TV playing a show fullscreen showed TV's home window. Cause: Raycast `open()` sends a reopen event. Now `activateApp()` sets `AXFrontmost` via the Swift helper (`frontApp`), falling back to `open()` without Accessibility or when the main window is minimized/missing.
+- Verified live in Raycast (deeplink + owner's hotkey): TV back to the fullscreen player; Calculator across Spaces; minimized Calculator and window-less TextEdit via fallback. Cost ~30–40ms per switch; faster private path: #25.
+
 ## 2026-09-26 — Claude conversations by deep link; private windows excluded (ADR-017, ADR-018, branch `tabs/muse-reveal-claude-links`)
 
 - Muse 4.1 hides its Side chats list, so Tabs lists Muse's window unless the panel is open. A reveal (press the button, read, press again) was built, verified live, then removed at the owner's call: too hacky. Owner rule: UI-changing workarounds need a yes first.

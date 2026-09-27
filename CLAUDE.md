@@ -66,7 +66,7 @@ extension/                                    the Raycast extension; everything 
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
     macos.ts                                  getRecentApps() (calls Swift) + activateApp() via Raycast open()
     tabs.ts                                   the tab level's Platform on macOS: runAppleScript + Swift Accessibility calls
-  swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift (app level);
+  swift/Sources/JumperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift, Activate.swift (app level);
                                               AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
@@ -88,7 +88,7 @@ site/index.html                               GitHub Pages landing page (deploye
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
 - Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`) free of Raycast/Node imports so `npm test` works without Raycast. Tab sources reach the OS only through `Platform` (ADR-013).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.
-- Activate apps with Raycast `open(app.path)` (ADR-007), never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
+- Activate apps through `activateApp()`: Accessibility `AXFrontmost` via the Swift helper, falling back to Raycast `open(app.path)` (ADR-021; `open()` alone sends a reopen event that can show the wrong window). Never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
 - Each exported Swift call spawns a process (~7ms): keep `@raycast` functions few and coarse. Profile any change on the hot path: `docs/PERFORMANCE.md`.
 - No prebuilt binaries in the repo; Swift is compiled from source by `ray build` (Store rule, ADR-008). `extension/assets/compiled_raycast_swift/` is build output and stays gitignored.
 - Any Swift file using `@raycast` must `import Foundation` (the macro expands to NSObject code). `ray build` hides Swift errors; run `swift build` in `extension/swift/` to see them. The first build on a machine fetches swift-syntax (a few minutes).

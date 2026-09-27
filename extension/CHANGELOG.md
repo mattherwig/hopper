@@ -9,6 +9,7 @@
 - Notion tabs: the front window's tabs (read from its tab bar) with each page's parent pages, then its other windows.
 - Claude Chat and Cowork conversations you've opened open via Claude's deep link, and stay listed with the sidebar hidden.
 - Incognito and private browser windows are left out of Tabs entirely.
+- Back, Forward, Toggle, and History switch apps like Cmd+Tab when Raycast has Accessibility, so an app returns to the window you left (for example TV's fullscreen player instead of its home screen).
 - Recently Closed section in Tabs: reopen browser tabs, Notion pages, and documents closed since Tabs last looked, with Remove and Clear actions.
 - Notion tabs open through Notion's own link, which switches to the tab showing the page in any window.
 
