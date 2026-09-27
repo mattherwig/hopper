@@ -47,8 +47,8 @@ async function load(scope: Scope) {
 
 /**
  * Search: tabs, windows, sessions, and agents of every running app (or only the current one), grouped by app.
- * An agent's status shows on the tab it runs in (a Claude Code session, a terminal or herdr tab), and every agent
- * also has a row in the Agents section.
+ * An agent's status shows on the tab it runs in (a Claude Code session, a terminal or herdr tab), and the agent
+ * has a row of its own in that app's section.
  */
 export function SearchList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
@@ -67,10 +67,15 @@ export function SearchList({ scope }: { scope: Scope }) {
       return key ? [[key, a] as const] : [];
     }),
   );
-  // Every located agent also has a row of its own (after the apps), so searching an agent's name finds it.
-  const agents = (agentData?.agents ?? []).filter(
-    (a) => a.location && (scope === "all" || a.location.app.bundleId === current?.bundleId),
-  );
+  // Every located agent also has a row of its own in its app's section, so searching its name finds it; except
+  // where its tab already says the same (a Claude Code session is both a tab and an agent, same title).
+  const tabTitles = new Map(tabs.map((t) => [t.key, t.title]));
+  const agents = (agentData?.agents ?? []).filter((a) => {
+    if (!a.location || (scope === "current" && a.location.app.bundleId !== current?.bundleId)) return false;
+    const place = placeOf(a);
+    return !(place && tabTitles.get(place) === a.title);
+  });
+  const entries: Entry[] = [...tabs.map(tabEntry), ...agents.map(agentEntry)];
 
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
@@ -84,20 +89,17 @@ export function SearchList({ scope }: { scope: Scope }) {
         scope === "current" && current ? `Search ${current.name}` : "Search apps, tabs, sessions, and agents"
       }
     >
-      {groupByApp(searchTabs(tabs, query)).map(({ app, tabs }) => (
-        <List.Section key={app.bundleId} title={app.name} subtitle={String(tabs.length)}>
-          {tabs.map((tab) => (
-            <TabItem key={tab.key} tab={tab} agent={agentByTab.get(tab.key)} />
-          ))}
+      {groupByApp(searchTabs(entries, query)).map(({ app, entries }) => (
+        <List.Section key={app.bundleId} title={app.name} subtitle={String(entries.length)}>
+          {entries.map((entry) =>
+            entry.tab ? (
+              <TabItem key={entry.tab.key} tab={entry.tab} agent={agentByTab.get(entry.tab.key)} />
+            ) : (
+              <AgentItem key={entry.agent.key} agent={entry.agent} onRefresh={reloadAgents} />
+            ),
+          )}
         </List.Section>
       ))}
-      {agents.length > 0 && (
-        <List.Section title="Agents" subtitle={String(agents.length)}>
-          {searchTabs(agents.map(searchableAgent), query).map(({ agent }) => (
-            <AgentItem key={agent.key} agent={agent} onRefresh={reloadAgents} />
-          ))}
-        </List.Section>
-      )}
       {closed.length > 0 && (
         <List.Section title="Recently Closed" subtitle={String(closed.length)}>
           {searchTabs(closed, query).map((entry) => (
@@ -218,25 +220,36 @@ function placeOf(agent: ListedAgent): string | undefined {
   return agent.location?.tab?.key ?? agent.placeKey;
 }
 
-/** An agent in the shape search reads. */
-function searchableAgent(agent: ListedAgent) {
-  return {
-    agent,
-    title: agent.title,
-    detail: [agent.product, agent.project?.name].filter(Boolean).join(" "),
-    url: undefined,
-    kind: "agent",
-    app: { name: agent.location?.app.name ?? agent.product },
-  };
-}
+/** A row of Search: a tab, or an agent, in the shape search reads, with its app for grouping. */
+type Entry = { title: string; detail?: string; detailFull?: string; url?: string; kind: string; app: App } & (
+  { tab: Tab; agent?: undefined } | { agent: ListedAgent; tab?: undefined }
+);
 
-/** One section per app, in order of each app's first tab (so the best search match's app comes first). */
-function groupByApp(tabs: Tab[]): { app: App; tabs: Tab[] }[] {
-  const sections = new Map<string, { app: App; tabs: Tab[] }>();
-  for (const tab of tabs) {
-    const section = sections.get(tab.app.bundleId);
-    if (section) section.tabs.push(tab);
-    else sections.set(tab.app.bundleId, { app: tab.app, tabs: [tab] });
+const tabEntry = (tab: Tab): Entry => ({
+  tab,
+  title: tab.title,
+  detail: tab.detail,
+  detailFull: tab.detailFull,
+  url: tab.url,
+  kind: tab.kind,
+  app: tab.app,
+});
+
+const agentEntry = (agent: ListedAgent): Entry => ({
+  agent,
+  title: agent.title,
+  detail: [agent.product, agent.project?.name].filter(Boolean).join(" "),
+  kind: "agent",
+  app: agent.location!.app,
+});
+
+/** One section per app, in order of each app's first entry (so the best search match's app comes first). */
+function groupByApp(entries: Entry[]): { app: App; entries: Entry[] }[] {
+  const sections = new Map<string, { app: App; entries: Entry[] }>();
+  for (const entry of entries) {
+    const section = sections.get(entry.app.bundleId);
+    if (section) section.entries.push(entry);
+    else sections.set(entry.app.bundleId, { app: entry.app, entries: [entry] });
   }
   return [...sections.values()];
 }
