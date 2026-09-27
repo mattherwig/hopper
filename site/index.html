@@ -205,9 +205,9 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <p>Browser-style history for the apps you've been using.</p>
           <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Back / Forward</b><kbd>⇧⌘[ ⇧⌘]</kbd><span>Step back to the app you used before this one, and keep going. Forward retraces.</span></li>
+            <li><b>Back / Forward</b><kbd>⌃⌘[ ⌃⌘]</kbd><span>Step back to the app you used before this one, and keep going. Forward retraces.</span></li>
             <li><b>Toggle</b><kbd>⌘ ⌘</kbd><span>Flip between your two most recent apps. Run again to flip back.</span></li>
-            <li><b>History</b><span>Running apps from most to least recent. Jump to any of them, or remove and exclude apps.</span></li>
+            <li><b>History</b><kbd>⌃⌘</kbd><span>Running apps from most to least recent. Jump to any of them, or remove and exclude apps.</span></li>
           </ul>
         </article>
 
@@ -216,7 +216,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <p>One search across the tabs, windows, sessions, and agents of every running app.</p>
           <div class="shot"><img src="tabs.png" alt="Search command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Search</b><kbd>⌃⌘</kbd><span>Search browser tabs, terminal tabs, herdr workspaces, Claude and Muse sessions, Notion tabs, any app's windows, and agents, then jump straight to one.</span></li>
+            <li><b>Search</b><kbd>⌃ ⌃</kbd><span>Search browser tabs, terminal tabs, herdr workspaces, Claude and Muse sessions, Notion tabs, any app's windows, and agents, then jump straight to one.</span></li>
             <li><b>Search Current App</b><span>The same, for just the app you're in.</span></li>
           </ul>
         </article>
@@ -225,8 +225,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <header><h3>Agents</h3></header>
           <p>Claude Code, Codex, Cursor, herdr, and other agents, wherever they run, by what they need from you.</p>
           <ul class="cmds">
-            <li><b>Agents</b><span>Every running agent grouped by Needs You, Done, Working, and Idle, filterable by project. Jump to its terminal pane, herdr pane, or session in the Claude app or Cursor.</span></li>
-            <li><b>Next Agent</b><kbd>⌃⌥A</kbd><span>Jump to the agent that has waited longest for you: needs input or approval first, then finished and unseen. Run again for the next.</span></li>
+            <li><b>Agents</b><kbd>⌥⌘</kbd><span>Every running agent grouped by Needs You, Done, Working, and Idle, filterable by project. Jump to its terminal pane, herdr pane, or session in the Claude app or Cursor.</span></li>
+            <li><b>Next Agent</b><kbd>⌥⌘]</kbd><span>Jump to the agent that has waited longest for you: needs input or approval first, then finished and unseen. Run again for the next.</span></li>
           </ul>
         </article>
       </div>
@@ -311,7 +311,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
       <h2>Setup</h2>
       <ol class="steps">
         <li><span>Install Jumper from the <a href="https://www.raycast.com/">Raycast</a> Store.</span></li>
-        <li><span>Assign hotkeys to Back, Forward, Toggle, Search (<kbd>⌃⌘</kbd>), and Next Agent (<kbd>⌃⌥A</kbd>) in Raycast Settings → Extensions → Jumper.</span></li>
+        <li><span>Record hotkeys in Raycast Settings → Extensions → Jumper (extensions can't set them). Recommended: the ones shown above.</span></li>
         <li><span>First time in Search: allow <strong>Automation</strong> and <strong>Accessibility</strong> when asked.</span></li>
       </ol>
     </div>

@@ -10,6 +10,7 @@
 - Ghostty tabs are listed in Search (Ghostty 1.3+), and herdr running in Ghostty is brought forward in its own tab.
 - cmux workspaces with several terminals also list each terminal by its name; herdr lists workspaces and their named tabs.
 - Search lists each agent in its app's section, and shows AppleScript's own error for apps it can't read.
+- README: recommended hotkeys for every command, clear of browser, terminal, and editor tab keys.
 - Claude Code sessions that haven't started yet (e.g. waiting to trust a folder) are listed as running.
 - Copy Resume Command for Claude Code and Codex sessions.
 

@@ -19,12 +19,18 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 
 ## Setup
 
-Back, Forward, Toggle, Search, and Next Agent are meant to be used with hotkeys:
+Jumper is meant to be used with hotkeys. Raycast extensions can't set hotkeys themselves, so record them in Raycast Settings → Extensions → Jumper. Recommended:
 
-1. Open Raycast Settings → Extensions → Jumper.
-2. Assign a hotkey to each command, for example `⇧⌘[` for Back, `⇧⌘]` for Forward, and a double tap of `⌘` for Toggle (the keys shown in the demo), `⌃⌘` for Search, and something like `⌃⌥A` for Next Agent.
+| Command        | Hotkey                   |
+| -------------- | ------------------------ |
+| Toggle         | `⌘⌘` (double tap)        |
+| Search         | `⌃⌃` (double tap)        |
+| History        | `⌃⌘` (press and release) |
+| Back / Forward | `⌃⌘[` / `⌃⌘]`            |
+| Agents         | `⌥⌘` (press and release) |
+| Next Agent     | `⌥⌘]`                    |
 
-`⇧⌘[` and `⇧⌘]` also switch tabs in browsers, Terminal, and many editors; a Raycast hotkey takes priority, so pick something like `⌃⌥[` / `⌃⌥]` if you rely on those.
+Each level has a base: the base alone opens its list, `[` and `]` step back and forward. These avoid the tab-switching keys of browsers, terminals, and editors (`⇧⌘[` / `⇧⌘]`). Conflicts: `⌥⌘]` unfolds code in VS Code and Cursor, and `⌃⌃` is taken if macOS Dictation is set to "Press Control Key Twice".
 
 Back, Forward, Toggle, and History need no permissions and no background process: they read the order macOS already keeps for Cmd+Tab. With Accessibility granted to Raycast (see below), they also switch like Cmd+Tab, so an app comes back to the window you left; without it, they switch like a Dock click.
 
@@ -49,17 +55,17 @@ Agents and Next Agent read the agents' own status files and local APIs, and need
 
 ### Search
 
-| App | Lists |
-|---|---|
-| Chrome, Brave, Edge, Vivaldi, Chromium, Safari | Tabs (never incognito or private windows) |
-| cmux | Workspaces, and each terminal of a workspace that has several |
-| Ghostty (1.3+) | Tabs (with their splits, for agents) |
-| herdr | Workspaces, and their tabs that have a name of their own, under the terminal running herdr |
-| iTerm, Terminal | Tabs (and iTerm's split panes, for agents) |
-| Claude | Code sessions (all projects, most recent first, even with the sidebar hidden); Chat and Cowork conversations from the sidebar, plus ones you've opened recently when the sidebar is hidden (opened by link) |
-| Muse | Main chat and side chats while the side chats panel is open; otherwise Muse's window |
-| Notion | Tabs of the front window with each page's parent pages (opened by Notion's link), then its other windows |
-| Any other app | Windows, and tabs if the window has a native tab bar |
+| App                                            | Lists                                                                                                                                                                                                       |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chrome, Brave, Edge, Vivaldi, Chromium, Safari | Tabs (never incognito or private windows)                                                                                                                                                                   |
+| cmux                                           | Workspaces, and each terminal of a workspace that has several                                                                                                                                               |
+| Ghostty (1.3+)                                 | Tabs (with their splits, for agents)                                                                                                                                                                        |
+| herdr                                          | Workspaces, and their tabs that have a name of their own, under the terminal running herdr                                                                                                                  |
+| iTerm, Terminal                                | Tabs (and iTerm's split panes, for agents)                                                                                                                                                                  |
+| Claude                                         | Code sessions (all projects, most recent first, even with the sidebar hidden); Chat and Cowork conversations from the sidebar, plus ones you've opened recently when the sidebar is hidden (opened by link) |
+| Muse                                           | Main chat and side chats while the side chats panel is open; otherwise Muse's window                                                                                                                        |
+| Notion                                         | Tabs of the front window with each page's parent pages (opened by Notion's link), then its other windows                                                                                                    |
+| Any other app                                  | Windows, and tabs if the window has a native tab bar                                                                                                                                                        |
 
 Apps are ordered by recent use; within an app, active tabs come first. herdr isn't an app: its workspaces and tabs are listed under the terminal running herdr, and picking one switches herdr there and brings that terminal forward (in iTerm, cmux, and Terminal, the very tab and split running herdr). Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar (Claude conversations you've opened open by link even with the sidebar hidden); Notion tabs are read from its tab bar, and their parent pages from Notion's local cache (full path on hover; searching a parent's name finds its pages). An app update can change what Jumper finds; if nothing is found, the app's windows are listed instead. Incognito and private browser windows are never listed, cached, or jumped to.
 
@@ -67,13 +73,13 @@ Apps are ordered by recent use; within an app, active tabs come first. herdr isn
 
 ### Agents
 
-| Agent | Where it runs | Status from |
-|---|---|---|
-| Claude Code | Terminals, the Claude app's Code tab, IDEs | Claude Code's own list of running sessions (busy, waiting for approval or input, idle); the Claude app's record of what you've looked at |
-| Codex | The Codex app (ChatGPT), terminals | Codex's own thread list and log (working, idle; Codex doesn't record when it waits on you) |
-| Cursor | Cursor's agents | Cursor's own flags (waiting on you, generating, unread) |
-| herdr | Any agent in a herdr pane | herdr's own detection, over its socket |
-| Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs | Terminals | Not readable: listed as Running |
+| Agent                                                  | Where it runs                              | Status from                                                                                                                              |
+| ------------------------------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code                                            | Terminals, the Claude app's Code tab, IDEs | Claude Code's own list of running sessions (busy, waiting for approval or input, idle); the Claude app's record of what you've looked at |
+| Codex                                                  | The Codex app (ChatGPT), terminals         | Codex's own thread list and log (working, idle; Codex doesn't record when it waits on you)                                               |
+| Cursor                                                 | Cursor's agents                            | Cursor's own flags (waiting on you, generating, unread)                                                                                  |
+| herdr                                                  | Any agent in a herdr pane                  | herdr's own detection, over its socket                                                                                                   |
+| Gemini CLI, OpenCode, Amp, Aider, and other agent CLIs | Terminals                                  | Not readable: listed as Running                                                                                                          |
 
 **Done** means an agent finished a turn since you last looked at it: in its own app (Claude records when you last opened a session), or by jumping to it from Jumper. Agents Jumper sees for the first time count as seen, so ones that were already sitting idle don't all show as done. **Needs You** is an agent stopped on a prompt: a permission request or a question.
 
