@@ -4,7 +4,7 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 
 ## 2026-09-26 — Tabs search: typo-tolerant, app first (ADR-015, branch `feature/tab-search-ranking`)
 
-- Tabs filters with `tabs/search.ts` instead of Raycast's filter: "caude" finds Claude; typing an app's name lists that app's tabs before browser/terminal tabs titled with it. 7 new unit tests. Not yet tried live in Raycast.
+- Tabs filters with `tabs/search.ts` instead of Raycast's filter: "caude" finds Claude; typing an app's name lists that app's tabs before browser/terminal tabs titled with it. 8 new unit tests; "gh" still finds "github" (demo GIF query). Live in Raycast: "claude" and "caude" both list the Claude app's 13 sessions first. Smoke test 32/32.
 
 ## 2026-09-26 — Landing page: tab level + new tagline (branch `site/tabs-branding`)
 
