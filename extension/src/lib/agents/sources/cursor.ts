@@ -1,27 +1,33 @@
 // Cursor agents (composers), from Cursor's own state database: its header list has each agent's folder and the
 // flags Cursor's UI uses (blocking pending actions, unread messages); each agent's record has its run status
-// (generating / completed / aborted). Cursor has no public link to a local agent, so jumping opens the agent's
-// folder with Cursor, which brings that window forward (ADR-022). Only read while Cursor runs: its agents
-// don't run otherwise.
+// (generating / completed / aborted). Jumping opens the agent in Cursor's Agents window through Cursor's own
+// deep link; opening the folder instead opened an extra editor window (ADR-026). Only read while Cursor runs:
+// its agents don't run otherwise.
 
 import type { Agent, AgentContext, AgentSource, AgentStatus } from "../model";
 
 const BUNDLE_ID = "com.todesktop.230313mzl4w4u92";
+const AGENT_LINK = "cursor://anysphere.cursor-deeplink/agent?id=";
 const DB = "Library/Application Support/Cursor/User/globalStorage/state.vscdb";
 /** Idle agents older than this aren't listed: the list is for what's going on now. */
 const IDLE_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-const HEADERS = `select
-  json_extract(e.value, '$.composerId') as id,
-  json_extract(e.value, '$.name') as name,
-  json_extract(e.value, '$.isArchived') as archived,
-  json_extract(e.value, '$.isDraft') as draft,
-  json_extract(e.value, '$.hasUnreadMessages') as unread,
-  json_extract(e.value, '$.hasBlockingPendingActions') as blocking,
-  coalesce(json_extract(e.value, '$.lastUpdatedAt'), json_extract(e.value, '$.createdAt')) as updatedAt,
-  json_extract(e.value, '$.workspaceIdentifier.uri.fsPath') as folder
-from ItemTable, json_each(json_extract(ItemTable.value, '$.allComposers')) e
-where ItemTable.key = 'composer.composerHeaders'`;
+const FIELDS = `json_extract(h, '$.composerId') as id,
+  json_extract(h, '$.name') as name,
+  json_extract(h, '$.isArchived') as archived,
+  json_extract(h, '$.isDraft') as draft,
+  json_extract(h, '$.hasUnreadMessages') as unread,
+  json_extract(h, '$.hasBlockingPendingActions') as blocking,
+  coalesce(json_extract(h, '$.lastUpdatedAt'), json_extract(h, '$.createdAt')) as updatedAt,
+  json_extract(h, '$.workspaceIdentifier.uri.fsPath') as folder`;
+
+/** Cursor 3.15+ keeps one header per row (subagents are their parent's, so left out); the old blob stops updating. */
+const HEADERS = `select ${FIELDS} from (select value as h from composerHeaders where isSubagent = 0)`;
+
+/** Before 3.15: all headers in one JSON blob. */
+const LEGACY_HEADERS = `select ${FIELDS} from (select e.value as h
+  from ItemTable, json_each(json_extract(ItemTable.value, '$.allComposers')) e
+  where ItemTable.key = 'composer.composerHeaders')`;
 
 const statusQuery = (ids: string[]) =>
   `select substr(key, 14) as id, json_extract(value, '$.status') as status from cursorDiskKV
@@ -85,7 +91,12 @@ export function toAgents(headers: Header[], runStatus: Map<string, string>, now:
         activeAt: h.updatedAt,
         // Cursor's own unread flag already says whether it was seen.
         seenAt: status === "done" ? 0 : h.updatedAt,
-        host: { kind: "link", bundleId: BUNDLE_ID, url: h.folder, label: `Cursor › ${folderName}` },
+        host: {
+          kind: "link",
+          bundleId: BUNDLE_ID,
+          url: AGENT_LINK + encodeURIComponent(h.id),
+          label: `Cursor › ${folderName}`,
+        },
       },
     ];
   });
@@ -96,10 +107,12 @@ export const cursor: AgentSource = {
   list: async ({ platform, apps, now }: AgentContext) => {
     if (!apps.some((a) => a.bundleId === BUNDLE_ID)) return [];
     const db = `${platform.homeDir()}/${DB}`;
-    const headers = parseHeaders(await platform.querySqlite(db, HEADERS)).filter((h) => !h.archived && !h.draft);
+    // No composerHeaders table (Cursor before 3.15) fails the query.
+    const rows = await platform.querySqlite(db, HEADERS).catch(() => platform.querySqlite(db, LEGACY_HEADERS));
+    const headers = parseHeaders(rows).filter((h) => !h.archived && !h.draft);
     if (headers.length === 0) return [];
-    const rows = await platform.querySqlite(db, statusQuery(headers.map((h) => h.id)));
-    const runStatus = new Map(rows.map((r) => [String(r.id), String(r.status ?? "")]));
+    const statuses = await platform.querySqlite(db, statusQuery(headers.map((h) => h.id)));
+    const runStatus = new Map(statuses.map((r) => [String(r.id), String(r.status ?? "")]));
     return toAgents(headers, runStatus, now);
   },
 };
