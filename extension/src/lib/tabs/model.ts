@@ -107,11 +107,6 @@ export interface SidebarQuery {
   namePattern?: string;
   /** Open rows by focusing them and sending Return, for apps that ignore AXPress (Muse). */
   keyboard?: boolean;
-  /**
-   * Title suffix of a button that shows the list when it's hidden (Muse: "<chat> Open chat and side chats").
-   * Listing presses it, reads, and presses it again; opening a row presses it and leaves the list to the app.
-   */
-  reveal?: string;
 }
 
 export interface WebPage {

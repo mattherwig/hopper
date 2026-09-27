@@ -50,10 +50,10 @@ An app Jumper can't read shows under **Unavailable**, with a shortcut to the rig
 | cmux | Workspaces |
 | iTerm, Terminal | Tabs |
 | Claude | Code sessions (all projects, most recent first, even with the sidebar hidden); Chat and Cowork conversations from the sidebar, plus ones you've opened recently when the sidebar is hidden (opened by link) |
-| Muse | Main chat and side chats, even with the side chats panel closed |
+| Muse | Main chat and side chats while the side chats panel is open; otherwise Muse's window |
 | Any other app | Windows, and tabs if the window has a native tab bar |
 
-Apps are ordered by recent use; within an app, active tabs come first. Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar (Jumper opens Muse's side chats panel for a moment if it's closed; Claude conversations you've opened open by link even with the sidebar hidden), so an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead. Incognito and private browser windows are never listed, cached, or jumped to.
+Apps are ordered by recent use; within an app, active tabs come first. Search forgives typos ("caude" finds Claude) and matches app names first: typing an app's name lists that app's own tabs before other tabs that mention it. Picking an entry selects it in its app and brings the app to the front. **Copy URL** and **Copy Title** are in the action panel. Claude's Code sessions come from Claude's own session list and open with its deep link. Muse chats and Claude Chat conversations are read from the on-screen sidebar (Claude conversations you've opened open by link even with the sidebar hidden), so an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead. Incognito and private browser windows are never listed, cached, or jumped to.
 
 ## Support
 

@@ -15,21 +15,8 @@ struct SidebarRow: Codable {
 
 /// Rows of the first element whose AXTitle or AXDescription is `container` (e.g. Claude's "Sidebar"
 /// landmark, Muse's "Side chats" navigation): every descendant with role `rowRole` that has a title.
-///
-/// `reveal`: title suffix of a button that shows a hidden list (Muse 4.1 hides its side chats behind
-/// "<chat> Open chat and side chats"). If the list isn't there, the button is pressed, the rows read, and the
-/// button pressed again so the user's layout is unchanged. Empty: no reveal.
-func readSidebarRows(bundleId: String, container: String, rowRole: String, reveal: String) -> [SidebarRow] {
-  guard let pid = pid(of: bundleId) else { return [] }
-  var revealButton: AXUIElement?
-  // With a reveal button, a missing list is most likely hidden: reveal it before waiting on the tree.
-  var root = findContainer(pid, container, attempts: reveal.isEmpty ? 2 : 1)
-  if root == nil, let button = pressReveal(pid, reveal) {
-    revealButton = button
-    root = findContainer(pid, container)
-  }
-  defer { if let revealButton { AXUIElementPerformAction(revealButton, kAXPressAction as CFString) } }
-  guard let root else { return [] }
+func readSidebarRows(bundleId: String, container: String, rowRole: String) -> [SidebarRow] {
+  guard let pid = pid(of: bundleId), let root = findContainer(pid, container) else { return [] }
   return rows(root, rowRole).map { row in
     SidebarRow(
       title: string(row, kAXTitleAttribute) ?? "",
@@ -45,12 +32,8 @@ func readSidebarRows(bundleId: String, container: String, rowRole: String, revea
 ///
 /// `keyboard`: focus the row and send Return to the app instead of AXPress. Some web UIs (Muse) report AXPress
 /// as handled but never navigate; a keyboard activation goes through their normal click path.
-///
-/// `reveal`: as in `readSidebarRows`, but the list is left open: the app closes it itself (Muse does on
-/// navigating), and the user is switching to the app anyway.
 func openSidebarRow(
-  bundleId: String, container: String, rowRole: String, name: String, namePattern: String, keyboard: Bool,
-  reveal: String
+  bundleId: String, container: String, rowRole: String, name: String, namePattern: String, keyboard: Bool
 ) -> Bool {
   let pattern = namePattern.isEmpty ? nil : try? NSRegularExpression(pattern: namePattern)
   func matches(_ row: AXUIElement) -> Bool {
@@ -61,18 +44,10 @@ func openSidebarRow(
     else { return false }
     return title[range] == name
   }
-  guard let pid = pid(of: bundleId) else { return false }
-  var root = findContainer(pid, container, attempts: reveal.isEmpty ? 2 : 1)
-  var revealButton: AXUIElement?
-  if root == nil, let button = pressReveal(pid, reveal) {
-    revealButton = button
-    root = findContainer(pid, container)
-  }
-  guard let root, let row = rows(root, rowRole).first(where: matches) else {
-    // Not there: close the list again rather than leave it open.
-    if let revealButton { AXUIElementPerformAction(revealButton, kAXPressAction as CFString) }
-    return false
-  }
+  guard
+    let pid = pid(of: bundleId), let root = findContainer(pid, container),
+    let row = rows(root, rowRole).first(where: matches)
+  else { return false }
 
   guard keyboard else { return AXUIElementPerformAction(row, kAXPressAction as CFString) == .success }
   guard AXUIElementSetAttributeValue(row, kAXFocusedAttribute as CFString, kCFBooleanTrue) == .success else { return false }
@@ -128,23 +103,10 @@ func readWebPage(bundleId: String) -> WebPage? {
   return nil
 }
 
-/// Presses the first button whose title ends with `suffix`; returns it, or nil if `suffix` is empty or not found.
-private func pressReveal(_ pid: Int32, _ suffix: String) -> AXUIElement? {
-  guard !suffix.isEmpty else { return nil }
-  for window in children(appElement(pid), kAXWindowsAttribute) {
-    if let button = find(window, depth: 30, where: {
-      string($0, kAXRoleAttribute) == kAXButtonRole as String && (string($0, kAXTitleAttribute) ?? "").hasSuffix(suffix)
-    }) {
-      return AXUIElementPerformAction(button, kAXPressAction as CFString) == .success ? button : nil
-    }
-  }
-  return nil
-}
-
-private func findContainer(_ pid: Int32, _ name: String, attempts: Int = 2) -> AXUIElement? {
+private func findContainer(_ pid: Int32, _ name: String) -> AXUIElement? {
   let app = appElement(pid)
   AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
-  for attempt in 0..<attempts {
+  for attempt in 0..<2 {
     // The first time accessibility is switched on, Chromium needs a moment to build the tree.
     if attempt > 0 { Thread.sleep(forTimeInterval: 0.4) }
     for window in children(app, kAXWindowsAttribute) {

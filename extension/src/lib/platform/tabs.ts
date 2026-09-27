@@ -27,18 +27,9 @@ export const macosTabPlatform: Platform = {
   accessibilityTrusted: () => accessibilityTrusted(),
   windows: async (bundleIds) => (await appWindows(bundleIds)) as AppWindows[],
   raiseWindow: (bundleId, index, title, tab) => focusWindow(bundleId, index, title, tab ?? null),
-  sidebarRows: async (bundleId, query) =>
-    (await sidebarRows(bundleId, query.container, query.rowRole, query.reveal ?? "")) as SidebarRow[],
+  sidebarRows: async (bundleId, query) => (await sidebarRows(bundleId, query.container, query.rowRole)) as SidebarRow[],
   openSidebarRow: (bundleId, query, name) =>
-    openSidebar(
-      bundleId,
-      query.container,
-      query.rowRole,
-      name,
-      query.namePattern ?? "",
-      query.keyboard ?? false,
-      query.reveal ?? "",
-    ),
+    openSidebar(bundleId, query.container, query.rowRole, name, query.namePattern ?? "", query.keyboard ?? false),
   labelWithSuffix: async (bundleId, suffix) => (await labelWithSuffix(bundleId, suffix)) ?? undefined,
   webPage: async (bundleId) => (await webPage(bundleId)) ?? undefined,
   loadJson: (key, fallback) => readJson(`tabs:${key}`, fallback),
