@@ -2,6 +2,13 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Agents point at places (ADR-028, branch `refactor/agent-places`)
+
+- Architecture cleanup: agent hosts are a terminal process, a `place` (tab key + pane of a tab the tab level lists), or a `link` (Cursor, Codex app). `placeKey`, `Host` kind `herdr` and `Location.herdr` removed; `jumpToAgent` = select the tab with its source, else open the link. herdr's pane focus moved into its tab source (`selectPane`); Claude's deep link built once (`codeSessionUrl`).
+- Visible change: in Search, a herdr agent's status tag is on its herdr tab, not on the terminal tab running herdr.
+- Verified: 127 unit tests, lint, build; `scripts/smoke_herdr.py` 6/6 live (herdr 0.9.1, clients in cmux + Ghostty); new `scripts/smoke_claude.py` 4/4 (Search and Agents jumps to Claude app Code sessions). Smoke `tabs` 2/3, and the same on `main`: the typo'd-title check ("OS - macOS 27 Glden Gate - Apple") lands on Safari tab 3, not 2; pre-existing, own issue. Not verified live: Next Agent.
+- Next: fix the `tabs` typo check.
+
 ## 2026-09-27 — Store PR review fixes (raycast/extensions#31648)
 
 - Store PR re-published with everything on `main` (it lacked Obsidian and the new media), then again with fixes for Greptile's four P1s: same-titled windows / native tabs raised by position; Codex terminals host only their folder's latest thread since they started; herdr sessions paired with their own client via the kernel's socket peer paths (checked live with a throwaway named session); same-titled Notion tabs of different pages listed separately. ADR-016/020/023/025 notes updated.

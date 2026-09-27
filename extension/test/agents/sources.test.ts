@@ -137,8 +137,8 @@ const snapshot = {
   },
 };
 
-test("herdr: agents from a snapshot, with the session they run and their pane", () => {
-  const agents = fromSnapshot(snapshotOf(snapshot)!, "/s");
+test("herdr: agents from a snapshot, with the session they run and the herdr tab and pane showing them", () => {
+  const agents = fromSnapshot(snapshotOf(snapshot)!, "/s", { bundleId: "g", name: "Ghostty", path: "/G.app" });
   assert.deepEqual(
     agents.map((a) => [a.product, a.id, a.status, a.cwd, a.sessionIds, a.host]),
     [
@@ -148,7 +148,7 @@ test("herdr: agents from a snapshot, with the session they run and their pane", 
         "blocked",
         "/p/api",
         ["s1"],
-        { kind: "herdr", socket: "/s", paneId: "w1:p1", label: "herdr › api › agents" },
+        { kind: "place", tabKey: "herdr:/s:w1:t1", paneId: "w1:p1", bundleId: "g", label: "herdr › api › agents" },
       ],
       [
         "Pi",
@@ -156,7 +156,7 @@ test("herdr: agents from a snapshot, with the session they run and their pane", 
         "unknown",
         undefined,
         undefined,
-        { kind: "herdr", socket: "/s", paneId: "w1:p2", label: "herdr › api › agents" },
+        { kind: "place", tabKey: "herdr:/s:w1:t1", paneId: "w1:p2", bundleId: "g", label: "herdr › api › agents" },
       ],
     ],
   );

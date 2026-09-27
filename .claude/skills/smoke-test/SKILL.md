@@ -13,6 +13,10 @@ description: End-to-end smoke test of Hopper in the real Raycast app, in suites 
 | `history` | History list, Remove, Exclude/Include | 11 | ~50s |
 | `tabs` | Tabs: search (exact, typo, app name) and jump to a Safari tab / app | 3 | ~20s |
 
+Separate script for herdr, no demo apps: `python3 scripts/smoke_herdr.py` (~20s). Needs herdr running with a client in a terminal app. Stages a throwaway herdr workspace (`hopper-smoke-ws` + tab `hopper-smoke-tab`), then checks Search → herdr tab, Search → herdr workspace, and Agents → the first agent herdr reports (its tab and pane focused, the terminal frontmost); closes the workspace and restores herdr's focus and the frontmost app. Suggest it when `tabs/sources/herdr.ts`, `agents/sources/herdr.ts`, `agents/locate.ts`, `agents/load.ts`, or `platform/processes.ts` change.
+
+Claude app Code sessions: `python3 scripts/smoke_claude.py` (~20s, no demo apps). Needs the Claude app with three live Code sessions (yours + two to jump to). Jumps to one from Search (Claude tab source) and one from Agents (deep link); passes when Claude is frontmost and the app's own session file records the session as focused (`lastFocusedAt`). Reopens the session you were in afterwards. Suggest it when `tabs/sources/claude.ts`, `agents/sources/claude.ts`, `agents/locate.ts`, or `agents/load.ts` change.
+
 Plus ~25s setup (demo apps): `--only tabs` measured 48s total. Suites run in that order.
 
 ## When to run
