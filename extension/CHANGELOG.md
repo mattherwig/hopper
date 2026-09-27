@@ -6,6 +6,7 @@
 - Tabs in Current App command: the same for the frontmost app.
 - Tabs search tolerates typos ("caude" finds Claude) and lists an app's own tabs before tabs that mention its name.
 - Claude Code sessions are listed from Claude's session files (all projects, most recent first, sidebar hidden or not) and open via Claude's deep link.
+- Notion tabs: the front window's tabs (read from its tab bar), then its other windows.
 
 ## [Initial Version] - {PR_MERGE_DATE}
 
