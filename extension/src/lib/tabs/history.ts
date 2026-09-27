@@ -1,7 +1,7 @@
 // PURE: Recently Closed. Each full read of the tab list is compared with the previous one: entries that were
 // open and aren't anymore are remembered as closed, and can be opened again. Only tabs whose source can reopen
 // them cleanly (a URL, a file) are tracked; see TabSource.reopenTarget. Private browsing never gets here: sources
-// leave it out of the list (ADR-017).
+// leave it out of the list (ADR-018).
 
 import type { App, Platform, ReopenTarget, Tab, TabKind } from "./model";
 import { sourceById } from "./registry";

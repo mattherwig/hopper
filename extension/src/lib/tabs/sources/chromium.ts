@@ -1,5 +1,5 @@
 // Chromium browsers share Chrome's AppleScript dictionary. Tab ids are stable until the tab closes. Incognito
-// windows are skipped entirely: never listed, cached, or jumped to (ADR-017).
+// windows are skipped entirely: never listed, cached, or jumped to (ADR-018).
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";
 import { webReopenTarget } from "../reopen";

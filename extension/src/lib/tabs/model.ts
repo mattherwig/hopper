@@ -25,6 +25,8 @@ export interface Tab<Ref = unknown> {
   title: string;
   /** URL, working directory, or status. */
   detail?: string;
+  /** `detail` before shortening (e.g. a Notion page's full path): shown on hover and searched. */
+  detailFull?: string;
   url?: string;
   /** Selected tab of its window, or the open session. */
   active: boolean;
@@ -80,8 +82,6 @@ export interface Platform {
   openSidebarRow(bundleId: string, query: SidebarQuery, name: string): Promise<boolean>;
   /** Description or title of the first element whose description or title ends with `suffix`, minus the suffix. */
   labelWithSuffix(bundleId: string, suffix: string): Promise<string | undefined>;
-  /** Title and URL of the first web view in the app's windows showing an http(s) page. */
-  webPage(bundleId: string): Promise<WebPage | undefined>;
   /** JSON value a source saved under `key` (namespaced per source by the caller), or `fallback`. */
   loadJson<T>(key: string, fallback: T): Promise<T>;
   saveJson(key: string, value: unknown): Promise<void>;
@@ -91,6 +91,10 @@ export interface Platform {
   readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string }[]>;
   /** Open a URL or file path with `appPath` (an .app path), or with its registered app if omitted. */
   openUrl(url: string, appPath?: string): Promise<void>;
+  /** Title and URL of each web page open in the app, through Accessibility (Notion: one per tab). */
+  webPages(bundleId: string): Promise<WebPage[]>;
+  /** Rows of a read-only query on an SQLite file, e.g. an app's local cache. Rejects if the file is missing. */
+  querySqlite(path: string, sql: string): Promise<Record<string, unknown>[]>;
 }
 
 export interface AppWindows {

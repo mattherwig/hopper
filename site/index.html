@@ -215,7 +215,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <p>One search across the tabs, windows, and sessions of every running app.</p>
           <div class="shot"><img src="tabs.png" alt="Tabs command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Tabs</b><kbd>⌃⌘</kbd><span>Search browser tabs, terminal tabs, Claude and Muse sessions, and any app's windows, then jump straight to one.</span></li>
+            <li><b>Tabs</b><kbd>⌃⌘</kbd><span>Search browser tabs, terminal tabs, Claude and Muse sessions, Notion tabs, and any app's windows, then jump straight to one.</span></li>
             <li><b>Tabs in Current App</b><span>The same, for just the app you're in.</span></li>
           </ul>
         </article>
@@ -244,7 +244,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
             <li><strong>Search forgives typos</strong> ("caude" finds Claude) and matches app names first: an app's own tabs before tabs that mention it.</li>
             <li><strong>Picking an entry selects it</strong> in its app and brings the app to the front.</li>
             <li><strong>Copy URL</strong> and <strong>Copy Title</strong> are in the action panel.</li>
-            <li><strong>Recently Closed</strong> reopens browser tabs and documents closed since Tabs last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
+            <li><strong>Recently Closed</strong> reopens browser tabs, Notion pages, and documents closed since Tabs last looked (a week, up to 100). Never terminals, chats, or private windows.</li>
             <li><strong>Apps Jumper can't read show under Unavailable,</strong> with a shortcut to the settings pane that fixes it.</li>
           </ul>
         </div>
@@ -264,10 +264,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <tr><td>cmux</td><td>Workspaces</td></tr>
           <tr><td>Claude</td><td>Code sessions, plus Chat and Cowork conversations, even with the sidebar hidden</td></tr>
           <tr><td>Muse</td><td>Main chat and side chats while the side chats panel is open</td></tr>
+          <tr><td>Notion</td><td>Tabs of the front window with each page's parent pages, then its other windows</td></tr>
           <tr><td>Any other app</td><td>Windows, and tabs if the window has a native tab bar</td></tr>
         </tbody>
       </table>
-      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar, so an app update can change what Jumper finds; if the sidebar isn't found, the app's windows are listed instead.</p>
+      <p class="fine">Claude chats and Muse are read from the app's on-screen sidebar and Notion from its tab bar, so an app update can change what Jumper finds; if nothing is found, the app's windows are listed instead.</p>
     </div>
   </section>
 

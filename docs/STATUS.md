@@ -2,14 +2,15 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
-## 2026-09-26 — Claude conversations by deep link; private windows excluded (ADR-016, ADR-017, branch `tabs/muse-reveal-claude-links`)
+## 2026-09-26 — Claude conversations by deep link; private windows excluded (ADR-017, ADR-018, branch `tabs/muse-reveal-claude-links`)
 
 - Muse 4.1 hides its Side chats list, so Tabs lists Muse's window unless the panel is open. A reveal (press the button, read, press again) was built, verified live, then removed at the owner's call: too hacky. Owner rule: UI-changing workarounds need a yes first.
 - Claude: page URL (`webPage` Swift call, ~3ms) teaches title → `chat/<uuid>` / `cowork/<cse_id>`; those open by `claude://claude.ai/<path>` (tested live), and stay listed with the sidebar hidden (20 most recent). Archived Code sessions' deep link lands on the Code home screen: still skipped.
 - Reopen capabilities for all sources researched and tested live: #21 (Recently Closed). Limits and stress test: #22. New app issues: Messages #15, Codex #16, Cursor #17, Notes #18, Notion #19.
-- Incognito/private windows left out of Tabs entirely (ADR-017): Chromium by `mode`, Safari by AX title matched to AppleScript windows (fails closed; Safari now needs Accessibility), fallback by title. Chrome script verified live (25 tabs, 0 incognito).
+- Incognito/private windows left out of Tabs entirely (ADR-018): Chromium by `mode`, Safari by AX title matched to AppleScript windows (fails closed; Safari now needs Accessibility), fallback by title. Chrome script verified live (25 tabs, 0 incognito).
 - Muse reveal removed (owner: too hacky); Muse lists its window unless the Side chats panel is open.
-- Recently Closed (ADR-018, #21 v1): browser tabs by URL and documents by file path, from consecutive reads. Swift `readWindows` now returns each window's AXDocument (verified live: TextEdit file; Terminal/Ghostty folders, skipped).
+- Recently Closed (ADR-019, #21 v1): browser tabs by URL and documents by file path, from consecutive reads. Swift `readWindows` now returns each window's AXDocument (verified live: TextEdit file; Terminal/Ghostty folders, skipped).
+- Merged main (Notion source): Claude now reads its page through Notion's shared `webPages` call; my ADRs renumbered 017–019. Notion tabs select and reopen via `notion://…?deepLinkOpenNewTab=true` (ADR-020; tested live: switches to the existing tab, exact URL required).
 - Not yet run in Raycast (dev build) or through the smoke test.
 
 ## 2026-09-26 — Tabs search: typo-tolerant, app first (ADR-015, branch `feature/tab-search-ranking`)
@@ -19,6 +20,14 @@ _Narrative snapshot. Update at the end of every session that changes state. Acti
 ## 2026-09-26 — Landing page: tab level + new tagline (branch `site/tabs-branding`)
 
 - `site/index.html` rebuilt around "Jump to any app, tab, or session": demo GIF up top, Apps and Tabs as equal columns (Store screenshots jumper-1 / jumper-5, symlinked), how it works for both, supported-apps table, permissions in Setup.
+
+## 2026-09-26 — Notion tabs (#19)
+
+- Notion source (`sources/notion.ts`) reuses the sidebar reader on Notion's "Tab Bar" web view: tabs are AXButtons titled with the page name; AXPress switches tabs (verified live, Notion 7.35.1). No AXSelected on tabs, so the active tab is the one matching the window title.
+- Only the front window's tab bar is read; other Notion windows are listed as windows. Tabs with the same page title appear once.
+- `notion://www.notion.so/<id>` deep links exist but navigate the *current* tab, so they aren't used for switching. `state.json` holds tabs only as saved at quit, not live.
+- Parent pages (ADR-016): each tab's web view URL gives its page id; one `sqlite3 -readonly` query on `notion.db` walks parents. Shown nearest-first within 36 chars (`… / Pinterest / Jordan Convo 2`), full path on hover and searched. Verified against the live cache (23ms for 6 pages); pages whose database isn't cached get no path.
+- Not done: live run through Raycast (smoke test not run).
 
 ## 2026-09-26 — Claude Code sessions without the sidebar (ADR-014)
 

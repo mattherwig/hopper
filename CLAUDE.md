@@ -55,13 +55,13 @@ extension/                                    the Raycast extension; everything 
   src/lib/tabs/                               tab level (Tabs, Tabs in Current App) — PURE, sources get OS access via a Platform
     model.ts                                  Tab, TabSource, Platform types; how to add an app or an action
     registry.ts                               which source handles which app (windows is the fallback) — add new apps here
-    history.ts, reopen.ts                     Recently Closed: diff of consecutive reads, reopen targets (URL / file) per source (ADR-018)
+    history.ts, reopen.ts                     Recently Closed: diff of consecutive reads, reopen targets (URL / file) per source (ADR-019)
     search.ts                                 search bar filter + ranking (typos, app-name first; ADR-015)
     load.ts                                   read all apps' tabs in parallel, order them, route selection to the source
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
     sources/                                  one file per app family: chromium, safari, cmux, iterm, terminal (AppleScript);
-                                              windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar, only while it's shown; ADR-016);
-                                              claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-016)
+                                              windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar, only while it's shown; ADR-017), notion (tab bar + deepLinkOpenNewTab links; ADR-016, ADR-020);
+                                              claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
   src/lib/platform/                           macOS / Raycast glue shared by every level
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
     macos.ts                                  getRecentApps() (calls Swift) + activateApp() via Raycast open()
@@ -84,7 +84,7 @@ site/index.html                               GitHub Pages landing page (deploye
 ## Invariants (don't break)
 
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`) are permanent once published: users' hotkeys bind to them.
-- Incognito / private browser windows never reach the tab list (ADR-017): filter them in the source, not the UI.
+- Incognito / private browser windows never reach the tab list (ADR-018): filter them in the source, not the UI.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
 - Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`) free of Raycast/Node imports so `npm test` works without Raycast. Tab sources reach the OS only through `Platform` (ADR-013).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.

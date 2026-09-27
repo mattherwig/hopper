@@ -1,5 +1,5 @@
 // Safari tabs have no id: remember window id + position, and the URL to catch a tab that moved.
-// Private windows are skipped entirely (ADR-017). AppleScript can't tell them apart; only their Accessibility
+// Private windows are skipped entirely (ADR-018). AppleScript can't tell them apart; only their Accessibility
 // title can ("<page>, Private Browsing"), so the two window lists are matched by title in front-to-back order.
 
 import { isTrue, listScript, parseRecords, quote, runSelect } from "../applescript";

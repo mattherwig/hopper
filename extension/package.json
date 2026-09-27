@@ -79,7 +79,7 @@
       "name": "tabs",
       "title": "Tabs",
       "subtitle": "Jumper",
-      "description": "Search tabs, windows, and sessions across running apps (browsers, terminals, Claude, Muse, and any app's windows) and jump to one.",
+      "description": "Search tabs, windows, and sessions across running apps (browsers, terminals, Claude, Muse, Notion, and any app's windows) and jump to one.",
       "mode": "view",
       "keywords": [
         "tab switcher",

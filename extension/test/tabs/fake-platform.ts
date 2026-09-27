@@ -18,7 +18,6 @@ export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { sc
     sidebarRows: overrides.sidebarRows ?? unexpected("sidebarRows"),
     openSidebarRow: overrides.openSidebarRow ?? unexpected("openSidebarRow"),
     labelWithSuffix: overrides.labelWithSuffix ?? (async () => undefined),
-    webPage: overrides.webPage ?? (async () => undefined),
     loadJson:
       overrides.loadJson ??
       (async <T>(key: string, fallback: T): Promise<T> => (store.has(key) ? (store.get(key) as T) : fallback)),
@@ -30,6 +29,8 @@ export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { sc
     homeDir: overrides.homeDir ?? (() => "/Users/me"),
     readFiles: overrides.readFiles ?? (async () => []),
     openUrl: overrides.openUrl ?? unexpected("openUrl"),
+    webPages: overrides.webPages ?? (async () => []),
+    querySqlite: overrides.querySqlite ?? (async () => []),
   };
 }
 

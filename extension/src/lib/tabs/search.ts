@@ -11,6 +11,7 @@ const KEYS = [
   { name: "app.name", weight: 5 },
   { name: "title", weight: 2 },
   { name: "detail", weight: 1 },
+  { name: "detailFull", weight: 1 },
   { name: "url", weight: 1 },
   { name: "kind", weight: 0.5 },
 ];

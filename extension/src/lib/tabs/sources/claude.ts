@@ -1,7 +1,7 @@
 // Claude desktop. Code sessions come from Claude's own session files and open with the claude:// deep link
 // that Claude's Dock menu and Spotlight entries use, so they're listed whether or not the sidebar is visible
 // (ADR-014). Chat and Cowork conversations aren't stored locally: they're read from the sidebar, and each one's
-// id is learned from the page URL while it's open, so it can then open by deep link, sidebar or not (ADR-016).
+// id is learned from the page URL while it's open, so it can then open by deep link, sidebar or not (ADR-017).
 
 import { tildify } from "../applescript";
 import type { App, Platform, Tab, TabSource, WebPage } from "../model";
@@ -114,13 +114,13 @@ export const claude: TabSource<Ref> = {
   id: "claude",
   bundleIds: [BUNDLE_ID],
   list: async (app, platform) => {
-    const [sessions, sidebar, page, stored] = await Promise.all([
+    const [sessions, sidebar, pages, stored] = await Promise.all([
       readSessions(platform),
       readSidebar(app, SIDEBAR, platform),
-      platform.webPage(app.bundleId),
+      platform.webPages(app.bundleId),
       platform.loadJson<KnownConversation[]>(KNOWN_KEY, []),
     ]);
-    const current = openConversation(page);
+    const current = pages.map(openConversation).find((c) => c !== undefined);
     const known = current ? remember(stored, current, Date.now()) : stored;
     if (current) await platform.saveJson(KNOWN_KEY, known);
     const active =

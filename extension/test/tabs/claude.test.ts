@@ -131,7 +131,7 @@ test("a conversation's id is learned while open; its sidebar row then opens by d
   let open = page("Trip ideas", CHAT);
   const platform = fakePlatform({
     sidebarRows: async () => [row("Idle Trip ideas", "Trip ideas"), row("Idle Other", "Other")],
-    webPage: async () => open,
+    webPages: async () => [open],
     openUrl: async (url) => {
       urls.push(url);
     },
@@ -159,7 +159,7 @@ test("sidebar showing no conversations: known ones are listed, the open one acti
         { title: "Trip ideas", path: CHAT, seenAt: 2 },
         { title: "tabs", path: "chat/x", seenAt: 1 },
       ] as T,
-    webPage: async () => page("Trip ideas", CHAT),
+    webPages: async () => [page("Trip ideas", CHAT)],
   });
   const tabs = await claude.list(claudeApp, platform);
   assert.deepEqual(

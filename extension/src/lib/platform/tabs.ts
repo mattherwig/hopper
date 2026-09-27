@@ -1,8 +1,10 @@
 import { open } from "@raycast/api";
 import { runAppleScript } from "@raycast/utils";
+import { execFile } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 import {
   accessibilityTrusted,
   appWindows,
@@ -10,13 +12,16 @@ import {
   labelWithSuffix,
   openSidebar,
   sidebarRows,
-  webPage,
+  webPages,
 } from "swift:../../../swift";
 import type { AppWindows, Platform, SidebarRow } from "../tabs/model";
 import { readJson, writeJson } from "./storage";
 
 /** An app that stops responding must not hold up the whole list. */
 const APPLESCRIPT_TIMEOUT = 4000;
+const SQLITE_TIMEOUT = 2000;
+
+const execFileAsync = promisify(execFile);
 
 /**
  * The tab level's Platform on macOS: AppleScript through Raycast, Accessibility through the Swift helper
@@ -31,7 +36,6 @@ export const macosTabPlatform: Platform = {
   openSidebarRow: (bundleId, query, name) =>
     openSidebar(bundleId, query.container, query.rowRole, name, query.namePattern ?? "", query.keyboard ?? false),
   labelWithSuffix: async (bundleId, suffix) => (await labelWithSuffix(bundleId, suffix)) ?? undefined,
-  webPage: async (bundleId) => (await webPage(bundleId)) ?? undefined,
   loadJson: (key, fallback) => readJson(`tabs:${key}`, fallback),
   saveJson: (key, value) => writeJson(`tabs:${key}`, value),
   homeDir: () => homedir(),
@@ -43,6 +47,14 @@ export const macosTabPlatform: Platform = {
     return files.filter((f) => f.text !== "");
   },
   openUrl: (url, appPath) => open(url, appPath),
+  webPages: (bundleId) => webPages(bundleId),
+  querySqlite: async (path, sql) => {
+    const { stdout } = await execFileAsync("/usr/bin/sqlite3", ["-readonly", "-json", path, sql], {
+      timeout: SQLITE_TIMEOUT,
+    });
+    // sqlite3 prints nothing, not "[]", when there are no rows.
+    return stdout.trim() ? JSON.parse(stdout) : [];
+  },
 };
 
 async function findFiles(dir: string, name: RegExp, depth: number): Promise<string[]> {

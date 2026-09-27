@@ -1,5 +1,5 @@
 // Muse (Meta): "Main chat" and the side chats in its "Side chats" navigation, while that panel is open. Muse 4.1
-// hides it by default; opening it for the user was judged too hacky (ADR-016), so then Muse's window is listed.
+// hides it by default; opening it for the user was judged too hacky (ADR-017), so then Muse's window is listed.
 // The "<open chat> Open chat and side chats" button names the open chat. Older versions add "<date> More thread
 // actions" to a hovered row's title. Rows ignore AXPress, so they're opened by keyboard.
 

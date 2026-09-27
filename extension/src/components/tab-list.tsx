@@ -114,7 +114,7 @@ function TabItem({ tab }: { tab: Tab }) {
       title={tab.title}
       accessories={[
         ...(tab.active ? [{ tag: "Active" }] : []),
-        { text: shortDetail(tab) },
+        { text: shortDetail(tab), tooltip: tab.detailFull },
         { icon: KIND_ICON[tab.kind], tooltip: tab.kind },
       ]}
       actions={

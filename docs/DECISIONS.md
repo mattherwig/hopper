@@ -106,7 +106,7 @@ Mechanics learned in the prototype:
 
 **Decision.** List Code sessions from Claude's per-session files, `~/Library/Application Support/Claude/claude-code-sessions/<account>/<org>/local_<uuid>.json` (`sessionId`, `title`, `cwd`, `isArchived`, `lastFocusedAt`), skipping archived ones, most recently focused first. Open one with the deep link through `Platform.openUrl`. Keep reading the sidebar for Chat-mode conversations (not stored locally), adding rows the files don't have. The open session is still named by the "<name>, rename session" label, which stays visible with the sidebar hidden. Fall back to windows if both are empty.
 
-**Consequences.** Code sessions show across all projects without Accessibility and regardless of sidebar state (~16ms for 11 files). The deep link is a public entry point (Claude's own Dock menu and Spotlight use it); the file layout is undocumented and may change, in which case the source degrades to the sidebar. Muse has no equivalent (no Spotlight items, no thread deep link, no local chat list; `hatch://` routes tested and ignored), tracked in #13. Chat and Cowork conversations: ADR-016.
+**Consequences.** Code sessions show across all projects without Accessibility and regardless of sidebar state (~16ms for 11 files). The deep link is a public entry point (Claude's own Dock menu and Spotlight use it); the file layout is undocumented and may change, in which case the source degrades to the sidebar. Muse has no equivalent (no Spotlight items, no thread deep link, no local chat list; `hatch://` routes tested and ignored), tracked in #13. Chat and Cowork conversations: ADR-017.
 
 ## ADR-015: Own search ranking in Tabs, app before mentions, typo-tolerant (2026-09-26)
 
@@ -116,7 +116,15 @@ Mechanics learned in the prototype:
 
 **Consequences.** Typos work, including swapped letters ("caude", "cluade"). Fuse is loose at this threshold: weak matches ("pull gitlab" finding a github.com tab) show at the bottom; below 0.35 swapped letters stop matching. Abbreviations don't ("gh" doesn't find "github"), so the demo GIF searches "github pages". No Raycast highlighting of matched text. Fuse 7.5 adds ~400KB unpacked, pure JS.
 
-## ADR-016: Claude conversations open by learned id; Muse's hidden side chats are not revealed (2026-09-26)
+## ADR-016: Notion tabs show their page's parents, from Notion's local cache (2026-09-26)
+
+**Context.** Notion pages nest, and tab titles alone are ambiguous ("New page", "Notes"). The tab bar (ADR-013 sidebar reader) gives titles only. Notion's own breadcrumb above a page is already elided ("Tech Interviewing / ... / Jordan Convo 2") and exists only per loaded page. Each open tab keeps its own web view (hidden ones moved off-screen) whose AXURL ends in the page id. Notion's local SQLite cache `~/Library/Application Support/Notion/notion.db` has `block.parent_id` / `parent_table` for every cached page, through databases (`collection`) up to the workspace.
+
+**Decision.** The Swift helper returns every web view's title and URL (`webPages`, ~40ms, in parallel with the tab bar read). Tabs are matched to pages by title, the page id taken from the URL, and one read-only `sqlite3 -readonly -json` query walks all tabs' ancestors (`Platform.querySqlite`, ~25ms). Only pages and databases count as parents; list/toggle blocks and the workspace are skipped, like Notion's breadcrumb. The detail shows the nearest parent always, then farther ones while the text stays within 36 characters, else `… / `; the full path is the hover tooltip (`Tab.detailFull`) and is searched.
+
+**Consequences.** No extra permission (the cache is the user's own file; `/usr/bin/sqlite3` ships with macOS). The cache schema is undocumented: any failure (file missing, locked, schema changed, page or database not cached) just leaves the detail empty. Tabs with the same title share the first match's path. Unloaded tabs (Notion unloads after ~10h idle) may have no web view and so no path.
+
+## ADR-017: Claude conversations open by learned id; Muse's hidden side chats are not revealed (2026-09-26)
 
 **Context.** Claude's Chat and Cowork conversations were only reachable while its sidebar showed them, but Claude handles `claude://claude.ai/<path>` like a claude.ai link: `chat/<uuid>` and `cowork/<cse_id>` open the conversation (tested live). Ids aren't stored locally and sidebar rows don't carry them; the open conversation's page URL does. Claude's Recents page lists ids too, but reading it means navigating the user's window. Muse 4.1 hides its "Side chats" list by default behind a "<open chat> Open chat and side chats" button, so the sidebar source (ADR-013) usually finds nothing and lists Muse's window. Muse has no deep link, App Intents, scripting, or local chat data (#13). Pressing that button through Accessibility (read, then press again) was built and worked in the background, but it flashes the panel and depends on English UI text.
 
@@ -124,7 +132,7 @@ Mechanics learned in the prototype:
 
 **Consequences.** Claude conversations open by link only once seen open in Claude; same-named conversations share an entry. Most Muse users see only Muse's window in Tabs until Muse offers a deep link or similar (#13). Limits (list lengths, virtualization, cache eviction) are tracked in #22; reopening closed items in #21.
 
-## ADR-017: Incognito and private windows are never listed (2026-09-26)
+## ADR-018: Incognito and private windows are never listed (2026-09-26)
 
 **Context.** Tabs listed every browser window, including incognito and private ones, and `useCachedPromise` persists the list to Raycast's on-disk cache, so private page titles and URLs were written to disk. The planned Recently Closed history (#21) would persist them longer. Owner decision: no listing, jumping, or history for private browsing at all.
 
@@ -132,10 +140,18 @@ Mechanics learned in the prototype:
 
 **Consequences.** Private tabs can't be jumped to from Tabs. Safari now needs Accessibility to list any tabs, and its private detection relies on the English suffix: in other languages private windows would show (tracked in #22). App-level Back/Forward still activate a browser whose front window is private; they switch apps, not windows.
 
-## ADR-018: Recently Closed from consecutive reads; URLs and files only (2026-09-26)
+## ADR-019: Recently Closed from consecutive reads; URLs and files only (2026-09-26)
 
-**Context.** Owner wants closed tabs reopenable from Tabs (#21), with a rule: anything that needs UI automation (pressing buttons, opening panels) waits for the owner's OK (ADR-016). Reopen methods were tested live per app: browsers by URL, documents by the window's AXDocument path, Claude by deep link, Muse only by UI automation, terminals only by recreating a shell. Chrome and Safari's own History ▸ Recently Closed menus restore a tab with its back history, but only by pressing menu items.
+**Context.** Owner wants closed tabs reopenable from Tabs (#21), with a rule: anything that needs UI automation (pressing buttons, opening panels) waits for the owner's OK (ADR-017). Reopen methods were tested live per app: browsers by URL, documents by the window's AXDocument path, Claude by deep link, Muse only by UI automation, terminals only by recreating a shell. Chrome and Safari's own History ▸ Recently Closed menus restore a tab with its back history, but only by pressing menu items.
 
-**Decision.** `history.ts` (PURE) compares each read with the previous one, stored in LocalStorage (`tabs:recently-closed`: last open entries + closed list). An entry that was open in an app the read covers and isn't now becomes closed; one that's open again leaves the list. Covered: every app for Tabs (so quitting an app closes its tabs), the frontmost app for Tabs in Current App, never an app that failed to read, nothing without Accessibility (sources then see nothing, which must not look like everything closed). A source opts in with `reopenTarget(tab)`: Chromium and Safari return the http(s) URL, the windows fallback the window's file (AXDocument `file://`, not folders). Reopen is `open(target, app.path)`. Newest first, one week, max 100. Not tracked: Claude (sessions don't close; archived ones don't reopen; conversations are already listed from learned ids), Muse and terminals (no clean reopen), private windows (never listed, ADR-017).
+**Decision.** `history.ts` (PURE) compares each read with the previous one, stored in LocalStorage (`tabs:recently-closed`: last open entries + closed list). An entry that was open in an app the read covers and isn't now becomes closed; one that's open again leaves the list. Covered: every app for Tabs (so quitting an app closes its tabs), the frontmost app for Tabs in Current App, never an app that failed to read, nothing without Accessibility (sources then see nothing, which must not look like everything closed). A source opts in with `reopenTarget(tab)`: Chromium and Safari return the http(s) URL, the windows fallback the window's file (AXDocument `file://`, not folders). Reopen is `open(target, app.path)`. Newest first, one week, max 100. Not tracked: Claude (sessions don't close; archived ones don't reopen; conversations are already listed from learned ids), Muse and terminals (no clean reopen), private windows (never listed, ADR-018).
 
 **Consequences.** Only what Jumper saw: tabs opened and closed between two Tabs uses are missed, and a tab that moved to another window with a new URL looks closed. Reopened pages lose their back history. The browser menus that keep it are an open question for the owner (UI automation). Limits: #22.
+
+## ADR-020: Notion tabs open by deep link with `deepLinkOpenNewTab` (2026-09-26)
+
+**Context.** The Notion source (ADR-016) selected tabs by pressing them in the front window's tab bar, and noted that `notion://` links replace the current tab. Notion's app code (`handleProtocolUrl`) has a `deepLinkOpenNewTab=true` query parameter: it switches to the tab showing an equivalent URL in any window (`hasEquivalentUrl`: same last path segment and `p` peek param) or opens the page in a new tab. Tested live: the tab's exact URL (`/p/Q-A-<id>`) switched tabs with none added; a bare id (`/p/<id>`) opened duplicates.
+
+**Decision.** Keep each tab-bar tab's page URL (from `webPages`, matched by title) in its ref, and select it with `notion://<host><path>?<query>&deepLinkOpenNewTab=true`; tabs without a URL still use the tab bar. The same link is the tab's Recently Closed target (ADR-019). `Tab.url` stays unset so the detail keeps showing parent pages.
+
+**Consequences.** Selecting works through Notion's own routing, including tabs in other windows. Closed Notion pages reopen in a new tab. Same-titled tabs share the first match's URL. The parameter is undocumented; if Notion drops it the link opens the page in the current tab, not a failure.
