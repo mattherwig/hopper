@@ -15,7 +15,7 @@ let out = NSBitmapImageRep(
   samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
 NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: out)
 
-// Background: diagonal purple gradient to match the extension icon, plus a soft glow behind the window.
+// Background: diagonal purple gradient, plus a soft glow behind the window.
 let rect = NSRect(origin: .zero, size: canvas)
 NSGradient(
   colors: [

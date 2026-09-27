@@ -2,6 +2,13 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Raycast mark on white (in progress)
+
+- Palette in use: magenta `#FD019A`, blue `#125CEF`, white. Navy stays inside the rabbit drawing.
+- `extension/assets/extension-icon.png` is the rabbit on a white squircle (from `hopper.heic`).
+- Store frames at 2000×1250 on the purple gradient: Search, Agents, History, Recently Closed, commands. The white edge left by lifting those windows off a white plate is removed. A fresh capture (`screencapture -o`, then `compose.swift`) does not have that edge. Raycast's padding check passes.
+- Next: demo GIF and the site.
+
 ## 2026-09-27 — Agent level, Search, herdr, Ghostty (ADR-022–024, branch `agents/levels`)
 
 - Levels: App → Tab → Pane (new) as places; Agent as an overlay (status + host, located into places); Project (git repository) as a grouping. Research per app family by subagents; what fits and what didn't is in ADR-022.

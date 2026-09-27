@@ -140,12 +140,23 @@ def wait_for_window(process: str, timeout: float = 10) -> None:
 class DemoApps:
     """Brings up DEMO_APPS in order and undoes it afterwards (quits only what it launched)."""
 
-    def __init__(self, frames: dict[str, tuple[int, int, int, int]] | None = None, before_staged=None):
+    def __init__(
+        self,
+        frames: dict[str, tuple[int, int, int, int]] | None = None,
+        before_staged=None,
+        safari_tabs: list[str] | None = None,
+        include_ghostty: bool = True,
+        note_name: str = "Hopper.txt",
+        preview_name: str | None = None,
+    ):
         self.frames = frames or {}  # staged app -> window rect (x, y, w, h), for the GIF
         self.before_staged = before_staged  # called once before the first staged app comes up (the backdrop)
+        self.safari_tabs = safari_tabs or SAFARI_TABS
+        self.include_ghostty = include_ghostty
+        self.preview_name = preview_name  # window title for the Preview shot; copies the extension icon
         self.launched: list[str] = []
         self.safari_window: str | None = None
-        self.note = TMP / "Hopper.txt"
+        self.note = TMP / note_name
         self.previous_app = frontmost()
 
     def __enter__(self):
@@ -156,6 +167,8 @@ class DemoApps:
                 self.before_staged()
                 self.before_staged = None
             if name == "Ghostty":
+                if not self.include_ghostty:
+                    continue
                 if not running(name):
                     print("note: Ghostty not running, leaving it out of the demo", file=sys.stderr)
                     continue
@@ -165,12 +178,17 @@ class DemoApps:
                     self.launched.append(name)
                 if name == "TextEdit":
                     subprocess.run(["open", "-a", "TextEdit", str(self.note)], check=True)
+                elif name == "Preview" and self.preview_name:
+                    preview = TMP / self.preview_name
+                    shutil.copy(EXT / "assets/extension-icon.png", preview)
+                    subprocess.run(["open", "-a", "Preview", str(preview)], check=True)
                 elif name == "Safari":
+                    tabs = self.safari_tabs
                     self.safari_window = osa(
                         'tell application "Safari"\n'
-                        f'  make new document with properties {{URL:"{SAFARI_TABS[0]}"}}\n'
+                        f'  make new document with properties {{URL:"{tabs[0]}"}}\n'
                         "  set w to front window\n"
-                        + "".join(f'  tell w to make new tab at end of tabs with properties {{URL:"{u}"}}\n' for u in SAFARI_TABS[1:])
+                        + "".join(f'  tell w to make new tab at end of tabs with properties {{URL:"{u}"}}\n' for u in tabs[1:])
                         + "  set current tab of w to tab 1 of w\n"
                         "  return id of w\n"
                         "end tell"
@@ -225,47 +243,76 @@ def capture(path: Path) -> None:
     print(f"wrote {path.relative_to(ROOT)}")
 
 
+def replace_query(text: str) -> None:
+    """Replaces the search field's text. The field is focused when a view command opens."""
+    keys('keystroke "a" using command down')
+    time.sleep(0.15)
+    keys(f'keystroke "{text}"')
+
+
+def capture_search(out: Path) -> None:
+    """Search with an empty query: whatever is already open. Don't launch apps or type."""
+    close_raycast()
+    deeplink("tabs")
+    time.sleep(4)  # the list first shows its cached copy, then refreshes
+    if raycast_window() is None:
+        raise RuntimeError("Search did not open")
+    capture(out / "hopper-1.png")
+    close_raycast()
+
+
 def screenshots() -> None:
+    """Five Store frames, in carousel order. See the store-screenshots skill.
+
+    Search is the machine as it is, with an empty query. Recently Closed uses one staged
+    public page. History uses built-in apps. Agents is whatever is actually running:
+    review that frame before keeping it.
+    """
     out = EXT / "metadata"
     out.mkdir(exist_ok=True)
-    for old in out.glob("hopper-*.png"):
-        old.unlink()
-    close_raycast()
-    with DemoApps():
-        # 1. History list
+    capture_search(out)
+    # The macOS page is opened so Search can record it, then closed so it lands in Recently Closed.
+    open_tabs = [
+        "https://www.raycast.com/store",
+        "https://github.com/raycast/extensions",
+        "https://developers.raycast.com/",
+        "https://www.apple.com/os/macos/",
+    ]
+    with DemoApps(safari_tabs=open_tabs, include_ghostty=False, note_name="Raycast.txt", preview_name="Raycast.png") as demo:
+        deeplink("tabs")
+        time.sleep(4.5)  # record the open list, including the page we are about to close
+        close_raycast()
+        osa(
+            'tell application "Safari"\n'
+            f"  set w to window id {demo.safari_window}\n"
+            '  close (every tab of w whose URL contains "apple.com/os/macos")\n'
+            "end tell"
+        )
+        time.sleep(0.6)
+
+        # 4. Recently Closed: Search, query matches only the tab we just closed.
+        deeplink("tabs")
+        time.sleep(4)
+        replace_query("macos")
+        time.sleep(1.4)
+        capture(out / "hopper-4.png")
+        close_raycast()
+
+        # 2. Agents. Live sessions; review for personal titles before this ships.
+        deeplink("agents")
+        time.sleep(4)
+        capture(out / "hopper-2.png")
+        close_raycast()
+
+        # 3. History: built-in apps, most recent first.
         deeplink("history")
         time.sleep(2)
-        capture(out / "hopper-1.png")
-
-        # 2. Action panel
-        keys('keystroke "k" using command down')
-        time.sleep(1)
-        capture(out / "hopper-2.png")
-        escape()
-
-        # 3. Excluded section: exclude Chess, filter to it, show Include in History, then undo.
-        keys('keystroke "Chess"')
-        time.sleep(0.8)
-        keys('keystroke "x" using {control down, shift down}')
-        time.sleep(3)  # let the success toast fade
-        keys('keystroke "k" using command down')
-        time.sleep(1)
         capture(out / "hopper-3.png")
-        keys("key code 36")  # Return = Include in History
-        time.sleep(1.5)
         close_raycast()
 
-        # 5. Tabs, from the staged Safari window: its tabs on top, then the other demo apps' windows.
-        subprocess.run(["open", "-a", "Safari"], check=True)
-        time.sleep(1)
-        deeplink("tabs")
-        time.sleep(3.5)  # the list first shows the cached copy, then refreshes
-        capture(out / "hopper-5.png")
-        close_raycast()
-
-    # 4. Root search for "hopper": every command, the second row selected to show its hotkey (Raycast ranks by use). Raycast ignores a synthetic
-    # ⌘Space, but Escape from a command's view pops to root search. Matching files from the
-    # user's disk show below the commands; review them before committing.
+    # 5. Root search for "hopper": every command, the second row selected to show its hotkey (Raycast ranks by use).
+    # Raycast ignores a synthetic ⌘Space, but Escape from a command's view pops to root search. Matching files from
+    # the user's disk show below the commands; review them before committing.
     deeplink("history")
     time.sleep(1.5)
     escape()
@@ -276,7 +323,7 @@ def screenshots() -> None:
     time.sleep(1.5)
     keys("key code 125")  # Raycast shows the hotkey of the selected row only
     time.sleep(0.6)
-    capture(out / "hopper-4.png")
+    capture(out / "hopper-5.png")
     close_raycast()
 
 
