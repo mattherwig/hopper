@@ -1,6 +1,7 @@
 // herdr (herdr.dev), a terminal multiplexer: workspace → tab → pane, inside whatever terminal runs a herdr client.
 // It isn't an app, so it's a *discovered* source (registry.ts): its tabs are listed under the terminal app running
-// herdr, found through the client process's parent chain. One `session.snapshot` request on herdr's local socket
+// herdr, found through the client process's parent chain; in terminals that report panes (iTerm, cmux, Terminal)
+// the client's tty also finds the terminal tab holding herdr, which is selected with it (Tab.within). One `session.snapshot` request on herdr's local socket
 // (one per named session) returns every workspace, tab, pane and agent; `tab.focus` / `pane.focus` switch herdr's
 // clients there. The agent level reads the same snapshot for herdr's agents (agents/sources/herdr.ts; ADR-022).
 
@@ -84,7 +85,7 @@ export function workspaceName(snapshot: Snapshot, workspaceId?: string): string 
 
 /** One entry per herdr tab, under the terminal app running herdr. Unnamed tabs (herdr labels them "1", "2"...) are
  * named by their workspace. */
-export function fromSnapshot(app: App, socket: string, snapshot: Snapshot): Tab<Ref>[] {
+export function fromSnapshot(app: App, socket: string, snapshot: Snapshot, hostTty?: string): Tab<Ref>[] {
   return (snapshot.tabs ?? []).flatMap((t): Tab<Ref>[] => {
     if (!t.tab_id) return [];
     const workspace = workspaceName(snapshot, t.workspace_id);
@@ -102,6 +103,7 @@ export function fromSnapshot(app: App, socket: string, snapshot: Snapshot): Tab<
         detailFull: cwd,
         active: t.tab_id === snapshot.focused_tab_id,
         ref: { socket, tabId: t.tab_id },
+        ...(hostTty ? { hostTty } : {}),
       },
     ];
   });
@@ -129,7 +131,7 @@ export const herdr: TabSource<Ref> = {
     const app = client && appOfProcess(client.pid, new Map(processes.map((p) => [p.pid, p])), apps);
     // No client attached in a terminal we know: nothing to bring forward, so nothing to jump to.
     if (!app) return [];
-    return snapshots.flatMap(({ socket, snapshot }) => fromSnapshot(app, socket, snapshot));
+    return snapshots.flatMap(({ socket, snapshot }) => fromSnapshot(app, socket, snapshot, client.tty));
   },
   select: (tab, platform) => focus(platform, tab.ref.socket, "tab.focus", { tab_id: tab.ref.tabId }),
 };

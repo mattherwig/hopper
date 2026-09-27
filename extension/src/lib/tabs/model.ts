@@ -37,6 +37,13 @@ export interface Tab<Ref = unknown> {
    * tab is one shell, set it.
    */
   panes?: Pane[];
+  /**
+   * For places inside another app's terminal (a herdr tab): the tty of the terminal they're shown in. loadTabs
+   * finds that terminal's tab (`within`), and selecting this place selects it too.
+   */
+  hostTty?: string;
+  /** The tab (and pane) of the host app showing this place; set by loadTabs from `hostTty`. */
+  within?: { tab: Tab; paneId: string };
 }
 
 export interface Pane {

@@ -54,7 +54,10 @@ test("discovered through the herdr client's terminal; selecting focuses the tab 
     tabs.filter((t) => t.source === "herdr").map((t) => t.title),
     ["agents", "Workspace 2"],
   );
-  await selectTab(tabs.find((t) => t.title === "Workspace 2")!, platform);
+  await selectTab(
+    tabs.find((t) => t.title === "Workspace 2")!,
+    platform,
+  );
   assert.equal(requests.at(-1), 'tab.focus {"tab_id":"w2:t1"}');
 });
 
@@ -66,4 +69,28 @@ test("herdr not running or no client in a known terminal: nothing listed", async
     },
   });
   assert.deepEqual(await herdr.discover!([ghostty], platform), []);
+});
+
+test("a herdr tab in iTerm also selects the iTerm split running herdr", async () => {
+  const iterm = { ...app("com.googlecode.iterm2", "iTerm"), pid: 60 };
+  const scripts: string[] = [];
+  const platform = fakePlatform({
+    listDir: async (dir) => (dir.endsWith(".config/herdr") ? ["herdr.sock"] : []),
+    socketRequest: async () => ({ id: "jumper", result: { snapshot } }),
+    processes: async () => [proc(61, 60, "ttys007", "login"), proc(62, 61, "ttys007", "herdr")],
+    runAppleScript: async (script) => {
+      scripts.push(script);
+      return script.includes("sessions of t\n") || script.includes("repeat with p in sessions")
+        ? `1\u001fS-1\u001fzsh\u001ftrue\u001fS-1=/dev/ttys006,S-2=/dev/ttys007,\u001e`
+        : "ok";
+    },
+  });
+  const { tabs } = await loadTabs([iterm], platform);
+  const place = tabs.find((t) => t.title === "agents")!;
+  assert.deepEqual(
+    [place.app.name, place.within?.tab.key, place.within?.paneId],
+    ["iTerm", "com.googlecode.iterm2:S-1", "S-2"],
+  );
+  await selectTab(place, platform);
+  assert.match(scripts.at(-1)!, /if \(id of s\) is "S-2" then/);
 });

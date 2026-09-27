@@ -44,7 +44,7 @@ export async function loadTabs(apps: App[], platform: Platform): Promise<LoadRes
   const [accessibility, ...results] = await Promise.all([platform.accessibilityTrusted(), ...reads]);
   return {
     tabs: orderTabs(
-      results.flat(),
+      placeWithinHosts(results.flat()),
       apps.map((a) => a.bundleId),
     ),
     failures,
@@ -61,6 +61,20 @@ export async function selectTab(tab: Tab, platform: Platform, paneId?: string): 
   if (!source) throw new Error(`Unknown tab source "${tab.source}"`);
   if (paneId !== undefined && source.selectPane) await source.selectPane(tab, paneId, platform);
   else await source.select(tab, platform);
+  // A place inside a terminal (herdr): also bring that terminal's tab and pane forward.
+  if (tab.within) await selectTab(tab.within.tab, platform, tab.within.paneId).catch(() => undefined);
+}
+
+/** Tabs with a `hostTty` get `within`: the tab of the same app with a pane on that tty. */
+export function placeWithinHosts(tabs: Tab[]): Tab[] {
+  return tabs.map((tab) => {
+    if (!tab.hostTty) return tab;
+    for (const host of tabs) {
+      const pane = host.app.bundleId === tab.app.bundleId && host.panes?.find((p) => p.tty === tab.hostTty);
+      if (pane) return { ...tab, within: { tab: host, paneId: pane.id } };
+    }
+    return tab;
+  });
 }
 
 /**
