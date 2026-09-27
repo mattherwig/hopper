@@ -20,6 +20,20 @@ Proxies used: Google autocomplete, Stack Exchange votes/views, HN points. (Googl
 - Existing names nearby: jump, quick-jump, spacejump, hop, retrace, recents, window-walker.
 - Mac-app precedent: "AppBeBack: CMD+Z for Apps", AltTab, Witch, Contexts, rcmd.
 
+## Keywords (2026-09-26, with the Tabs commands)
+
+How Raycast uses them ([manifest docs](https://developers.raycast.com/information/manifest)):
+- Extension `keywords` (max 12): **Store search only**. The Store also matches title and description, so a keyword is only worth a slot if it's a phrase *not* already there (tabs, windows, sessions, apps, history, jump, browser are covered by the description).
+- Command `keywords`: **root search** in the launcher, i.e. what an installed user types. Per command, no cap enforced; keep them few and specific.
+
+Store search probes (`https://www.raycast.com/api/v1/store_listings/search?q=…`):
+- Keywords do match: "alt tab" returns only Window Walker, via its `alt-tab` keyword.
+- Open ground: "tab switcher" (no results), "app switcher" and "window switcher" (only unrelated tmux/media extensions), "recent apps", "previous app", "terminal tabs" (weak results).
+- Crowded but relevant: "browser tabs", "switch tabs" (Browser Tabs, Firefox Tabs, browser extensions).
+- "harpoon" matches the Harpoon extension (tag apps and switch between them, inspired by ThePrimeagen's Neovim plugin): people searching it want fast jumping, which Jumper does.
+
+Dropped: "alt tab" and "cmd tab" (web-search terms, not how people search a Store; owner's call), "jump" and "app history" (already in the title/description), "last used app" (duplicate).
+
 ## Name
 
 **Jumper** (`jumper`). Free in the Store; nearby names: Jump, Quick Jump, SpaceJump. Searchable terms live in command titles, description, and keywords. See ADR-005.

@@ -15,17 +15,17 @@
   ],
   "keywords": [
     "app switcher",
+    "tab switcher",
+    "window switcher",
     "switch apps",
-    "previous app",
-    "last app",
-    "recent apps",
-    "app history",
-    "harpoon",
-    "go back",
-    "alt tab",
-    "cmd tab",
     "switch tabs",
-    "window switcher"
+    "previous app",
+    "recent apps",
+    "browser tabs",
+    "terminal tabs",
+    "claude sessions",
+    "chrome tabs",
+    "harpoon"
   ],
   "commands": [
     {
@@ -33,42 +33,75 @@
       "title": "Back",
       "subtitle": "Jumper",
       "description": "Switch to the app you used before this one, like a browser's Back button. Run again to keep going back. Best bound to a hotkey.",
-      "mode": "no-view"
+      "mode": "no-view",
+      "keywords": [
+        "previous app",
+        "last app",
+        "go back"
+      ]
     },
     {
       "name": "forward",
       "title": "Forward",
       "subtitle": "Jumper",
       "description": "Undo a Back step. Best bound to a hotkey.",
-      "mode": "no-view"
+      "mode": "no-view",
+      "keywords": [
+        "next app",
+        "go forward"
+      ]
     },
     {
       "name": "toggle",
       "title": "Toggle",
       "subtitle": "Jumper",
       "description": "Flip between your two most recent apps. Run again to flip back. Best bound to a hotkey.",
-      "mode": "no-view"
+      "mode": "no-view",
+      "keywords": [
+        "last app",
+        "previous app",
+        "switch app"
+      ]
     },
     {
       "name": "history",
       "title": "History",
       "subtitle": "Jumper",
       "description": "List running apps from most to least recently used and switch to any of them.",
-      "mode": "view"
+      "mode": "view",
+      "keywords": [
+        "recent apps",
+        "app switcher",
+        "switch app"
+      ]
     },
     {
       "name": "tabs",
       "title": "Tabs",
       "subtitle": "Jumper",
       "description": "Search tabs, windows, and sessions across running apps (browsers, terminals, Claude, Muse, and any app's windows) and jump to one.",
-      "mode": "view"
+      "mode": "view",
+      "keywords": [
+        "tab switcher",
+        "switch tab",
+        "browser tabs",
+        "terminal tabs",
+        "windows",
+        "sessions",
+        "harpoon"
+      ]
     },
     {
       "name": "app-tabs",
       "title": "Tabs in Current App",
       "subtitle": "Jumper",
       "description": "Search the tabs, windows, or sessions of the app you're in and jump to one.",
-      "mode": "view"
+      "mode": "view",
+      "keywords": [
+        "tab switcher",
+        "switch tab",
+        "windows"
+      ]
     }
   ],
   "dependencies": {
