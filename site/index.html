@@ -116,7 +116,6 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
 }
 .level header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .level h3 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
-.level .tag { font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 3px 9px; border-radius: 999px; }
 .level > p { margin: -8px 0 0; color: var(--muted); font-size: 15px; }
 .cmds { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .cmds li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--border); }
@@ -179,7 +178,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
   <div class="wrap hero">
     <img class="icon" src="extension-icon.png" alt="">
     <h1>Jump to any <em>app, tab, or session.</em></h1>
-    <p>Step back through your recent apps like browser history. Or search every browser tab, terminal tab, and Claude session in one list and land right on it. A free Raycast extension for macOS.</p>
+    <p>Step back through recent apps like browser history, or search every tab and session in one list. Free for Raycast.</p>
     <div class="cta">
       <a class="btn primary" id="install" href="https://www.raycast.com/matt_herwig/jumper">Get it for Raycast</a>
       <a class="btn" href="#demo">See it in action ↓</a>
@@ -201,19 +200,18 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
       <div class="levels">
         <article class="level">
-          <header><h3>Apps</h3><span class="tag">No permissions</span></header>
+          <header><h3>Apps</h3></header>
           <p>Browser-style history for the apps you've been using.</p>
           <div class="shot"><img src="history.png" alt="History command: running apps from most to least recently used" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
-            <li><b>Back</b><kbd>⇧⌘[</kbd><span>Switch to the app you used before this one. Run again to keep going back.</span></li>
-            <li><b>Forward</b><kbd>⇧⌘]</kbd><span>Retrace a Back step.</span></li>
+            <li><b>Back / Forward</b><kbd>⇧⌘[ ⇧⌘]</kbd><span>Step back to the app you used before this one, and keep going. Forward retraces.</span></li>
             <li><b>Toggle</b><kbd>⌘ ⌘</kbd><span>Flip between your two most recent apps. Run again to flip back.</span></li>
             <li><b>History</b><span>Running apps from most to least recent. Jump to any of them, or remove and exclude apps.</span></li>
           </ul>
         </article>
 
         <article class="level">
-          <header><h3>Tabs</h3><span class="tag">Browsers · Terminals · Claude</span></header>
+          <header><h3>Tabs</h3></header>
           <p>One search across the tabs, windows, and sessions of every running app.</p>
           <div class="shot"><img src="tabs.png" alt="Tabs command: Safari tabs, a TextEdit document, and a Preview window in one searchable list" width="2000" height="1250" loading="lazy"></div>
           <ul class="cmds">
@@ -236,7 +234,6 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
           <ul class="facts">
             <li><strong>The first Back takes a snapshot</strong> of your app order and moves one step back. Further Backs go deeper; Forward retraces.</li>
             <li><strong>Switching any other way starts fresh.</strong> Click an app or Cmd+Tab and the forward history is dropped, just like visiting a new page in a browser.</li>
-            <li><strong>Apps you quit are skipped.</strong></li>
             <li><strong>Remove from History</strong> (<kbd>⌃X</kbd>) hides an app until you use it again; <strong>Exclude</strong> (<kbd>⌃⇧X</kbd>) hides it for good.</li>
           </ul>
         </div>
@@ -274,12 +271,11 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
   <section id="setup">
     <div class="wrap">
-      <p class="eyebrow">Setup</p>
-      <h2>Two minutes</h2>
+      <h2>Setup</h2>
       <ol class="steps">
-        <li><span>Install <a href="https://www.raycast.com/">Raycast</a>, then install Jumper from the Raycast Store.</span></li>
-        <li><span>Open Raycast Settings → Extensions → Jumper and assign hotkeys to Back, Forward, and Toggle (and Tabs, if you like). <kbd>⇧⌘[</kbd> / <kbd>⇧⌘]</kbd> also switch tabs in many apps; a Raycast hotkey wins, so pick <kbd>⌃⌥[</kbd> / <kbd>⌃⌥]</kbd> if you rely on those.</span></li>
-        <li><span>The first time you open Tabs, allow <strong>Automation</strong> when macOS asks (once per browser or terminal), and grant Raycast <strong>Accessibility</strong> in System Settings → Privacy &amp; Security for other apps' windows and Claude and Muse sessions.</span></li>
+        <li><span>Install Jumper from the <a href="https://www.raycast.com/">Raycast</a> Store.</span></li>
+        <li><span>Assign hotkeys to Back, Forward, and Toggle in Raycast Settings → Extensions → Jumper.</span></li>
+        <li><span>First time in Tabs: allow <strong>Automation</strong> and <strong>Accessibility</strong> when asked.</span></li>
       </ol>
     </div>
   </section>
@@ -287,7 +283,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
 
 <footer>
   <div class="wrap">
-    <span>Jumper · MIT · by Matt Herwig</span>
+    <span>Jumper · MIT · by <a href="https://mattherwig.com/">Matt Herwig</a></span>
     <span><a href="https://github.com/mattherwig/jumper">Source</a> · <a href="https://github.com/sponsors/mattherwig">Sponsor</a></span>
   </div>
 </footer>
