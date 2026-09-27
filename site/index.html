@@ -137,11 +137,30 @@ h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -.025em; margin: 0 0 10p
 .facts strong { display: block; color: var(--text); font-weight: 600; }
 
 /* Connectors */
-.apps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 20px 12px; }
-.apps li { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
-.apps img { width: 56px; height: 56px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.18)); }
-.more { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.more li { font-size: 13px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; }
+.marquee {
+  display: grid; gap: 16px; overflow: hidden; padding: 8px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.marquee-row {
+  --size: 64px; --gap: 20px;
+  list-style: none; margin: 0; padding: 0; display: flex; gap: var(--gap); width: max-content;
+  animation: marquee calc(var(--n) * 3.2s) linear infinite;
+}
+.marquee-row.rev { animation-direction: reverse; }
+.marquee:hover .marquee-row { animation-play-state: paused; }
+.marquee-row img {
+  display: block; width: var(--size); height: var(--size);
+  filter: saturate(.25) contrast(.92) drop-shadow(0 2px 4px rgba(0,0,0,.18));
+  opacity: .8; transition: filter .25s, opacity .25s, transform .25s;
+}
+.marquee-row img:hover { filter: none; opacity: 1; transform: scale(1.08); }
+@keyframes marquee { to { transform: translateX(calc(-50% - var(--gap) / 2)); } }
+@media (prefers-reduced-motion: reduce) {
+  .marquee { -webkit-mask-image: none; mask-image: none; }
+  .marquee-row { animation: none; flex-wrap: wrap; width: auto; }
+  .marquee-row [aria-hidden] { display: none; }
+}
 
 /* Setup */
 .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; max-width: 700px; }
@@ -277,22 +296,12 @@ footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wr
     <div class="wrap">
       <p class="eyebrow">Connectors</p>
       <h2>Works with what you already use</h2>
-      <p class="lede">Browsers, terminals, AI apps, and notes. Anything else by its windows.</p>
-      <ul class="apps">
-        <li><img src="icons/safari.png" alt="" width="56" height="56" loading="lazy"><span>Safari</span></li>
-        <li><img src="icons/chrome.png" alt="" width="56" height="56" loading="lazy"><span>Chrome</span></li>
-        <li><img src="icons/iterm.png" alt="" width="56" height="56" loading="lazy"><span>iTerm</span></li>
-        <li><img src="icons/terminal.png" alt="" width="56" height="56" loading="lazy"><span>Terminal</span></li>
-        <li><img src="icons/ghostty.png" alt="" width="56" height="56" loading="lazy"><span>Ghostty</span></li>
-        <li><img src="icons/cmux.png" alt="" width="56" height="56" loading="lazy"><span>cmux</span></li>
-        <li><img src="icons/claude.png" alt="" width="56" height="56" loading="lazy"><span>Claude</span></li>
-        <li><img src="icons/chatgpt.png" alt="" width="56" height="56" loading="lazy"><span>Codex</span></li>
-        <li><img src="icons/cursor.png" alt="" width="56" height="56" loading="lazy"><span>Cursor</span></li>
-        <li><img src="icons/notion.png" alt="" width="56" height="56" loading="lazy"><span>Notion</span></li>
-        <li><img src="icons/obsidian.png" alt="" width="56" height="56" loading="lazy"><span>Obsidian</span></li>
-        <li><img src="icons/muse.png" alt="" width="56" height="56" loading="lazy"><span>Muse</span></li>
-      </ul>
-      <ul class="more"><li>Brave</li><li>Edge</li><li>Vivaldi</li><li>Chromium</li><li>herdr</li><li>Gemini CLI</li><li>OpenCode</li><li>Amp</li><li>Aider</li><li>Any app’s windows</li></ul>
+      <p class="lede">Browsers, terminals, and AI agents, down to the tab and pane. Every other app by its windows.</p>
+      <div class="marquee">
+        <ul class="marquee-row" style="--n:10"><li><img src="icons/safari.png" alt="Safari" title="Safari" width="64" height="64"></li><li><img src="icons/chrome.png" alt="Chrome" title="Chrome" width="64" height="64"></li><li><img src="icons/brave.png" alt="Brave" title="Brave" width="64" height="64"></li><li><img src="icons/edge.png" alt="Edge" title="Edge" width="64" height="64"></li><li><img src="icons/vivaldi.png" alt="Vivaldi" title="Vivaldi" width="64" height="64"></li><li><img src="icons/chromium.png" alt="Chromium" title="Chromium" width="64" height="64"></li><li><img src="icons/iterm.png" alt="iTerm" title="iTerm" width="64" height="64"></li><li><img src="icons/terminal.png" alt="Terminal" title="Terminal" width="64" height="64"></li><li><img src="icons/ghostty.png" alt="Ghostty" title="Ghostty" width="64" height="64"></li><li><img src="icons/cmux.png" alt="cmux" title="cmux" width="64" height="64"></li><li aria-hidden="true"><img src="icons/safari.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/chrome.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/brave.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/edge.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/vivaldi.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/chromium.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/iterm.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/terminal.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/ghostty.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/cmux.png" alt="" width="64" height="64"></li></ul>
+        <ul class="marquee-row rev" style="--n:11"><li><img src="icons/claude.png" alt="Claude" title="Claude" width="64" height="64"></li><li><img src="icons/codex.png" alt="Codex" title="Codex" width="64" height="64"></li><li><img src="icons/cursor.png" alt="Cursor" title="Cursor" width="64" height="64"></li><li><img src="icons/gemini.png" alt="Gemini CLI" title="Gemini CLI" width="64" height="64"></li><li><img src="icons/opencode.png" alt="OpenCode" title="OpenCode" width="64" height="64"></li><li><img src="icons/amp.png" alt="Amp" title="Amp" width="64" height="64"></li><li><img src="icons/aider.png" alt="Aider" title="Aider" width="64" height="64"></li><li><img src="icons/herdr.png" alt="herdr" title="herdr" width="64" height="64"></li><li><img src="icons/muse.png" alt="Muse" title="Muse" width="64" height="64"></li><li><img src="icons/notion.png" alt="Notion" title="Notion" width="64" height="64"></li><li><img src="icons/obsidian.png" alt="Obsidian" title="Obsidian" width="64" height="64"></li><li aria-hidden="true"><img src="icons/claude.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/codex.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/cursor.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/gemini.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/opencode.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/amp.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/aider.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/herdr.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/muse.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/notion.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/obsidian.png" alt="" width="64" height="64"></li></ul>
+        <ul class="marquee-row" style="--n:16"><li><img src="icons/finder.png" alt="Finder" title="Finder" width="64" height="64"></li><li><img src="icons/vscode.png" alt="VS Code" title="VS Code" width="64" height="64"></li><li><img src="icons/xcode.png" alt="Xcode" title="Xcode" width="64" height="64"></li><li><img src="icons/slack.png" alt="Slack" title="Slack" width="64" height="64"></li><li><img src="icons/discord.png" alt="Discord" title="Discord" width="64" height="64"></li><li><img src="icons/mail.png" alt="Mail" title="Mail" width="64" height="64"></li><li><img src="icons/messages.png" alt="Messages" title="Messages" width="64" height="64"></li><li><img src="icons/notes.png" alt="Notes" title="Notes" width="64" height="64"></li><li><img src="icons/calendar.png" alt="Calendar" title="Calendar" width="64" height="64"></li><li><img src="icons/preview.png" alt="Preview" title="Preview" width="64" height="64"></li><li><img src="icons/word.png" alt="Word" title="Word" width="64" height="64"></li><li><img src="icons/keynote.png" alt="Keynote" title="Keynote" width="64" height="64"></li><li><img src="icons/pages.png" alt="Pages" title="Pages" width="64" height="64"></li><li><img src="icons/numbers.png" alt="Numbers" title="Numbers" width="64" height="64"></li><li><img src="icons/zoom.png" alt="Zoom" title="Zoom" width="64" height="64"></li><li><img src="icons/blender.png" alt="Blender" title="Blender" width="64" height="64"></li><li aria-hidden="true"><img src="icons/finder.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/vscode.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/xcode.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/slack.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/discord.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/mail.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/messages.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/notes.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/calendar.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/preview.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/word.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/keynote.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/pages.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/numbers.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/zoom.png" alt="" width="64" height="64"></li><li aria-hidden="true"><img src="icons/blender.png" alt="" width="64" height="64"></li></ul>
+      </div>
     </div>
   </section>
 
