@@ -24,6 +24,9 @@ import store_media as sm  # noqa: E402  (shared helpers: demo apps, deeplinks, s
 
 EXT = sm.ROOT / "extension"
 STEP = 1.3  # seconds for a command to switch apps
+# Fragment on the staged Safari tabs' URLs, added to Safari queries: the owner's own windows (or ones left by a media
+# run) can have the same pages open, and Search would rightly jump to those.
+TAG = f"smoke{int(time.time()) % 100000:05d}"
 
 
 class Model:
@@ -221,10 +224,10 @@ def tabs(s: Smoke) -> None:
     current = lambda: sm.osa(f'tell application "Safari" to get index of current tab of window id {window}')  # noqa: E731
 
     print("Tabs")
-    s.tab_search(title(3), "Safari", "exact title", current, 3)
+    s.tab_search(f"{title(3)} {TAG}", "Safari", "exact title", current, 3)
     s.tab_search("textedt", "TextEdit", "app name with a typo ('textedt')")
     query = typo(title(2))
-    s.tab_search(query, "Safari", f"title with a typo ('{query[:12]}…')", current, 2)
+    s.tab_search(f"{query} {TAG}", "Safari", f"title with a typo ('{query[:12]}…')", current, 2)
 
 
 def typo(text: str) -> str:
@@ -332,7 +335,7 @@ def main() -> None:
     sm.close_raycast()
     s: Smoke | None = None
     try:
-        with sm.DemoApps() as demo:
+        with sm.DemoApps(safari_tabs=[f"{url}#{TAG}" for url in sm.SAFARI_TABS]) as demo:
             order = [sm.PROCESS.get(n, n) for n, *_ in reversed(sm.DEMO_APPS) if sm.running(n)]
             s = Smoke(demo, order)
             print(f"Build: {'dist' if dist else 'dev'}. Suites: {', '.join(suites)}. Starting order: {', '.join(order[:6])}, …")
