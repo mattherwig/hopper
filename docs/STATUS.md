@@ -2,6 +2,14 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-27 — Simplification pass (issues #45–#56, label `simplification`)
+
+- Code, repo and docs surveyed for simplifications; 12 research-first issues filed (`decision` on the ones that cut features).
+- #50 closed, kept: Notion parent paths stay (owner likes them); findings on the issue.
+- #51: Cursor agent source re-checked live on Cursor 3.22.7 and kept; the pre-3.15 fallback (`LEGACY_HEADERS`) removed. `querySqlite` stays (Cursor, Codex, Notion).
+- Aside: `@raycast/utils` `executeSQL` measured against the `sqlite3` CLI (~0.3ms vs ~4ms per query) and not adopted: it copies busy databases (Cursor's is 1 GB) and has no timeout.
+- Next: the other `simplification` issues.
+
 ## 2026-09-27 — Agents point at places (ADR-028, branch `refactor/agent-places`)
 
 - Architecture cleanup: agent hosts are a terminal process, a `place` (tab key + pane of a tab the tab level lists), or a `link` (Cursor, Codex app). `placeKey`, `Host` kind `herdr` and `Location.herdr` removed; `jumpToAgent` = select the tab with its source, else open the link. herdr's pane focus moved into its tab source (`selectPane`); Claude's deep link built once (`codeSessionUrl`).

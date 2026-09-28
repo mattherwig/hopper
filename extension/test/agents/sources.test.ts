@@ -66,30 +66,22 @@ test("cursor: blocked, working, done from Cursor's own flags; old idle and archi
   });
 });
 
-test("cursor: headers from the composerHeaders table, the old blob when Cursor has no table", async () => {
+test("cursor: headers from the composerHeaders table; Cursor without it (before 3.15) fails", async () => {
   const header = { id: "a", unread: 1, blocking: 0, updatedAt: 5, folder: "/p/app" };
-  const run = async (hasTable: boolean) => {
-    const queries: string[] = [];
-    const platform = fakePlatform({
-      querySqlite: async (_db, sql) => {
-        queries.push(sql);
-        if (sql.includes("from composerHeaders")) {
+  const run = (hasTable: boolean) =>
+    cursor.list({
+      platform: fakePlatform({
+        querySqlite: async (_db, sql) => {
+          if (!sql.includes("from composerHeaders")) return [];
           if (!hasTable) throw new Error("no such table: composerHeaders");
           return [header];
-        }
-        if (sql.includes("allComposers")) return [header];
-        return [];
-      },
-    });
-    const agents = await cursor.list({
-      platform,
+        },
+      }),
       apps: [{ name: "Cursor", bundleId: "com.todesktop.230313mzl4w4u92", path: "/Applications/Cursor.app" }],
       now: 10,
     } as never);
-    return { ids: agents.map((a) => a.id), legacy: queries.some((q) => q.includes("allComposers")) };
-  };
-  assert.deepEqual(await run(true), { ids: ["a"], legacy: false });
-  assert.deepEqual(await run(false), { ids: ["a"], legacy: true });
+  assert.deepEqual((await run(true)).map((a) => a.id), ["a"]);
+  await assert.rejects(run(false), /no such table/);
 });
 
 test("cursor: an agent saved as aborted is working while its transcript's turn is open", async () => {
