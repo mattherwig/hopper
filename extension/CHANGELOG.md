@@ -15,6 +15,7 @@
 - Copy Resume Command for Claude Code and Codex sessions.
 - Search: `⌥→` / `⌥←` jump to the next or previous app's most recent entry.
 - Obsidian tabs in Search: every open vault's tabs, in all its windows (popouts too), with each note's folder; closed notes reopen from Recently Closed.
+- Bookmarks in Search: `⌘D` bookmarks a tab, page, note, document, or Recently Closed entry. Picking a bookmark jumps to the tab already showing it, in any browser, and opens it only when it isn't open.
 
 ## [Tabs] - {PR_MERGE_DATE}
 
