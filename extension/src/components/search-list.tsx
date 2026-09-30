@@ -1,6 +1,6 @@
 import { Action, ActionPanel, Icon, Keyboard, List, open } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosPlatform } from "../lib/platform/os";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
@@ -79,11 +79,14 @@ export function SearchList({ scope }: { scope: Scope }) {
   const sections = groupByApp(searchTabs(entries, query));
   const shownClosed = searchTabs(closed, query);
 
-  // Next / Previous App: selection is controlled, and follows the arrow keys so a jump starts from where you are.
-  // Typing hands it back to Raycast (top row).
-  const [selected, setSelected] = useState<string>();
+  // Next / Previous App. The selected row lives in a ref, not state: ↑ / ↓ must not re-render the whole list
+  // (every render sends every row to Raycast). Only a jump sets `jumpTo`, which Raycast selects; the first move
+  // away clears it again (one render), so a later jump to the same row still reaches Raycast. Typing clears it too,
+  // leaving Raycast to select the top match.
+  const selected = useRef<string>(undefined);
+  const [jumpTo, setJumpTo] = useState<string>();
   const rows = [...sections.map((s) => s.entries.map(entryId)), shownClosed.map(closedId)];
-  const move = (step: 1 | -1) => setSelected(adjacentSection(rows, selected, step));
+  const move = (step: 1 | -1) => setJumpTo(adjacentSection(rows, selected.current, step));
   const appActions = (
     <ActionPanel.Section>
       <Action
@@ -105,11 +108,14 @@ export function SearchList({ scope }: { scope: Scope }) {
     <List
       isLoading={isLoading}
       filtering={false}
-      selectedItemId={selected}
-      onSelectionChange={(id) => setSelected(id ?? undefined)}
+      selectedItemId={jumpTo}
+      onSelectionChange={(id) => {
+        selected.current = id ?? undefined;
+        if (jumpTo && id !== jumpTo) setJumpTo(undefined);
+      }}
       onSearchTextChange={(text) => {
         setQuery(text);
-        setSelected(undefined);
+        setJumpTo(undefined);
       }}
       searchBarPlaceholder={
         scope === "current" && current ? `Search ${current.name}` : "Search apps, tabs, sessions, and agents"
