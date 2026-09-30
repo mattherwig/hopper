@@ -1,12 +1,12 @@
 import { Action, ActionPanel, Icon, Keyboard, List, open } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosPlatform } from "../lib/platform/os";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
-import { searchTabs } from "../lib/tabs/search";
+import { adjacentSection, searchTabs } from "../lib/tabs/search";
 import type { ListedAgent } from "../lib/agents/load";
 import { STATUS_TITLE } from "../lib/agents/status";
 import { loadAllAgents } from "../lib/platform/agents";
@@ -76,31 +76,66 @@ export function SearchList({ scope }: { scope: Scope }) {
 
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
+  const sections = groupByApp(searchTabs(entries, query));
+  const shownClosed = searchTabs(closed, query);
+
+  // Next / Previous App: selection is controlled, and follows the arrow keys so a jump starts from where you are.
+  // Typing hands it back to Raycast (top row).
+  const [selected, setSelected] = useState<string>();
+  const rows = [...sections.map((s) => s.entries.map(entryId)), shownClosed.map(closedId)];
+  const move = (step: 1 | -1) => setSelected(adjacentSection(rows, selected, step));
+  const appActions = (
+    <ActionPanel.Section>
+      <Action
+        title="Next App"
+        icon={Icon.ArrowRight}
+        shortcut={{ modifiers: ["opt"], key: "arrowRight" }}
+        onAction={() => move(1)}
+      />
+      <Action
+        title="Previous App"
+        icon={Icon.ArrowLeft}
+        shortcut={{ modifiers: ["opt"], key: "arrowLeft" }}
+        onAction={() => move(-1)}
+      />
+    </ActionPanel.Section>
+  );
 
   return (
     <List
       isLoading={isLoading}
       filtering={false}
-      onSearchTextChange={setQuery}
+      selectedItemId={selected}
+      onSelectionChange={(id) => setSelected(id ?? undefined)}
+      onSearchTextChange={(text) => {
+        setQuery(text);
+        setSelected(undefined);
+      }}
       searchBarPlaceholder={
         scope === "current" && current ? `Search ${current.name}` : "Search apps, tabs, sessions, and agents"
       }
     >
-      {groupByApp(searchTabs(entries, query)).map(({ app, entries }) => (
+      {sections.map(({ app, entries }) => (
         <List.Section key={app.bundleId} title={app.name} subtitle={String(entries.length)}>
           {entries.map((entry) =>
             entry.tab ? (
-              <TabItem key={entry.tab.key} tab={entry.tab} agent={agentByTab.get(entry.tab.key)} />
+              <TabItem key={entry.tab.key} id={entryId(entry)} tab={entry.tab} agent={agentByTab.get(entry.tab.key)}>
+                {appActions}
+              </TabItem>
             ) : (
-              <AgentItem key={entry.agent.key} agent={entry.agent} onRefresh={reloadAgents} />
+              <AgentItem key={entry.agent.key} id={entryId(entry)} agent={entry.agent} onRefresh={reloadAgents}>
+                {appActions}
+              </AgentItem>
             ),
           )}
         </List.Section>
       ))}
       {closed.length > 0 && (
         <List.Section title="Recently Closed" subtitle={String(closed.length)}>
-          {searchTabs(closed, query).map((entry) => (
-            <ClosedItem key={entry.id} entry={entry} onForget={revalidate} />
+          {shownClosed.map((entry) => (
+            <ClosedItem key={entry.id} entry={entry} onForget={revalidate}>
+              {appActions}
+            </ClosedItem>
           ))}
         </List.Section>
       )}
@@ -138,9 +173,10 @@ export function SearchList({ scope }: { scope: Scope }) {
   );
 }
 
-function TabItem({ tab, agent }: { tab: Tab; agent?: ListedAgent }) {
+function TabItem({ id, tab, agent, children }: { id: string; tab: Tab; agent?: ListedAgent; children: ReactNode }) {
   return (
     <List.Item
+      id={id}
       icon={tab.url ? getFavicon(tab.url, { fallback: Icon.Globe }) : { fileIcon: tab.app.path }}
       title={tab.title}
       accessories={[
@@ -168,19 +204,21 @@ function TabItem({ tab, agent }: { tab: Tab; agent?: ListedAgent }) {
           />
           {tab.url && <Action.CopyToClipboard title="Copy URL" content={tab.url} />}
           <Action.CopyToClipboard title="Copy Title" content={tab.title} shortcut={Keyboard.Shortcut.Common.Copy} />
+          {children}
         </ActionPanel>
       }
     />
   );
 }
 
-function ClosedItem({ entry, onForget }: { entry: ClosedTab; onForget: () => void }) {
+function ClosedItem({ entry, onForget, children }: { entry: ClosedTab; onForget: () => void; children: ReactNode }) {
   const forget = async (id?: string) => {
     await forgetClosed(macosPlatform, id);
     onForget();
   };
   return (
     <List.Item
+      id={closedId(entry)}
       icon={entry.url ? getFavicon(entry.url, { fallback: Icon.Globe }) : { fileIcon: entry.reopen.target }}
       title={entry.title}
       subtitle={entry.app.name}
@@ -206,6 +244,7 @@ function ClosedItem({ entry, onForget }: { entry: ClosedTab; onForget: () => voi
             shortcut={Keyboard.Shortcut.Common.RemoveAll}
             onAction={() => forget()}
           />
+          {children}
         </ActionPanel>
       }
     />
@@ -234,6 +273,10 @@ const agentEntry = (agent: ListedAgent): Entry => ({
   kind: "agent",
   app: agent.location!.app,
 });
+
+/** Row ids: tabs, agents, and closed entries each have their own keys, so each gets a prefix. */
+const entryId = (entry: Entry) => (entry.tab ? `tab:${entry.tab.key}` : `agent:${entry.agent.key}`);
+const closedId = (entry: ClosedTab) => `closed:${entry.id}`;
 
 /** One section per app, in order of each app's first entry (so the best search match's app comes first). */
 function groupByApp(entries: Entry[]): { app: App; entries: Entry[] }[] {
