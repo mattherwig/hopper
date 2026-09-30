@@ -50,7 +50,7 @@ export interface Platform {
   readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string; modified?: number }[]>;
   /**
    * The same files' `fields` (top-level keys of a JSON object; absent ones left out), one file at a time: for big
-   * files of which only a few fields are needed, so no more than one is held at once (ADR-031). Files that aren't a
+   * files of which only a few fields are needed, so no more than one is held at once (ADR-032). Files that aren't a
    * JSON object are left out.
    */
   readJsonFields(dir: string, name: RegExp, depth: number, fields: readonly string[]): Promise<JsonFields[]>;

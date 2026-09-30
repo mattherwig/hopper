@@ -56,7 +56,7 @@ Every render of Search rebuilds every row in JS (~11ms) and sends the whole tree
 
 Rule: nothing that changes on every arrow key may be React state in a list view.
 
-## Search memory (2026-09-29, macOS 27.0, 86 tabs, 10 agents, ADR-031)
+## Search memory (2026-09-29, macOS 27.0, 86 tabs, 10 agents, ADR-032)
 
 Raycast stops a command at 100 MB of JS heap ("Command terminated after reaching the extension memory limit"). Measured with temporary `console.log`s of `process.memoryUsage().heapUsed` (after each tab and agent source, after `loadTabs` / `loadAllAgents`, each render) in a dev build, opening Search by deeplink and closing it with Escape (7s apart). A dev build runs React StrictMode, so the load runs twice per open: it overstates production by one load. `heapUsed` includes garbage not yet collected.
 
@@ -68,4 +68,4 @@ Raycast stops a command at 100 MB of JS heap ("Command terminated after reaching
 
 Where it went: ~25 MB baseline (Raycast API, React); each Claude session read was ~30 MB of two-byte strings (14.9M chars in 42 files); a warm open ran the agent read on the cached tabs while the fresh tab read ran. Each full-list render is ~2 MB of garbage. Timing with one file at a time: `loadTabs` ~1.0–1.1s, the Claude tab source done at ~550ms.
 
-Offline, 43 files, two overlapping reads, 20 MB ballast (`node --max-old-space-size`): read all then parse, or parse each as it arrives in parallel, run out of memory even at a 64 MB cap; one at a time passes at 32 MB. Rule: don't hold an app file that can grow whole, or many at once (ADR-031); watch the heap when adding a hook or a render to Search.
+Offline, 43 files, two overlapping reads, 20 MB ballast (`node --max-old-space-size`): read all then parse, or parse each as it arrives in parallel, run out of memory even at a 64 MB cap; one at a time passes at 32 MB. Rule: don't hold an app file that can grow whole, or many at once (ADR-032); watch the heap when adding a hook or a render to Search.
