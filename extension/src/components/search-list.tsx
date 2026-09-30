@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Icon, Keyboard, List, open, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Form, Icon, Keyboard, List, open, showToast, Toast, useNavigation } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
 import { useRef, useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
@@ -7,9 +7,11 @@ import { showFailure } from "../lib/platform/report";
 import {
   bookmarkFor,
   loadBookmarks,
+  renameBookmark,
   setBookmark,
   withBookmark,
   withoutBookmark,
+  withTitle,
   type Bookmark,
 } from "../lib/tabs/bookmarks";
 import {
@@ -98,12 +100,18 @@ export function SearchList({ scope }: { scope: Scope }) {
         },
       shouldRevalidateAfter: false,
     });
-  // Agents: read after the tabs, which it reuses to locate them, so the list shows first.
+  const renameTo = (id: string, title: string) =>
+    mutate(renameBookmark(macosPlatform, id, title), {
+      optimisticUpdate: (data) => data && { ...data, bookmarks: withTitle(data.bookmarks, id, title) },
+      shouldRevalidateAfter: false,
+    });
+  // Agents: read after the tabs, which it reuses to locate them, so the list shows first. Not on the cached tabs
+  // while fresh ones load: the cached agents already show, and two reads at once can exceed the heap (ADR-032).
   const { data: agentData, revalidate: reloadAgents } = useCachedPromise(
     (read: Tab[]) => loadAllAgents({ tabs: read }),
     [tabs],
     {
-      execute: tabs.length > 0,
+      execute: !isLoading && tabs.length > 0,
       keepPreviousData: true,
       onError: (error) => showFailure(error, "Could not read agents"),
     },
@@ -197,6 +205,7 @@ export function SearchList({ scope }: { scope: Scope }) {
               bookmark={bookmark}
               tabs={tabs}
               onRemove={() => changeBookmark(bookmark, false)}
+              onRename={(title) => renameTo(bookmark.id, title)}
             >
               {appActions}
             </BookmarkItem>
@@ -344,11 +353,13 @@ function BookmarkItem({
   bookmark,
   tabs,
   onRemove,
+  onRename,
   children,
 }: {
   bookmark: Bookmark;
   tabs: Tab[];
   onRemove: () => Promise<unknown>;
+  onRename: (title: string) => Promise<unknown>;
   children: ReactNode;
 }) {
   const openTab = openTabFor(bookmark, tabs);
@@ -371,6 +382,12 @@ function BookmarkItem({
             onSwitch={() => jumpOrOpen(bookmark, tabs, macosPlatform, activateApp)}
           />
           {bookmark.url && <Action.CopyToClipboard title="Copy URL" content={bookmark.url} />}
+          <Action.Push
+            title="Rename Bookmark"
+            icon={Icon.Pencil}
+            shortcut={Keyboard.Shortcut.Common.Edit}
+            target={<RenameBookmarkForm bookmark={bookmark} onRename={onRename} />}
+          />
           <Action
             title="Remove Bookmark"
             icon={Icon.XMarkCircle}
@@ -392,6 +409,45 @@ function reopenIcon(entry: Reopenable & { url?: string }) {
 /** Marks a bookmark or closed entry that a listed tab shows: picking it jumps there. */
 function openTag(openTab: Tab | undefined): List.Item.Accessory[] {
   return openTab ? [{ tag: "Open", tooltip: `Open in ${openTab.app.name}` }] : [];
+}
+
+/** A clean name for a bookmark, in place of a long URL or a generic page title. */
+function RenameBookmarkForm({
+  bookmark,
+  onRename,
+}: {
+  bookmark: Bookmark;
+  onRename: (title: string) => Promise<unknown>;
+}) {
+  const { pop } = useNavigation();
+  const [error, setError] = useState<string>();
+  return (
+    <Form
+      navigationTitle="Rename Bookmark"
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm
+            title="Rename Bookmark"
+            icon={Icon.Pencil}
+            onSubmit={({ title }: { title: string }) => {
+              if (!title.trim()) return setError("Enter a name");
+              pop();
+              runChange(onRename(title.trim()), "Could not rename bookmark");
+            }}
+          />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="title"
+        title="Name"
+        defaultValue={bookmark.title}
+        error={error}
+        onChange={() => setError(undefined)}
+      />
+      <Form.Description text={bookmark.url ?? bookmark.reopen.target} />
+    </Form>
+  );
 }
 
 /** ⌘D on a tab or Recently Closed entry: bookmark it, or remove its bookmark. Nothing for what can't reopen. */

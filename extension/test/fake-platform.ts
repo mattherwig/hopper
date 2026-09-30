@@ -32,6 +32,7 @@ export function fakePlatform(
       }),
     homeDir: overrides.homeDir ?? (() => "/Users/me"),
     readFiles: overrides.readFiles ?? (async () => []),
+    readJsonFields: overrides.readJsonFields ?? (async () => []),
     openUrl: overrides.openUrl ?? unexpected("openUrl"),
     pressWebElement: overrides.pressWebElement ?? unexpected("pressWebElement"),
     webPages: overrides.webPages ?? (async () => []),

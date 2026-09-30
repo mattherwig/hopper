@@ -45,3 +45,15 @@ export async function setBookmark(
   await platform.saveJson(KEY, next);
   return next;
 }
+
+/** `bookmarks` with `id` named `title` (a clean name for a long URL or a generic page title); order unchanged. */
+export function withTitle(bookmarks: Bookmark[], id: string, title: string): Bookmark[] {
+  return bookmarks.map((b) => (b.id === id ? { ...b, title } : b));
+}
+
+/** Renames the bookmark `id`, and returns the bookmarks after. */
+export async function renameBookmark(platform: Platform, id: string, title: string): Promise<Bookmark[]> {
+  const next = withTitle(await loadBookmarks(platform), id, title);
+  await platform.saveJson(KEY, next);
+  return next;
+}

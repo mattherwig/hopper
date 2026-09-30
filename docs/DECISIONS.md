@@ -268,7 +268,19 @@ Watching the database through a run: 3.15 never saves `generating`; a running ag
 
 **Consequences.** Codex threads are read whether Codex is idle or working; Cursor and Notion get the same fallback if they ever close their databases. Race: if the app opens the database between the two attempts, its first writes go to the new WAL, so the immutable read sees the state just before them; only a checkpoint rewrites the file, and that needs ~1000 pages of WAL. Any other failure (schema changes, a missing file) is still reported as before.
 
-## ADR-032: Recently Closed and Bookmarks share jump-or-open, with a fresh read of the entry's app (2026-09-29)
+## ADR-032: Big app files: one at a time, only the fields needed; agents wait for fresh tabs (2026-09-29)
+
+**Context.** Search crashed with "Command terminated after reaching the extension memory limit (100 MB JS heap)" on the owner's Mac (1 of 4 opens on `main`, 4 of 4 warm opens in a dev build). Heap logs put it on the Claude app's Code session files (`claude-code-sessions/**/local_*.json`, 42 files, 14.9M characters, up to ~400 KB each, almost all of it `remoteMcpServersConfig`). Both the tab source and the agent source read them all with `readFiles` (in parallel, all texts held until the last one was read) and then parsed them. Every file has non-ASCII, so V8 keeps each as a two-byte string: ~30 MB per read. And on a warm open the cached tabs started the agent read while the fresh tab read ran, so two reads were alive at once (three in dev, where React StrictMode runs the load twice) on a ~25 MB baseline.
+
+**Decision.**
+- `Platform.readJsonFields(dir, name, depth, fields)` reads the files one at a time, `JSON.parse`s each and keeps only `fields`. Only one file's text is live at once; the rest is garbage the GC reclaims. Both Claude sources ask for only the fields they use.
+- Search reads agents only once the fresh tabs are in (`execute: !isLoading && …`), not also on the cached tabs: the cached agents show meanwhile.
+- Codex turns each rollout tail (up to 50 × 256 KB) into its status as soon as it's read, instead of holding every tail until all are read.
+- Considered: a byte-level picker that decoded only the wanted values (~18 ms and ~2 MB for all files, vs ~55 ms here), and the streaming parsers `@streamparser/json` (~190 ms, +18 MB) and `stream-json` (~390 ms, +65 MB). The owner chose plain `JSON.parse` for simplicity. Parsing each file as it arrives while reading them all in parallel doesn't help: the reads finish together, so all texts are live at once (out of memory under a 64 MB cap, where one at a time passed at 32 MB).
+
+**Consequences.** Same data and behavior. A Claude read costs ~55 ms of CPU (it was about the same before), in the background of the other apps' reads; measured in Raycast, Search's load takes as long as with the picker (`loadTabs` median 1049 vs 1085 ms), at a higher peak `heapUsed` (67 vs 50 MB in dev, mostly garbage). On a warm open, fresh agent statuses show after the tabs, not alongside. Rule for new sources: an app file that can grow (session records, transcripts, configs) is read with `readJsonFields` or `readTail`, never all at once with `readFiles`; `readFiles` is for small files (`~/.claude/sessions`, cmux, Obsidian).
+
+## ADR-033: Recently Closed and Bookmarks share jump-or-open, with a fresh read of the entry's app (2026-09-29)
 
 **Context.** Owner: bookmarked a Chrome tab, closed it, opened it again from the bookmark, then picked its Recently Closed entry, and got a second tab. Two causes. Reopen (ADR-019) always opened the target, while bookmarks jumped to an open tab first (ADR-030). And Search shows its cached last list while it reads again (`useCachedPromise`), so the entry was still listed (the tab opened by the bookmark was not in the cached tabs); even after the fresh read, Recently Closed compared ids exactly, so a page back as `/x/` stayed "closed" as `/x`.
 

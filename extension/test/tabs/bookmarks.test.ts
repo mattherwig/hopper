@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FIELD as F, RECORD as R } from "../../src/lib/tabs/applescript.ts";
-import { bookmarkFor, loadBookmarks, setBookmark } from "../../src/lib/tabs/bookmarks.ts";
+import { bookmarkFor, loadBookmarks, renameBookmark, setBookmark } from "../../src/lib/tabs/bookmarks.ts";
 import type { App, Tab } from "../../src/lib/tabs/model.ts";
 import * as chromium from "../../src/lib/tabs/sources/chromium.ts";
 import { app, fakePlatform } from "../fake-platform.ts";
@@ -40,4 +40,22 @@ test("add puts newest first, re-adding moves it up; remove drops it", async () =
     [b.id],
   );
   assert.deepEqual(await loadBookmarks(platform), await setBookmark(platform, a, false, 5));
+});
+
+test("rename changes only that bookmark's title, in place", async () => {
+  const platform = fakePlatform();
+  const [a, b] = [bookmarkFor(tab(chrome, "1", "https://a.com"))!, bookmarkFor(tab(chrome, "2", "https://b.com"))!];
+  await setBookmark(platform, a, true, 1);
+  await setBookmark(platform, b, true, 2);
+  assert.deepEqual(
+    (await renameBookmark(platform, a.id, "My PRs")).map((x) => [x.id, x.title, x.url]),
+    [
+      [b.id, "https://b.com", "https://b.com"],
+      [a.id, "My PRs", "https://a.com"],
+    ],
+  );
+  assert.deepEqual(
+    (await loadBookmarks(platform)).map((x) => x.title),
+    ["https://b.com", "My PRs"],
+  );
 });
