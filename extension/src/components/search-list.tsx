@@ -1,4 +1,4 @@
-import { Action, ActionPanel, Icon, Keyboard, List, open, showToast, Toast } from "@raycast/api";
+import { Action, ActionPanel, Form, Icon, Keyboard, List, open, showToast, Toast, useNavigation } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
 import { useRef, useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
@@ -9,9 +9,11 @@ import {
   loadBookmarks,
   openBookmark,
   openTabFor,
+  renameBookmark,
   setBookmark,
   withBookmark,
   withoutBookmark,
+  withTitle,
   type Bookmark,
 } from "../lib/tabs/bookmarks";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
@@ -90,6 +92,11 @@ export function SearchList({ scope }: { scope: Scope }) {
           ...data,
           bookmarks: on ? withBookmark(data.bookmarks, entry, Date.now()) : withoutBookmark(data.bookmarks, entry.id),
         },
+      shouldRevalidateAfter: false,
+    });
+  const renameTo = (id: string, title: string) =>
+    mutate(renameBookmark(macosPlatform, id, title), {
+      optimisticUpdate: (data) => data && { ...data, bookmarks: withTitle(data.bookmarks, id, title) },
       shouldRevalidateAfter: false,
     });
   // Agents: read after the tabs, which it reuses to locate them, so the list shows first. Not on the cached tabs
@@ -192,6 +199,7 @@ export function SearchList({ scope }: { scope: Scope }) {
               bookmark={bookmark}
               tabs={tabs}
               onRemove={() => changeBookmark(bookmark, false)}
+              onRename={(title) => renameTo(bookmark.id, title)}
             >
               {appActions}
             </BookmarkItem>
@@ -324,11 +332,13 @@ function BookmarkItem({
   bookmark,
   tabs,
   onRemove,
+  onRename,
   children,
 }: {
   bookmark: Bookmark;
   tabs: Tab[];
   onRemove: () => Promise<unknown>;
+  onRename: (title: string) => Promise<unknown>;
   children: ReactNode;
 }) {
   const openTab = openTabFor(bookmark, tabs);
@@ -351,6 +361,12 @@ function BookmarkItem({
             onSwitch={() => openBookmark(bookmark, tabs, macosPlatform, activateApp)}
           />
           {bookmark.url && <Action.CopyToClipboard title="Copy URL" content={bookmark.url} />}
+          <Action.Push
+            title="Rename Bookmark"
+            icon={Icon.Pencil}
+            shortcut={Keyboard.Shortcut.Common.Edit}
+            target={<RenameBookmarkForm bookmark={bookmark} onRename={onRename} />}
+          />
           <Action
             title="Remove Bookmark"
             icon={Icon.XMarkCircle}
@@ -361,6 +377,45 @@ function BookmarkItem({
         </ActionPanel>
       }
     />
+  );
+}
+
+/** A clean name for a bookmark, in place of a long URL or a generic page title. */
+function RenameBookmarkForm({
+  bookmark,
+  onRename,
+}: {
+  bookmark: Bookmark;
+  onRename: (title: string) => Promise<unknown>;
+}) {
+  const { pop } = useNavigation();
+  const [error, setError] = useState<string>();
+  return (
+    <Form
+      navigationTitle="Rename Bookmark"
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm
+            title="Rename Bookmark"
+            icon={Icon.Pencil}
+            onSubmit={({ title }: { title: string }) => {
+              if (!title.trim()) return setError("Enter a name");
+              pop();
+              runChange(onRename(title.trim()), "Could not rename bookmark");
+            }}
+          />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="title"
+        title="Name"
+        defaultValue={bookmark.title}
+        error={error}
+        onChange={() => setError(undefined)}
+      />
+      <Form.Description text={bookmark.url ?? bookmark.reopen.target} />
+    </Form>
   );
 }
 

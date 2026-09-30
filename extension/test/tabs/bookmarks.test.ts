@@ -6,6 +6,7 @@ import {
   loadBookmarks,
   openBookmark,
   openTabFor,
+  renameBookmark,
   setBookmark,
   type Bookmark,
 } from "../../src/lib/tabs/bookmarks.ts";
@@ -49,6 +50,24 @@ test("add puts newest first, re-adding moves it up; remove drops it", async () =
     [b.id],
   );
   assert.deepEqual(await loadBookmarks(platform), await setBookmark(platform, a, false, 5));
+});
+
+test("rename changes only that bookmark's title, in place", async () => {
+  const platform = fakePlatform();
+  const [a, b] = [bookmarkFor(tab(chrome, "1", "https://a.com"))!, bookmarkFor(tab(chrome, "2", "https://b.com"))!];
+  await setBookmark(platform, a, true, 1);
+  await setBookmark(platform, b, true, 2);
+  assert.deepEqual(
+    (await renameBookmark(platform, a.id, "My PRs")).map((x) => [x.id, x.title, x.url]),
+    [
+      [b.id, "https://b.com", "https://b.com"],
+      [a.id, "My PRs", "https://a.com"],
+    ],
+  );
+  assert.deepEqual(
+    (await loadBookmarks(platform)).map((x) => x.title),
+    ["https://b.com", "My PRs"],
+  );
 });
 
 test("openTabFor: the saved app's tab first, then another app's active tab; trailing slash ignored", () => {
