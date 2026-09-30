@@ -1,7 +1,7 @@
 import { open } from "@raycast/api";
 import { runAppleScript } from "@raycast/utils";
 import { execFile } from "node:child_process";
-import { open as openFile, readdir, readFile, stat } from "node:fs/promises";
+import { access, open as openFile, readdir, readFile, stat } from "node:fs/promises";
 import { createConnection } from "node:net";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
@@ -19,6 +19,7 @@ import {
 } from "swift:../../../swift";
 import type { AppWindows, GitRepo, Platform, SidebarRow } from "./model";
 import { reportError } from "./report";
+import { immutableUri, isCantOpen } from "./sqlite";
 import { readJson, writeJson } from "./storage";
 
 /** An app that stops responding must not hold up the whole list. */
@@ -27,6 +28,12 @@ const SQLITE_TIMEOUT = 2000;
 const SOCKET_TIMEOUT = 1000;
 
 const execFileAsync = promisify(execFile);
+
+const exists = (path: string) =>
+  access(path).then(
+    () => true,
+    () => false,
+  );
 
 /**
  * Falls back to `value` when a read fails. A missing file or folder is the Platform's contract ("[] if it's
@@ -81,9 +88,15 @@ export const macosPlatform: Platform = {
   listDir: (dir) => readdir(dir).catch(orElse([], "files: list")),
   openUrl: (url, appPath) => open(url, appPath),
   querySqlite: async (path, sql) => {
-    const { stdout } = await execFileAsync("/usr/bin/sqlite3", ["-readonly", "-json", path, sql], {
-      timeout: SQLITE_TIMEOUT,
-      maxBuffer: 16 * 1024 * 1024,
+    const query = (file: string) =>
+      execFileAsync("/usr/bin/sqlite3", ["-readonly", "-json", file, sql], {
+        timeout: SQLITE_TIMEOUT,
+        maxBuffer: 16 * 1024 * 1024,
+      });
+    // A WAL database no app holds open can't be opened read-only; with no -wal file it's read as immutable.
+    const { stdout } = await query(path).catch(async (error: unknown) => {
+      if (!isCantOpen(error) || !(await exists(path)) || (await exists(`${path}-wal`))) throw error;
+      return query(immutableUri(path));
     });
     // sqlite3 prints nothing, not "[]", when there are no rows.
     return stdout.trim() ? JSON.parse(stdout) : [];
