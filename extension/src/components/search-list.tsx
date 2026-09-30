@@ -7,8 +7,6 @@ import { showFailure } from "../lib/platform/report";
 import {
   bookmarkFor,
   loadBookmarks,
-  openBookmark,
-  openTabFor,
   renameBookmark,
   setBookmark,
   withBookmark,
@@ -16,7 +14,15 @@ import {
   withTitle,
   type Bookmark,
 } from "../lib/tabs/bookmarks";
-import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
+import {
+  forgetClosed,
+  jumpOrOpen,
+  openTabFor,
+  recordHistory,
+  reopenClosed,
+  type ClosedTab,
+  type Reopenable,
+} from "../lib/tabs/history";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
 import { adjacentSection, searchTabs } from "../lib/tabs/search";
@@ -69,7 +75,7 @@ async function load(scope: Scope) {
  */
 export function SearchList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
-  // looks the tab up again and reports it if it's gone.
+  // looks the tab up again and reports it if it's gone, and a bookmark or closed entry reads its app again first.
   const { data, isLoading, revalidate, mutate } = useCachedPromise(load, [scope], {
     keepPreviousData: true,
     onError: (error) => showFailure(error, "Could not read tabs"),
@@ -209,7 +215,7 @@ export function SearchList({ scope }: { scope: Scope }) {
       {closed.length > 0 && (
         <List.Section title="Recently Closed" subtitle={String(closed.length)}>
           {shownClosed.map((entry) => (
-            <ClosedItem key={entry.id} entry={entry} onForget={revalidate}>
+            <ClosedItem key={entry.id} entry={entry} tabs={tabs} onForget={revalidate}>
               <BookmarkAction entry={entry} bookmarked={bookmarked} onChange={changeBookmark} />
               {appActions}
             </ClosedItem>
@@ -288,24 +294,39 @@ function TabItem({ id, tab, agent, children }: { id: string; tab: Tab; agent?: L
   );
 }
 
-function ClosedItem({ entry, onForget, children }: { entry: ClosedTab; onForget: () => void; children: ReactNode }) {
+function ClosedItem({
+  entry,
+  tabs,
+  onForget,
+  children,
+}: {
+  entry: ClosedTab;
+  tabs: Tab[];
+  onForget: () => void;
+  children: ReactNode;
+}) {
   const forget = async (id?: string) => {
     await forgetClosed(macosPlatform, id);
     onForget();
   };
+  const openTab = openTabFor(entry, tabs);
   return (
     <List.Item
       id={closedId(entry)}
-      icon={entry.url ? getFavicon(entry.url, { fallback: Icon.Globe }) : { fileIcon: entry.reopen.target }}
+      icon={reopenIcon(entry)}
       title={entry.title}
       subtitle={entry.app.name}
-      accessories={[{ text: closedDetail(entry) }, { date: new Date(entry.closedAt), tooltip: "Closed" }]}
+      accessories={[
+        ...openTag(openTab),
+        { text: closedDetail(entry) },
+        { date: new Date(entry.closedAt), tooltip: "Closed" },
+      ]}
       actions={
         <ActionPanel>
           <SwitchAction
-            title="Reopen"
+            title={openTab ? "Jump to Tab" : "Reopen"}
             failureTitle={`Could not reopen ${entry.title}`}
-            onSwitch={() => reopenClosed(entry, macosPlatform)}
+            onSwitch={() => reopenClosed(entry, tabs, macosPlatform, activateApp)}
           />
           {entry.url && <Action.CopyToClipboard title="Copy URL" content={entry.url} />}
           <Action
@@ -345,11 +366,11 @@ function BookmarkItem({
   return (
     <List.Item
       id={bookmarkId(bookmark)}
-      icon={bookmark.url ? getFavicon(bookmark.url, { fallback: Icon.Globe }) : { fileIcon: bookmark.reopen.target }}
+      icon={reopenIcon(bookmark)}
       title={bookmark.title}
       subtitle={bookmark.app.name}
       accessories={[
-        ...(openTab ? [{ tag: "Open", tooltip: `Open in ${openTab.app.name}` }] : []),
+        ...openTag(openTab),
         { text: closedDetail(bookmark) },
         { icon: Icon.Bookmark, tooltip: "Bookmark" },
       ]}
@@ -358,7 +379,7 @@ function BookmarkItem({
           <SwitchAction
             title={openTab ? "Jump to Tab" : "Open Bookmark"}
             failureTitle={`Could not open ${bookmark.title}`}
-            onSwitch={() => openBookmark(bookmark, tabs, macosPlatform, activateApp)}
+            onSwitch={() => jumpOrOpen(bookmark, tabs, macosPlatform, activateApp)}
           />
           {bookmark.url && <Action.CopyToClipboard title="Copy URL" content={bookmark.url} />}
           <Action.Push
@@ -378,6 +399,16 @@ function BookmarkItem({
       }
     />
   );
+}
+
+/** Bookmarks and Recently Closed: the page's favicon, or the file's icon. */
+function reopenIcon(entry: Reopenable & { url?: string }) {
+  return entry.url ? getFavicon(entry.url, { fallback: Icon.Globe }) : { fileIcon: entry.reopen.target };
+}
+
+/** Marks a bookmark or closed entry that a listed tab shows: picking it jumps there. */
+function openTag(openTab: Tab | undefined): List.Item.Accessory[] {
+  return openTab ? [{ tag: "Open", tooltip: `Open in ${openTab.app.name}` }] : [];
 }
 
 /** A clean name for a bookmark, in place of a long URL or a generic page title. */

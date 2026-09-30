@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-29 — Recently Closed jumps to the open tab (ADR-033, branch `claude/bookmark-reopening-behavior-f1d837`)
+
+- Owner's bug: bookmark → close tab → open from bookmark → pick its Recently Closed entry opened a duplicate. Reopen never looked for an open tab, Search picks from its cached list while reading, and Recently Closed matched URLs exactly.
+- `history.ts` `jumpOrOpen` (shared by Recently Closed and Bookmarks): reads the entry's app again, jumps to the tab showing it, else opens. `nextHistory` ignores a trailing slash. Recently Closed rows get the **Open** tag and "Jump to Tab".
+- Verified: 148 unit tests after merging `main` (the owner's sequence among them: a tab opened since the list was read is jumped to), lint, build. Not yet run live in Raycast.
+
 ## 2026-09-29 — Search out of memory (ADR-032, branch `claude/angry-ramanujan-7888bb`)
 
 - Measured live (dev build, heap logs, deeplink opens): `main` peaked at 88.8–94.7 MB of the 100 MB heap and crashed on 4 of 4 warm opens. Cause: the Claude app's session files (42 files, 14.9M chars, two-byte strings: ~30 MB per read) read all at once by the tab and agent sources, and on a warm open both reads overlapped (the cached tabs started the agent read).
