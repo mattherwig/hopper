@@ -1,9 +1,19 @@
-import { Action, ActionPanel, Icon, Keyboard, List, open } from "@raycast/api";
+import { Action, ActionPanel, Icon, Keyboard, List, open, showToast, Toast } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
 import { useRef, useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosPlatform } from "../lib/platform/os";
 import { showFailure } from "../lib/platform/report";
+import {
+  bookmarkFor,
+  loadBookmarks,
+  openBookmark,
+  openTabFor,
+  setBookmark,
+  withBookmark,
+  withoutBookmark,
+  type Bookmark,
+} from "../lib/tabs/bookmarks";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
@@ -38,10 +48,14 @@ async function load(scope: Scope) {
   const failed = new Set(result.failures.map((f) => f.app.bundleId));
   const covered = (bundleId: string) =>
     result.accessibility && !failed.has(bundleId) && (scope === "all" || bundleId === recent[0]?.bundleId);
-  const closed = await recordHistory(macosPlatform, result.tabs, covered, Date.now());
+  const [closed, bookmarks] = await Promise.all([
+    recordHistory(macosPlatform, result.tabs, covered, Date.now()),
+    loadBookmarks(macosPlatform),
+  ]);
   return {
     ...result,
     closed: scope === "all" ? closed : closed.filter((c) => c.app.bundleId === recent[0]?.bundleId),
+    bookmarks,
     current: recent[0],
   };
 }
@@ -54,11 +68,30 @@ async function load(scope: Scope) {
 export function SearchList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
   // looks the tab up again and reports it if it's gone.
-  const { data, isLoading, revalidate } = useCachedPromise(load, [scope], {
+  const { data, isLoading, revalidate, mutate } = useCachedPromise(load, [scope], {
     keepPreviousData: true,
     onError: (error) => showFailure(error, "Could not read tabs"),
   });
-  const { tabs = [], closed = [], failures = [], accessibility = true, current } = data ?? {};
+  const {
+    tabs = [],
+    closed = [],
+    bookmarks: allBookmarks = [],
+    failures = [],
+    accessibility = true,
+    current,
+  } = data ?? {};
+  const bookmarks = scope === "all" ? allBookmarks : allBookmarks.filter((b) => b.app.bundleId === current?.bundleId);
+  const bookmarked = new Set(allBookmarks.map((b) => b.id));
+  // Bookmarks are part of the list's data: a change is shown at once, without reading every app again.
+  const changeBookmark = (entry: Omit<Bookmark, "addedAt">, on: boolean) =>
+    mutate(setBookmark(macosPlatform, entry, on, Date.now()), {
+      optimisticUpdate: (data) =>
+        data && {
+          ...data,
+          bookmarks: on ? withBookmark(data.bookmarks, entry, Date.now()) : withoutBookmark(data.bookmarks, entry.id),
+        },
+      shouldRevalidateAfter: false,
+    });
   // Agents: read after the tabs, which it reuses to locate them, so the list shows first.
   const { data: agentData, revalidate: reloadAgents } = useCachedPromise(
     (read: Tab[]) => loadAllAgents({ tabs: read }),
@@ -85,6 +118,7 @@ export function SearchList({ scope }: { scope: Scope }) {
   // Own filtering (ADR-015): typo-tolerant, and ranks an app's own tabs above tabs that mention its name.
   const [query, setQuery] = useState("");
   const sections = groupByApp(searchTabs(entries, query));
+  const shownBookmarks = searchTabs(bookmarks, query);
   const shownClosed = searchTabs(closed, query);
 
   // Next / Previous App. The selected row lives in a ref, not state: ↑ / ↓ must not re-render the whole list
@@ -93,7 +127,11 @@ export function SearchList({ scope }: { scope: Scope }) {
   // leaving Raycast to select the top match.
   const selected = useRef<string>(undefined);
   const [jumpTo, setJumpTo] = useState<string>();
-  const rows = [...sections.map((s) => s.entries.map(entryId)), shownClosed.map(closedId)];
+  const rows = [
+    ...sections.map((s) => s.entries.map(entryId)),
+    shownBookmarks.map(bookmarkId),
+    shownClosed.map(closedId),
+  ];
   const move = (step: 1 | -1) => setJumpTo(adjacentSection(rows, selected.current, step));
   const appActions = (
     <ActionPanel.Section>
@@ -134,6 +172,7 @@ export function SearchList({ scope }: { scope: Scope }) {
           {entries.map((entry) =>
             entry.tab ? (
               <TabItem key={entry.tab.key} id={entryId(entry)} tab={entry.tab} agent={agentByTab.get(entry.tab.key)}>
+                <BookmarkAction entry={bookmarkFor(entry.tab)} bookmarked={bookmarked} onChange={changeBookmark} />
                 {appActions}
               </TabItem>
             ) : (
@@ -144,10 +183,25 @@ export function SearchList({ scope }: { scope: Scope }) {
           )}
         </List.Section>
       ))}
+      {bookmarks.length > 0 && (
+        <List.Section title="Bookmarks" subtitle={String(bookmarks.length)}>
+          {shownBookmarks.map((bookmark) => (
+            <BookmarkItem
+              key={bookmark.id}
+              bookmark={bookmark}
+              tabs={tabs}
+              onRemove={() => changeBookmark(bookmark, false)}
+            >
+              {appActions}
+            </BookmarkItem>
+          ))}
+        </List.Section>
+      )}
       {closed.length > 0 && (
         <List.Section title="Recently Closed" subtitle={String(closed.length)}>
           {shownClosed.map((entry) => (
             <ClosedItem key={entry.id} entry={entry} onForget={revalidate}>
+              <BookmarkAction entry={entry} bookmarked={bookmarked} onChange={changeBookmark} />
               {appActions}
             </ClosedItem>
           ))}
@@ -265,6 +319,88 @@ function ClosedItem({ entry, onForget, children }: { entry: ClosedTab; onForget:
   );
 }
 
+function BookmarkItem({
+  bookmark,
+  tabs,
+  onRemove,
+  children,
+}: {
+  bookmark: Bookmark;
+  tabs: Tab[];
+  onRemove: () => Promise<unknown>;
+  children: ReactNode;
+}) {
+  const openTab = openTabFor(bookmark, tabs);
+  return (
+    <List.Item
+      id={bookmarkId(bookmark)}
+      icon={bookmark.url ? getFavicon(bookmark.url, { fallback: Icon.Globe }) : { fileIcon: bookmark.reopen.target }}
+      title={bookmark.title}
+      subtitle={bookmark.app.name}
+      accessories={[
+        ...(openTab ? [{ tag: "Open", tooltip: `Open in ${openTab.app.name}` }] : []),
+        { text: closedDetail(bookmark) },
+        { icon: Icon.Bookmark, tooltip: "Bookmark" },
+      ]}
+      actions={
+        <ActionPanel>
+          <SwitchAction
+            title={openTab ? "Jump to Tab" : "Open Bookmark"}
+            failureTitle={`Could not open ${bookmark.title}`}
+            onSwitch={() => openBookmark(bookmark, tabs, macosPlatform, activateApp)}
+          />
+          {bookmark.url && <Action.CopyToClipboard title="Copy URL" content={bookmark.url} />}
+          <Action
+            title="Remove Bookmark"
+            icon={Icon.XMarkCircle}
+            shortcut={Keyboard.Shortcut.Common.Remove}
+            onAction={() => runChange(onRemove(), "Could not remove bookmark")}
+          />
+          {children}
+        </ActionPanel>
+      }
+    />
+  );
+}
+
+/** ⌘D on a tab or Recently Closed entry: bookmark it, or remove its bookmark. Nothing for what can't reopen. */
+function BookmarkAction({
+  entry,
+  bookmarked,
+  onChange,
+}: {
+  entry?: Omit<Bookmark, "addedAt">;
+  bookmarked: Set<string>;
+  onChange: (entry: Omit<Bookmark, "addedAt">, on: boolean) => Promise<unknown>;
+}) {
+  if (!entry) return null;
+  const on = !bookmarked.has(entry.id);
+  return (
+    <Action
+      title={on ? "Add Bookmark" : "Remove Bookmark"}
+      icon={on ? Icon.Bookmark : Icon.XMarkCircle}
+      shortcut={{ modifiers: ["cmd"], key: "d" }}
+      onAction={() =>
+        runChange(onChange(entry, on), on ? "Could not add bookmark" : "Could not remove bookmark", {
+          title: on ? "Bookmarked" : "Bookmark removed",
+          message: entry.title,
+        })
+      }
+    />
+  );
+}
+
+/** Shows how a bookmark change went. */
+async function runChange(change: Promise<unknown>, failureTitle: string, success?: { title: string; message: string }) {
+  try {
+    await change;
+  } catch (error) {
+    await showFailure(error, failureTitle);
+    return;
+  }
+  if (success) await showToast({ style: Toast.Style.Success, ...success });
+}
+
 /** A row of Search: a tab, or an agent, in the shape search reads, with its app for grouping. */
 type Entry = { title: string; detail?: string; detailFull?: string; url?: string; kind: string; app: App } & (
   { tab: Tab; agent?: undefined } | { agent: ListedAgent; tab?: undefined }
@@ -288,9 +424,10 @@ const agentEntry = (agent: ListedAgent): Entry => ({
   app: agent.location!.app,
 });
 
-/** Row ids: tabs, agents, and closed entries each have their own keys, so each gets a prefix. */
+/** Row ids: tabs, agents, bookmarks, and closed entries each have their own keys, so each gets a prefix. */
 const entryId = (entry: Entry) => (entry.tab ? `tab:${entry.tab.key}` : `agent:${entry.agent.key}`);
 const closedId = (entry: ClosedTab) => `closed:${entry.id}`;
+const bookmarkId = (bookmark: Bookmark) => `bookmark:${bookmark.id}`;
 
 /** One section per app, in order of each app's first entry (so the best search match's app comes first). */
 function groupByApp(entries: Entry[]): { app: App; entries: Entry[] }[] {
@@ -304,7 +441,7 @@ function groupByApp(entries: Entry[]): { app: App; entries: Entry[] }[] {
 }
 
 /** Host for pages, the containing folder for files. */
-function closedDetail(entry: ClosedTab): string {
+function closedDetail(entry: Pick<ClosedTab, "url" | "detail" | "reopen">): string {
   if (entry.reopen.kind === "url") return shortDetail(entry);
   return entry.reopen.target.split("/").slice(-2, -1)[0] ?? "";
 }

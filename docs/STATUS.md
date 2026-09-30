@@ -2,6 +2,13 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-29 — Bookmarks in Search (ADR-030, branch `claude/search-quick-links-integration-65f8cf`)
+
+- Asked for: Raycast Quicklinks in Search. Not readable by extensions (encrypted `main.db`, create-only API), so, with the owner, Hopper's own bookmarks instead.
+- `tabs/bookmarks.ts`: `⌘D` on a tab or Recently Closed entry adds/removes; a Bookmarks section in Search; picking one jumps to the tab already showing it (saved app first, then any browser's active tab), else opens it in the saved app.
+- Verified: 139 unit tests (4 new), lint, build; live in Raycast (dev) on a throwaway Safari window: `⌘D` adds (toast, **Open** tag), picking the bookmark from Finder selects its Safari tab with no duplicate, after closing the tab it opens a new one, `⌃X` on the row and `⌘D` again on the tab remove it.
+- Found live: Search's JS heap already peaks at ~90+ MB of Raycast's 100 MB limit on this Mac (`main` crashed "Command Out of Memory" 1 of 4 opens). A first version with bookmarks in their own `useCachedPromise` crashed 4/4 (one more full-list render at peak load); bookmarks now ride on the tabs load and change via `mutate` (0/4). The headroom itself is a separate problem (Claude app session files: 41 files, 14 MB of JSON, read in full).
+
 ## 2026-09-29 — Error reports to the Developer Hub (ADR-029, branch `feat/error-reports`)
 
 - Every handled failure now goes to the Developer Hub via `captureException` (`platform/report.ts`, `Platform.reportError`, `showFailure`), labeled with what failed. Previously nothing was reported: Hopper catches everything, and Raycast only reports unhandled errors.
