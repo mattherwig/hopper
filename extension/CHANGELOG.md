@@ -16,6 +16,7 @@
 - Search: `⌥→` / `⌥←` jump to the next or previous app's most recent entry.
 - Obsidian tabs in Search: every open vault's tabs, in all its windows (popouts too), with each note's folder; closed notes reopen from Recently Closed.
 - Bookmarks in Search: `⌘D` bookmarks a tab, page, note, document, or Recently Closed entry. Picking a bookmark jumps to the tab already showing it, in any browser, and opens it only when it isn't open.
+- Search no longer runs out of memory ("Command Out of Memory") with many Claude Code sessions: only the few fields it needs are read from the Claude app's session files.
 
 ## [Tabs] - {PR_MERGE_DATE}
 

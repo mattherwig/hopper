@@ -122,10 +122,10 @@ export function liveCliThreads(threads: Thread[], processes: Process[]): Map<str
   return new Map([...latest.values()].map(({ thread, terminal }) => [thread.id, terminal]));
 }
 
-/** Threads with a live host, as agents; `tails` maps a thread id to its rollout's end. */
+/** Threads with a live host, as agents; `statuses` maps a thread id to its rollout's status (idle if none). */
 export function toAgents(
   threads: Thread[],
-  tails: Map<string, string>,
+  statuses: Map<string, AgentStatus>,
   processes: Process[],
   appRunning: boolean,
 ): Agent[] {
@@ -140,7 +140,7 @@ export function toAgents(
       if (!appRunning) return [];
       host = { kind: "link", bundleId: CODEX_APP, url: `codex://threads/${thread.id}` };
     }
-    const status = statusOf(tails.get(thread.id) ?? "");
+    const status = statuses.get(thread.id) ?? "idle";
     return [
       {
         key: `codex:${thread.id}`,
@@ -195,14 +195,19 @@ export const codex: AgentSource = {
     if (rows.length > 0 && threads.length === 0) {
       platform.reportError(new Error("Codex threads have no id"), "agents: codex threads");
     }
-    const tails = new Map(
+    // Each tail becomes its status as soon as it's read: up to 50 tails of 256 KB held together would take a big
+    // share of the extension's 100 MB JS heap (docs/PERFORMANCE.md).
+    const statuses = new Map(
       await Promise.all(
         threads.map(
           async (t) =>
-            [t.id, t.rollout ? await platform.readTail(t.rollout, TAIL_BYTES).catch(noTail(platform)) : ""] as const,
+            [
+              t.id,
+              statusOf(t.rollout ? await platform.readTail(t.rollout, TAIL_BYTES).catch(noTail(platform)) : ""),
+            ] as const,
         ),
       ),
     );
-    return toAgents(threads, tails, processes, appRunning);
+    return toAgents(threads, statuses, processes, appRunning);
   },
 };

@@ -17,7 +17,7 @@ import {
   sidebarRows,
   webPages,
 } from "swift:../../../swift";
-import type { AppWindows, GitRepo, Platform, SidebarRow } from "./model";
+import type { AppWindows, GitRepo, JsonFields, Platform, SidebarRow } from "./model";
 import { reportError } from "./report";
 import { readJson, writeJson } from "./storage";
 
@@ -78,6 +78,16 @@ export const macosPlatform: Platform = {
     );
     return files.filter((f) => f.text !== "");
   },
+  readJsonFields: async (dir, name, depth, fields) => {
+    const files: JsonFields[] = [];
+    // One file at a time, so only one file's text is on the JS heap at once; read in parallel, they all were (ADR-031).
+    for (const path of await findFiles(dir, name, depth)) {
+      const data = parseJson(await readFile(path, "utf8").catch(orElse("", "files: read")));
+      if (data)
+        files.push({ path, fields: Object.fromEntries(fields.filter((f) => f in data).map((f) => [f, data[f]])) });
+    }
+    return files;
+  },
   listDir: (dir) => readdir(dir).catch(orElse([], "files: list")),
   openUrl: (url, appPath) => open(url, appPath),
   querySqlite: async (path, sql) => {
@@ -94,6 +104,16 @@ export const macosPlatform: Platform = {
   gitRepos: (dirs) => Promise.all(dirs.map((dir) => gitRepo(dir).catch(orElse(undefined, "projects: git")))),
   reportError,
 };
+
+/** A JSON object's fields; undefined for anything else, or for text that doesn't parse (e.g. a file mid-write). */
+function parseJson(text: string): Record<string, unknown> | undefined {
+  try {
+    const data: unknown = JSON.parse(text);
+    return data && typeof data === "object" && !Array.isArray(data) ? (data as Record<string, unknown>) : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 async function findFiles(dir: string, name: RegExp, depth: number): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(orElse([], "files: find"));

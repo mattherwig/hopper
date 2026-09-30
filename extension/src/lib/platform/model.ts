@@ -2,6 +2,12 @@
 // Platform passed in, implemented for real in os.ts (AppleScript, Swift helper, files) and faked in tests
 // (test/fake-platform.ts). Adding a capability: add it here, implement it in os.ts, fake it in the test helper.
 
+/** A file's picked fields (Platform.readJsonFields). */
+export interface JsonFields {
+  path: string;
+  fields: Record<string, unknown>;
+}
+
 export interface App {
   bundleId: string;
   name: string;
@@ -42,6 +48,12 @@ export interface Platform {
    * [] if `dir` is missing.
    */
   readFiles(dir: string, name: RegExp, depth: number): Promise<{ path: string; text: string; modified?: number }[]>;
+  /**
+   * The same files' `fields` (top-level keys of a JSON object; absent ones left out), one file at a time: for big
+   * files of which only a few fields are needed, so no more than one is held at once (ADR-031). Files that aren't a
+   * JSON object are left out.
+   */
+  readJsonFields(dir: string, name: RegExp, depth: number, fields: readonly string[]): Promise<JsonFields[]>;
   /** Names of the entries in `dir`, [] if it's missing. */
   listDir(dir: string): Promise<string[]>;
   /** Open a URL or file path with `appPath` (an .app path), or with its registered app if omitted. */

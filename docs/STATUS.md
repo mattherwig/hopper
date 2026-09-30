@@ -2,6 +2,13 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-29 — Search out of memory (ADR-031, branch `claude/angry-ramanujan-7888bb`)
+
+- Measured live (dev build, heap logs, deeplink opens): `main` peaked at 88.8–94.7 MB of the 100 MB heap and crashed on 4 of 4 warm opens. Cause: the Claude app's session files (42 files, 14.9M chars, two-byte strings: ~30 MB per read) read all at once by the tab and agent sources, and on a warm open both reads overlapped (the cached tabs started the agent read).
+- Fix: `Platform.readJsonFields` reads one file at a time and keeps only the needed fields; Search reads agents only once fresh tabs are in; Codex keeps each rollout tail's status, not the tail. A byte-level picker (faster, ~80 lines) and streaming JSON libraries were measured and not taken (ADR-031).
+- Verified: 140 unit tests, lint, build; live 0 out-of-memory in 3 opens, peak 68.8 MB (dev, StrictMode doubles the load). The picker variant did 0 in 8 at 50.7 MB. The 8-open run of the final version was cut short by another session's dev build.
+- Next: rerun 8 opens with the final version.
+
 ## 2026-09-29 — Bookmarks in Search (ADR-030, branch `claude/search-quick-links-integration-65f8cf`)
 
 - Asked for: Raycast Quicklinks in Search. Not readable by extensions (encrypted `main.db`, create-only API), so, with the owner, Hopper's own bookmarks instead.

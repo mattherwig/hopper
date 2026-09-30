@@ -92,12 +92,13 @@ export function SearchList({ scope }: { scope: Scope }) {
         },
       shouldRevalidateAfter: false,
     });
-  // Agents: read after the tabs, which it reuses to locate them, so the list shows first.
+  // Agents: read after the tabs, which it reuses to locate them, so the list shows first. Not on the cached tabs
+  // while fresh ones load: the cached agents already show, and two reads at once can exceed the heap (ADR-031).
   const { data: agentData, revalidate: reloadAgents } = useCachedPromise(
     (read: Tab[]) => loadAllAgents({ tabs: read }),
     [tabs],
     {
-      execute: tabs.length > 0,
+      execute: !isLoading && tabs.length > 0,
       keepPreviousData: true,
       onError: (error) => showFailure(error, "Could not read agents"),
     },
