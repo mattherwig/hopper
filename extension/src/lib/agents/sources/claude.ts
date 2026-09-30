@@ -18,6 +18,8 @@ const REGISTRY_FILE = /^\d+\.json$/;
 const CLAUDE_APP = "com.anthropic.claudefordesktop";
 /** Session statuses statusOf knows; "" is a file without one. Any other is reported (a new Claude Code). */
 const STATUSES = new Set(["waiting", "busy", "shell", "idle", ""]);
+/** What agents need of the app's session files; the rest (mostly MCP config, ~400 KB) is dropped as each file is read. */
+const DESKTOP_FIELDS = ["sessionId", "cliSessionId", "title", "lastActivityAt", "lastFocusedAt", "postTurnSummary"];
 
 /** A running session, from its ~/.claude/sessions/<pid>.json. */
 export interface LiveSession {
@@ -75,14 +77,8 @@ export function parseLiveSession(text: string): LiveSession | undefined {
   };
 }
 
-export function parseDesktopSession(text: string): DesktopSession | undefined {
-  let d: Record<string, unknown>;
-  try {
-    d = JSON.parse(text);
-  } catch {
-    return undefined;
-  }
-  const sessionId = str(d?.sessionId);
+export function parseDesktopSession(d: Record<string, unknown>): DesktopSession | undefined {
+  const sessionId = str(d.sessionId);
   if (!sessionId) return undefined;
   const summary = d.postTurnSummary as Record<string, unknown> | undefined;
   return {
@@ -204,7 +200,7 @@ export const claude: AgentSource = {
     const home = platform.homeDir();
     const [registry, desktopFiles] = await Promise.all([
       platform.readFiles(`${home}/${REGISTRY_DIR}`, REGISTRY_FILE, 0),
-      platform.readFiles(`${home}/${DESKTOP_DIR}`, DESKTOP_FILE, 3),
+      platform.readJsonFields(`${home}/${DESKTOP_DIR}`, DESKTOP_FILE, 3, DESKTOP_FIELDS),
     ]);
     const procs = new Map(processes.map((p) => [p.pid, p]));
     const sessions = registry.flatMap((f) => parseLiveSession(f.text) ?? []);
@@ -213,7 +209,7 @@ export const claude: AgentSource = {
     const live = sessions.filter((s) => isLive(s, procs));
     const agents = toAgents(
       live,
-      desktopFiles.flatMap((f) => parseDesktopSession(f.text) ?? []),
+      desktopFiles.flatMap((f) => parseDesktopSession(f.fields) ?? []),
     );
     // Terminal sessions are found by their tty.
     return agents.map((agent) =>

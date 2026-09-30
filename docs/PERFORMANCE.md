@@ -55,3 +55,24 @@ Every render of Search rebuilds every row in JS (~11ms) and sends the whole tree
 | Selection in a ref, state only for jumps | 13 (loading + jumps) | 0 |
 
 Rule: nothing that changes on every arrow key may be React state in a list view.
+
+## Search memory (2026-09-29, macOS 27.0, 86 tabs, 10 agents, ADR-032)
+
+Raycast stops a command at 100 MB of JS heap ("Command terminated after reaching the extension memory limit"). Measured with temporary `console.log`s of `process.memoryUsage().heapUsed` (after each tab and agent source, after `loadTabs` / `loadAllAgents`, each render) in a dev build, opening Search by deeplink and closing it with Escape (7s apart). A dev build runs React StrictMode, so the load runs twice per open: it overstates production by one load. `heapUsed` includes garbage not yet collected.
+
+| | Peak heapUsed | Out of memory |
+|---|---|---|
+| `main`: Claude session files read in parallel, then parsed, by the tab and agent sources; agents also read on the cached tabs | 88.8–94.7 MB | 4 of 4 warm opens (first open survived) |
+| One file at a time + `JSON.parse` (`readJsonFields`); agents after fresh tabs | 67.4 MB (52–67 per open) | 0 of 9 |
+| Same, with a byte picker that decodes only the wanted fields (measured, not kept) | 50.4 MB | 0 of 9 |
+
+Where it went: ~25 MB baseline (Raycast API, React); each Claude session read was ~30 MB of two-byte strings (14.9M chars in 42 files); a warm open ran the agent read on the cached tabs while the fresh tab read ran. Each full-list render is ~2 MB of garbage. Time from the start of the load (medians of the 9 opens, twice each in dev):
+
+| | Claude tab source done | `loadTabs` done | Agents done |
+|---|---|---|---|
+| One file at a time + `JSON.parse` | 510 ms | 1049 ms | 1336 ms |
+| Byte picker | 529 ms | 1085 ms | 1344 ms |
+
+The same within noise: the other apps' reads (AppleScript, Accessibility) set the pace, not the Claude files.
+
+Offline, 43 files, two overlapping reads, 20 MB ballast (`node --max-old-space-size`): read all then parse, or parse each as it arrives in parallel, run out of memory even at a 64 MB cap; one at a time passes at 32 MB. Rule: don't hold an app file that can grow whole, or many at once (ADR-032); watch the heap when adding a hook or a render to Search.
