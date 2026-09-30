@@ -2,6 +2,13 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-29 — Codex threads unreadable while Codex is idle (ADR-031)
+
+- Cause: `~/.codex/state_5.sqlite` is WAL-mode and Codex closes it when idle, deleting `-wal`/`-shm`; `sqlite3 -readonly` can't open a WAL db without `-shm` ("unable to open database file (14)"), so Codex agents never appeared. Not a race, as ADR-029 had guessed.
+- Fix: `querySqlite` retries as an immutable URI when the read-only open fails and no `-wal` file exists (`platform/sqlite.ts`); `-readonly` stays the path while the app has the db open. Nothing is written in the app's folder.
+- Verified: 143 unit tests (2 new), lint, build; `-readonly` vs immutable checked on a copy of the db, idle and with a writer open; the immutable URI read the live db without creating files.
+- Live (dev build): with Codex working on a new thread (db open, `-wal` present), Agents lists it ("Codex · ~/Projects/jumper · Idle"). Not yet seen live: the same after Codex closes the db (the fallback path); Codex's app-server kept it open for 10+ minutes after the turn.
+
 ## 2026-09-29 — Bookmarks in Search (ADR-030, branch `claude/search-quick-links-integration-65f8cf`)
 
 - Asked for: Raycast Quicklinks in Search. Not readable by extensions (encrypted `main.db`, create-only API), so, with the owner, Hopper's own bookmarks instead.

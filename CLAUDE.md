@@ -76,6 +76,7 @@ extension/                                    the Raycast extension; everything 
   src/lib/projects/project.ts                 PURE: projects = git repositories (worktrees under their main checkout); a grouping, not a level
   src/lib/platform/                           macOS / Raycast glue shared by every level
     model.ts                                  PURE: the Platform interface (OS capabilities) and App; fake in test/fake-platform.ts
+    sqlite.ts                                 PURE: when querySqlite reads a WAL database as immutable (no app holds it open; ADR-031)
     report.ts                                 reportError() → captureException to the Developer Hub, labeled; showFailure() = toast + report (ADR-029)
     os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
@@ -104,7 +105,7 @@ site/index.html                               landing page at https://addhopper.
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`, `agents`, `next-agent`) are permanent once published: users' hotkeys bind to them.
 - Incognito / private browser windows never reach the tab list (ADR-018): filter them in the source, not the UI.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
-- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, and `platform/model.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-022).
+- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, `platform/model.ts`, and `platform/sqlite.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-022).
 - Agent sources read agents' own state read-only: never install hooks, write their config, or call anything that starts, resumes, loads, or sends input to a session (ADR-022).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.
 - Activate apps through `activateApp()`: Accessibility `AXFrontmost` via the Swift helper, falling back to Raycast `open(app.path)` (ADR-021; `open()` alone sends a reopen event that can show the wrong window). Never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).
