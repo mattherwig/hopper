@@ -58,8 +58,8 @@ extension/                                    the Raycast extension; everything 
     registry.ts                               which source handles which app (windows is the fallback), plus DISCOVERED sources of places inside other apps (herdr) — add new apps here
     search.ts                                 search bar filter + ranking (typos, app-name first; ADR-015)
     load.ts                                   read all apps' tabs in parallel, order them, route selection (and pane selection) to the source
-    history.ts, reopen.ts                     Recently Closed (ADR-019)
-    bookmarks.ts                              Bookmarks: saved reopen targets; jump to the open tab, else open (ADR-030)
+    history.ts, reopen.ts                     Recently Closed (ADR-019); jumpOrOpen: jump to the open tab, else open, shared with Bookmarks (ADR-032)
+    bookmarks.ts                              Bookmarks: saved reopen targets (ADR-030)
     applescript.ts                            script scaffolding + record parsing shared by AppleScript sources
     sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
                                               herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-023);

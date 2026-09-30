@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-29 — Recently Closed jumps to the open tab (ADR-032, branch `claude/bookmark-reopening-behavior-f1d837`)
+
+- Owner's bug: bookmark → close tab → open from bookmark → pick its Recently Closed entry opened a duplicate. Reopen never looked for an open tab, Search picks from its cached list while reading, and Recently Closed matched URLs exactly.
+- `history.ts` `jumpOrOpen` (shared by Recently Closed and Bookmarks): reads the entry's app again, jumps to the tab showing it, else opens. `nextHistory` ignores a trailing slash. Recently Closed rows get the **Open** tag and "Jump to Tab".
+- Verified: 146 unit tests (the owner's sequence among them: a tab opened since the list was read is jumped to), lint, build. Not yet run live in Raycast.
+
 ## 2026-09-29 — Codex threads unreadable while Codex is idle (ADR-031)
 
 - Cause: `~/.codex/state_5.sqlite` is WAL-mode and Codex closes it when idle, deleting `-wal`/`-shm`; `sqlite3 -readonly` can't open a WAL db without `-shm` ("unable to open database file (14)"), so Codex agents never appeared. Not a race, as ADR-029 had guessed.
