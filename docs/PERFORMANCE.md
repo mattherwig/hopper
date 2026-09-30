@@ -44,3 +44,21 @@ The raw native read is <10ms; the Raycast Swift bridge adds ~15ms (Node `spawn` 
 ## Activate via Accessibility (2026-09-27, macOS 27.0, ADR-021)
 
 `PERF activated − PERF read` with `frontApp()` (Accessibility `AXFrontmost`, Swift helper): **~55–65ms** (range 42–76ms over 8 toggles), vs ~25ms for Raycast `open()` alone. The extra ~30–40ms is one helper spawn (~15ms through the bridge) plus the AX call, which blocks until the target app has activated. No side-by-side `open()` run on the same day; the ~25ms is the baseline above. Candidate speedup: private SkyLight `_SLPSSetFrontProcessWithOptions` (#25).
+
+## Search keyboard (2026-09-29, macOS 27.0, 215 rows)
+
+Dev builds log `PERF select <epoch> <id>` (Raycast reports a new selection), `PERF jump <epoch>` (⌥→ / ⌥←), and `PERF render <ms> rows=<n>` (each React render of Search, JS side only). The bench presses keys like a user and logs each key's epoch:
+
+```bash
+swiftc -O -o /tmp/hopper-bench-search scripts/bench_search.swift   # from the repo root
+/tmp/hopper-bench-search 15 4 60 2>/tmp/keys.log                   # 15 ↓, 15 ↑, 4 ⌥→, 4 ⌥←, then jump/step/jump back
+```
+
+Key → `PERF select` is Raycast delivering the selection (~8ms median), not what you see: the cost is each render, which rebuilds every row in JS (~11ms) and sends the whole tree to Raycast to diff. So count renders per key.
+
+| | Renders in the bench | Per ↑ / ↓ |
+|---|---|---|
+| #59 (selection in state, mirrored from `onSelectionChange`) | 38 | 1 full render |
+| Selection in a ref, state only for jumps | 13 (loading + jumps) | 0 |
+
+Rule: nothing that changes on every arrow key may be React state in a list view.

@@ -1,6 +1,6 @@
-import { Action, ActionPanel, Icon, Keyboard, List, open } from "@raycast/api";
+import { Action, ActionPanel, environment, Icon, Keyboard, List, open } from "@raycast/api";
 import { getFavicon, useCachedPromise } from "@raycast/utils";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosPlatform } from "../lib/platform/os";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
@@ -51,6 +51,7 @@ async function load(scope: Scope) {
  * has a row of its own in that app's section.
  */
 export function SearchList({ scope }: { scope: Scope }) {
+  const renderStart = performance.now();
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
   // looks the tab up again and reports it if it's gone.
   const { data, isLoading, revalidate } = useCachedPromise(load, [scope], { keepPreviousData: true });
@@ -79,11 +80,18 @@ export function SearchList({ scope }: { scope: Scope }) {
   const sections = groupByApp(searchTabs(entries, query));
   const shownClosed = searchTabs(closed, query);
 
-  // Next / Previous App: selection is controlled, and follows the arrow keys so a jump starts from where you are.
-  // Typing hands it back to Raycast (top row).
-  const [selected, setSelected] = useState<string>();
+  // Next / Previous App. The selected row lives in a ref, not state: ↑ / ↓ must not re-render the whole list
+  // (every render sends every row to Raycast). Only a jump sets `jumpTo`, which Raycast selects; the first move
+  // away clears it again (one render), so a later jump to the same row still reaches Raycast. Typing clears it too,
+  // leaving Raycast to select the top match.
+  const selected = useRef<string>(undefined);
+  const [jumpTo, setJumpTo] = useState<string>();
   const rows = [...sections.map((s) => s.entries.map(entryId)), shownClosed.map(closedId)];
-  const move = (step: 1 | -1) => setSelected(adjacentSection(rows, selected, step));
+  const move = (step: 1 | -1) => {
+    perf(`jump ${Date.now()}`);
+    setJumpTo(adjacentSection(rows, selected.current, step));
+  };
+  useEffect(() => perf(`render ${(performance.now() - renderStart).toFixed(1)}ms rows=${rows.flat().length}`));
   const appActions = (
     <ActionPanel.Section>
       <Action
@@ -105,11 +113,15 @@ export function SearchList({ scope }: { scope: Scope }) {
     <List
       isLoading={isLoading}
       filtering={false}
-      selectedItemId={selected}
-      onSelectionChange={(id) => setSelected(id ?? undefined)}
+      selectedItemId={jumpTo}
+      onSelectionChange={(id) => {
+        perf(`select ${Date.now()} ${id}`);
+        selected.current = id ?? undefined;
+        if (jumpTo && id !== jumpTo) setJumpTo(undefined);
+      }}
       onSearchTextChange={(text) => {
         setQuery(text);
-        setSelected(undefined);
+        setJumpTo(undefined);
       }}
       searchBarPlaceholder={
         scope === "current" && current ? `Search ${current.name}` : "Search apps, tabs, sessions, and agents"
@@ -273,6 +285,11 @@ const agentEntry = (agent: ListedAgent): Entry => ({
   kind: "agent",
   app: agent.location!.app,
 });
+
+/** Timings, logged only in development (`npm run dev`); see docs/PERFORMANCE.md. */
+function perf(message: string) {
+  if (environment.isDevelopment) console.log(`PERF ${message}`);
+}
 
 /** Row ids: tabs, agents, and closed entries each have their own keys, so each gets a prefix. */
 const entryId = (entry: Entry) => (entry.tab ? `tab:${entry.tab.key}` : `agent:${entry.agent.key}`);
