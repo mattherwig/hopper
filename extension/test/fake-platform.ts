@@ -1,13 +1,17 @@
 import type { Platform } from "../src/lib/platform/model.ts";
 
-/** A Platform where every call fails unless overridden; records AppleScript calls. */
-export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { scripts: string[] } {
+/** A Platform where every call fails unless overridden; records AppleScript calls and reported errors. */
+export function fakePlatform(
+  overrides: Partial<Platform> = {},
+): Platform & { scripts: string[]; reports: { error: unknown; context: string }[] } {
   const scripts: string[] = [];
+  const reports: { error: unknown; context: string }[] = [];
   // In-memory LocalStorage, shared by loadJson/saveJson unless overridden.
   const store = new Map<string, unknown>();
   const unexpected = (name: string) => () => Promise.reject(new Error(`unexpected ${name}`));
   return {
     scripts,
+    reports,
     runAppleScript: async (script) => {
       scripts.push(script);
       return overrides.runAppleScript ? overrides.runAppleScript(script) : "";
@@ -37,6 +41,7 @@ export function fakePlatform(overrides: Partial<Platform> = {}): Platform & { sc
     socketRequest: overrides.socketRequest ?? unexpected("socketRequest"),
     readTail: overrides.readTail ?? unexpected("readTail"),
     gitRepos: overrides.gitRepos ?? (async (dirs) => dirs.map(() => undefined)),
+    reportError: overrides.reportError ?? ((error, context) => reports.push({ error, context })),
   };
 }
 

@@ -2,6 +2,15 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-09-29 — Error reports to the Developer Hub (ADR-029, branch `feat/error-reports`)
+
+- Every handled failure now goes to the Developer Hub via `captureException` (`platform/report.ts`, `Platform.reportError`, `showFailure`), labeled with what failed. Previously nothing was reported: Hopper catches everything, and Raycast only reports unhandled errors.
+- Simplified with the owner: raw errors, no expected-failure filter, no dedupe, no special error classes; only missing files stay silent (the Platform's `[]` contract).
+- Version drift reported per source: Cursor (unopenable db, headers without id, unknown run status, transcript not at the derived path), Codex (no thread db while running, rows without id, both queries failing), Claude Code (unparseable session files, unknown status), herdr (no socket while running, reply without snapshot, unknown agent status), Obsidian and cmux (files they always write missing while running).
+- Found live in dev: Cursor 3.22.7 uses run status "none" (never-run agents), now known; Codex's database briefly unopenable while Codex wrote it (transient, reported as is).
+- Verified: 135 unit tests, lint, build, dev build running. Not verified: a report arriving at raycast.com/extension-issues (needs a Store build).
+- Next: commit + PR; after the next Store release, read https://www.raycast.com/extension-issues and decide whether noise needs a filter (ADR-029 Consequences).
+
 ## 2026-09-27 — Simplification pass (issues #45–#56, label `simplification`)
 
 - Code, repo and docs surveyed for simplifications; 12 research-first issues filed (`decision` on the ones that cut features).

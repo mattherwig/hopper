@@ -59,6 +59,12 @@ export interface Platform {
   readTail(path: string, bytes: number): Promise<string>;
   /** The git repository containing each folder (undefined if none), for grouping places into projects. */
   gitRepos(dirs: string[]): Promise<(GitRepo | undefined)[]>;
+  /**
+   * Report a failure that is handled (shown as Unavailable, or worked around) but may be a bug, e.g. an app's
+   * files changing shape. Expected failures (errors.ts) are dropped. `context` says what failed, e.g.
+   * "tabs: chromium"; never a title, URL, or path.
+   */
+  reportError(error: unknown, context: string): void;
 }
 
 export interface Process {

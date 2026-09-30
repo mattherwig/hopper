@@ -5,6 +5,7 @@ import {
   isLive,
   parseDesktopSession,
   parseLiveSession,
+  registryDrift,
   statusOf,
   toAgents,
   waitingLabel,
@@ -140,4 +141,12 @@ test("list: reads both folders, keeps live sessions, and gives terminal sessions
     agents.map((a) => [a.id, a.status, a.host]),
     [["a", "working", { kind: "process", pid: 1, tty: "ttys004" }]],
   );
+});
+
+test("session files that don't fit this Claude Code are reported: none parse, or unknown statuses", () => {
+  const session = (status: string) => parseLiveSession(JSON.stringify({ pid: 1, sessionId: "s", status }))!;
+  assert.equal(registryDrift(1, [session("idle")]), undefined);
+  assert.equal(registryDrift(0, []), undefined);
+  assert.equal(registryDrift(2, [])?.message, "Claude Code's session files don't parse");
+  assert.equal(registryDrift(1, [session("thinking")])?.message, 'Unknown Claude Code session status: "thinking"');
 });

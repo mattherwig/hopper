@@ -18,6 +18,7 @@ import {
   webPages,
 } from "swift:../../../swift";
 import type { AppWindows, GitRepo, Platform, SidebarRow } from "./model";
+import { reportError } from "./report";
 import { readJson, writeJson } from "./storage";
 
 /** An app that stops responding must not hold up the whole list. */
@@ -26,6 +27,17 @@ const SQLITE_TIMEOUT = 2000;
 const SOCKET_TIMEOUT = 1000;
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Falls back to `value` when a read fails. A missing file or folder is the Platform's contract ("[] if it's
+ * missing": how sources tell an app that was never used), so only other failures are reported.
+ */
+const orElse =
+  <T>(value: T, context: string) =>
+  (error: unknown): T => {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") reportError(error, context);
+    return value;
+  };
 
 /**
  * The Platform on macOS: AppleScript through Raycast, Accessibility and the process table through the Swift
@@ -60,13 +72,13 @@ export const macosPlatform: Platform = {
     const files = await Promise.all(
       paths.map(async (path) => ({
         path,
-        text: await readFile(path, "utf8").catch(() => ""),
+        text: await readFile(path, "utf8").catch(orElse("", "files: read")),
         modified: (await stat(path).catch(() => undefined))?.mtimeMs,
       })),
     );
     return files.filter((f) => f.text !== "");
   },
-  listDir: (dir) => readdir(dir).catch(() => []),
+  listDir: (dir) => readdir(dir).catch(orElse([], "files: list")),
   openUrl: (url, appPath) => open(url, appPath),
   querySqlite: async (path, sql) => {
     const { stdout } = await execFileAsync("/usr/bin/sqlite3", ["-readonly", "-json", path, sql], {
@@ -79,11 +91,12 @@ export const macosPlatform: Platform = {
   processes: () => processes(),
   socketRequest,
   readTail,
-  gitRepos: (dirs) => Promise.all(dirs.map((dir) => gitRepo(dir).catch(() => undefined))),
+  gitRepos: (dirs) => Promise.all(dirs.map((dir) => gitRepo(dir).catch(orElse(undefined, "projects: git")))),
+  reportError,
 };
 
 async function findFiles(dir: string, name: RegExp, depth: number): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  const entries = await readdir(dir, { withFileTypes: true }).catch(orElse([], "files: find"));
   const nested = await Promise.all(
     entries.map((e) => {
       const path = join(dir, e.name);

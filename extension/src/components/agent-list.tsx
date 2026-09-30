@@ -7,6 +7,7 @@ import { STATUS_TITLE } from "../lib/agents/status";
 import { loadAllAgents } from "../lib/platform/agents";
 import { activateApp } from "../lib/platform/macos";
 import { macosPlatform } from "../lib/platform/os";
+import { showFailure } from "../lib/platform/report";
 import { projectLabel } from "../lib/projects/project";
 import { tildify } from "../lib/tabs/applescript";
 import { SwitchAction } from "./switch-action";
@@ -30,6 +31,7 @@ const ALL = "all";
 export function AgentList() {
   const { data, isLoading, revalidate } = useCachedPromise(() => loadAllAgents(), [], {
     keepPreviousData: true,
+    onError: (error) => showFailure(error, "Could not read agents"),
   });
   useEffect(() => {
     const timer = setInterval(revalidate, REFRESH_MS);
