@@ -3,6 +3,7 @@ import { getFavicon, useCachedPromise } from "@raycast/utils";
 import { useRef, useState, type ReactNode } from "react";
 import { activateApp, getRecentApps } from "../lib/platform/macos";
 import { macosPlatform } from "../lib/platform/os";
+import { showFailure } from "../lib/platform/report";
 import { forgetClosed, recordHistory, reopenClosed, type ClosedTab } from "../lib/tabs/history";
 import { loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
@@ -53,13 +54,20 @@ async function load(scope: Scope) {
 export function SearchList({ scope }: { scope: Scope }) {
   // Cached: the last list shows instantly while fresh data loads. A stale entry is safe to pick: selection
   // looks the tab up again and reports it if it's gone.
-  const { data, isLoading, revalidate } = useCachedPromise(load, [scope], { keepPreviousData: true });
+  const { data, isLoading, revalidate } = useCachedPromise(load, [scope], {
+    keepPreviousData: true,
+    onError: (error) => showFailure(error, "Could not read tabs"),
+  });
   const { tabs = [], closed = [], failures = [], accessibility = true, current } = data ?? {};
   // Agents: read after the tabs, which it reuses to locate them, so the list shows first.
   const { data: agentData, revalidate: reloadAgents } = useCachedPromise(
     (read: Tab[]) => loadAllAgents({ tabs: read }),
     [tabs],
-    { execute: tabs.length > 0, keepPreviousData: true },
+    {
+      execute: tabs.length > 0,
+      keepPreviousData: true,
+      onError: (error) => showFailure(error, "Could not read agents"),
+    },
   );
   const agentByTab = new Map(
     (agentData?.agents ?? []).flatMap((a) => (a.location?.tab ? [[a.location.tab.key, a] as const] : [])),

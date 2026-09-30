@@ -75,6 +75,7 @@ extension/                                    the Raycast extension; everything 
   src/lib/projects/project.ts                 PURE: projects = git repositories (worktrees under their main checkout); a grouping, not a level
   src/lib/platform/                           macOS / Raycast glue shared by every level
     model.ts                                  PURE: the Platform interface (OS capabilities) and App; fake in test/fake-platform.ts
+    report.ts                                 reportError() → captureException to the Developer Hub, labeled; showFailure() = toast + report (ADR-029)
     os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
     macos.ts                                  getRecentApps() (calls Swift, apps with pid) + activateApp() (Cmd+Tab-style via Accessibility, open() as fallback)
@@ -113,6 +114,8 @@ site/index.html                               landing page at https://addhopper.
 - Nothing dev-only in `extension/`: publish copies the whole folder into raycast/extensions (ADR-012).
 - Max 12 `keywords` in package.json (`ray lint` enforces).
 - Store rules: MIT, US English, Title Case titles, `CHANGELOG.md` top entry `## [Title] - {PR_MERGE_DATE}`.
+
+- A catch that hides a failure reports it (ADR-029): `platform.reportError(error, context)` in pure code, `reportError` / `showFailure` in glue (never bare `showFailureToast`). Sources also report version drift: a running app's files missing or not parsing, statuses outside the known set (`unknownStatuses`). `context` never carries titles, URLs, or paths. Reports: https://www.raycast.com/extension-issues.
 
 ## Verifying end to end (no hotkey needed)
 

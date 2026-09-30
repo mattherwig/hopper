@@ -11,10 +11,13 @@ import {
   SESSION_FILE as DESKTOP_FILE,
 } from "../../tabs/sources/claude";
 import type { Agent, AgentContext, AgentSource, AgentStatus, Host } from "../model";
+import { unknownStatuses } from "../status";
 
 const REGISTRY_DIR = ".claude/sessions";
 const REGISTRY_FILE = /^\d+\.json$/;
 const CLAUDE_APP = "com.anthropic.claudefordesktop";
+/** Session statuses statusOf knows; "" is a file without one. Any other is reported (a new Claude Code). */
+const STATUSES = new Set(["waiting", "busy", "shell", "idle", ""]);
 
 /** A running session, from its ~/.claude/sessions/<pid>.json. */
 export interface LiveSession {
@@ -182,6 +185,19 @@ function shellQuote(path: string): string {
   return /^[\w@%+=:,./~-]+$/.test(path) ? path : `'${path.replace(/'/g, "'\\''")}'`;
 }
 
+/**
+ * Why the session files don't fit what Hopper knows of Claude Code, if they don't: files none of which parse, or
+ * statuses statusOf doesn't know (a new Claude Code). `sessions`: every file that parsed, live or not.
+ */
+export function registryDrift(files: number, sessions: LiveSession[]): Error | undefined {
+  if (files > 0 && sessions.length === 0) return new Error("Claude Code's session files don't parse");
+  return unknownStatuses(
+    "Claude Code session",
+    sessions.map((s) => s.status),
+    STATUSES,
+  );
+}
+
 export const claude: AgentSource = {
   id: "claude",
   list: async ({ platform, processes }: AgentContext) => {
@@ -191,7 +207,10 @@ export const claude: AgentSource = {
       platform.readFiles(`${home}/${DESKTOP_DIR}`, DESKTOP_FILE, 3),
     ]);
     const procs = new Map(processes.map((p) => [p.pid, p]));
-    const live = registry.flatMap((f) => parseLiveSession(f.text) ?? []).filter((s) => isLive(s, procs));
+    const sessions = registry.flatMap((f) => parseLiveSession(f.text) ?? []);
+    const drift = registryDrift(registry.length, sessions);
+    if (drift) platform.reportError(drift, "agents: claude sessions");
+    const live = sessions.filter((s) => isLive(s, procs));
     const agents = toAgents(
       live,
       desktopFiles.flatMap((f) => parseDesktopSession(f.text) ?? []),
