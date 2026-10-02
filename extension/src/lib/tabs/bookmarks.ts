@@ -25,8 +25,11 @@ export function bookmarkFor(tab: Tab): Omit<Bookmark, "addedAt"> | undefined {
 
 /** `bookmarks` with `entry` on top; bookmarking the same thing again moves it there with its new title. */
 export function withBookmark(bookmarks: Bookmark[], entry: Omit<Bookmark, "addedAt">, now: number): Bookmark[] {
-  const { id, app, kind, title, detail, url, reopen } = entry;
-  return [{ id, app, kind, title, detail, url, reopen, addedAt: now }, ...withoutBookmark(bookmarks, id)];
+  const { id, app, kind, title, detail, url, link, reopen } = entry;
+  return [
+    { id, app, kind, title, detail, url, ...(link ? { link } : {}), reopen, addedAt: now },
+    ...withoutBookmark(bookmarks, id),
+  ];
 }
 
 export function withoutBookmark(bookmarks: Bookmark[], id: string): Bookmark[] {

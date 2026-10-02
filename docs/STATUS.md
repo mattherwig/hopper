@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-10-01 — Copy Link (⌘L) (ADR-034, branch `claude/linkable-item-copy-command-1c918d`)
+
+- Owner: ⌘L is for sharing externally, so only web links others can open. `TabSource.link` + `linkFor` (default `Tab.url`, filtered to http(s)); Notion implements it (notion.so page URL); bookmarks / Recently Closed store `link`. Shared `CopyLinkAction` replaces Copy URL. Deep links (claude://, obsidian://, cursor://, codex://, file://) were built first and dropped.
+- Verified: unit tests (4 new, 155 total), lint, build. Not yet run live in Raycast.
+- Possible follow-up: tell public Notion pages from people-with-access ones (`public_permission` in notion.db `block.permissions`, on the page or an ancestor).
+
 ## 2026-09-29 — Recently Closed jumps to the open tab (ADR-033, branch `claude/bookmark-reopening-behavior-f1d837`)
 
 - Owner's bug: bookmark → close tab → open from bookmark → pick its Recently Closed entry opened a duplicate. Reopen never looked for an open tab, Search picks from its cached list while reading, and Recently Closed matched URLs exactly.

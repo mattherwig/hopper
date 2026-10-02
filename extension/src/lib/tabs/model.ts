@@ -87,6 +87,11 @@ export interface TabSource<Ref = unknown> {
    * reopened cleanly. Sources without it never show in Recently Closed.
    */
   reopenTarget?(tab: Tab<Ref>): ReopenTarget | undefined;
+  /**
+   * The link Copy Link (⌘L) copies, when it isn't `tab.url` (the default, see load.ts linkFor): a web address
+   * others can open (Notion's notion.so page URL), never a deep link that only works on this Mac (ADR-034).
+   */
+  link?(tab: Tab<Ref>): string | undefined;
 }
 
 /** Something to open again: a URL (in the tab's app) or a file (with the tab's app). */
