@@ -47,7 +47,7 @@ extension/                                    the Raycast extension; everything 
   src/history.tsx                             view command: List of running apps by recency
   src/tabs.tsx, src/app-tabs.tsx              Search / Search Current App (names `tabs` / `app-tabs`, ADR-023), thin; render SearchList
   src/agents.tsx, src/next-agent.ts           Agents (view, thin; renders AgentList) and Next Agent (no-view: jump to the longest-waiting agent)
-  src/components/                             shared UI: search-list.tsx (Search: tabs and agents, grouped by app), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
+  src/components/                             shared UI: search-list.tsx (Search: tabs and agents, grouped by app), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast), copy-link-action.tsx (Copy Link, ⌘L)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
     navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
     history.ts                                PURE filters on the app list (exclude, remove), unit-tested
@@ -64,7 +64,7 @@ extension/                                    the Raycast extension; everything 
     sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
                                               herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-023);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020); obsidian (workspace.json + tab headers by DOM class; ADR-027);
-                                              notes (Apple Notes: Recent Notes menu by AXIdentifier, shown by AppleScript; ADR-034);
+                                              notes (Apple Notes: Recent Notes menu by AXIdentifier, shown by AppleScript; ADR-035);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
   src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-022)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places

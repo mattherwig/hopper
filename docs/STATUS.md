@@ -2,10 +2,16 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
-## 2026-10-01 — Apple Notes in Search (ADR-034, branch `claude/apple-notes-tabs-5c9864`)
+## 2026-10-01 — Apple Notes in Search (ADR-035, branch `claude/apple-notes-tabs-5c9864`)
 
 - Notes has no tabs; its View → Recent Notes menu (up to 10, most recent first) is listed instead. New generic `Platform.menuItems` / `pressMenuItem` (Swift `Menus.swift`); `sources/notes.ts` jumps by AppleScript `show` (unique name) or by pressing the menu item (repeated names like "New Note").
-- Verified: 156 unit tests (5 new), lint, `swift build`; live against Notes from a standalone helper build: menu read (~50ms warm), pressing two different "New Note" items by position (Notes in the background: ~0.5s), AppleScript `show` of a name cut with "…" (~0.25s), also with Notes hidden and with its window closed. Not yet run from Search in Raycast (dev build).
+- Verified: 160 unit tests after merging `main` (5 new), lint, build; live against Notes from a standalone helper build: menu read (~50ms warm), pressing two different "New Note" items by position (Notes in the background: ~0.5s), AppleScript `show` of a name cut with "…" (~0.25s), also with Notes hidden and with its window closed. Not yet run from Search in Raycast (dev build).
+
+## 2026-10-01 — Copy Link (⌘L) (ADR-034, branch `claude/linkable-item-copy-command-1c918d`)
+
+- Owner: ⌘L is for sharing externally, so only web links others can open. `TabSource.link` + `linkFor` (default `Tab.url`, filtered to http(s)); Notion implements it (notion.so page URL); bookmarks / Recently Closed store `link`. Shared `CopyLinkAction` replaces Copy URL. Deep links (claude://, obsidian://, cursor://, codex://, file://) were built first and dropped.
+- Verified: unit tests (4 new, 155 total), lint, build. Not yet run live in Raycast.
+- Possible follow-up: tell public Notion pages from people-with-access ones (`public_permission` in notion.db `block.permissions`, on the page or an ancestor).
 
 ## 2026-09-29 — Recently Closed jumps to the open tab (ADR-033, branch `claude/bookmark-reopening-behavior-f1d837`)
 

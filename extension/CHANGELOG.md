@@ -17,6 +17,7 @@
 - Obsidian tabs in Search: every open vault's tabs, in all its windows (popouts too), with each note's folder; closed notes reopen from Recently Closed.
 - Bookmarks in Search: `⌘D` bookmarks a tab, page, note, document, or Recently Closed entry. Picking a bookmark jumps to the tab already showing it, in any browser, and opens it only when it isn't open. `⌘E` renames a bookmark.
 - Recently Closed jumps to the tab already showing an entry too, instead of opening it a second time; a page that comes back with or without a trailing slash no longer counts as closed.
+- Copy Link (`⌘L`) in Search: a link to share for a web page, Notion page, bookmark, or Recently Closed entry. Replaces Copy URL.
 - Apple Notes in Search: the notes in its Recent Notes menu (up to 10, most recent first); picking one shows it in Notes.
 - Search no longer runs out of memory ("Command Out of Memory") with many Claude Code sessions: only the few fields it needs are read from the Claude app's session files.
 

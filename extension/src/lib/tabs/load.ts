@@ -15,6 +15,17 @@ export interface LoadResult {
   accessibility: boolean;
 }
 
+/** A link others can open: a web address, not an app's deep link or a file on this Mac (ADR-034). */
+export function shareable(link: string | undefined): string | undefined {
+  return link && /^https?:\/\//.test(link) ? link : undefined;
+}
+
+/** What Copy Link copies for `tab`: its source's link, else its URL, if shareable (ADR-034). */
+export function linkFor(tab: Tab): string | undefined {
+  const source = sourceById(tab.source);
+  return shareable(source?.link ? source.link(tab) : tab.url);
+}
+
 /**
  * Tabs of all `apps` (most recently used first), ordered by orderTabs. Apps are read in parallel, batched per
  * source when it supports it; one failing app becomes a Failure instead of hiding the others.

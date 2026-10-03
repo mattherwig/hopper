@@ -3,7 +3,7 @@
 // them cleanly (a URL, a file) are tracked; see TabSource.reopenTarget. Private browsing never gets here: sources
 // leave it out of the list (ADR-018). Reopening, here and for Bookmarks, jumps to a tab already showing the entry.
 
-import { selectTab } from "./load";
+import { linkFor, selectTab, shareable } from "./load";
 import type { App, Platform, ReopenTarget, Tab, TabKind } from "./model";
 import { TabGoneError } from "./model";
 import { sourceById, sourceFor } from "./registry";
@@ -16,6 +16,8 @@ export interface ClosedTab {
   title: string;
   detail?: string;
   url?: string;
+  /** What Copy Link copies (load.ts linkFor), when it isn't `url`; absent in entries saved before it existed. */
+  link?: string;
   reopen: ReopenTarget;
   closedAt: number;
 }
@@ -41,8 +43,15 @@ export function reopenable(tabs: Tab[]): Omit<ClosedTab, "closedAt">[] {
     const id = reopen && `${tab.app.bundleId} ${reopen.target}`;
     if (!reopen || !id || seen.has(id)) return [];
     seen.add(id);
-    return [{ id, app: tab.app, kind: tab.kind, title: tab.title, detail: tab.detail, url: tab.url, reopen }];
+    const link = linkFor(tab);
+    const { app, kind, title, detail, url } = tab;
+    return [{ id, app, kind, title, detail, url, ...(link && link !== url ? { link } : {}), reopen }];
   });
+}
+
+/** What Copy Link copies for a Recently Closed entry or bookmark: its tab's link, if shareable. */
+export function entryLink(entry: Pick<ClosedTab, "link" | "url">): string | undefined {
+  return shareable(entry.link ?? entry.url);
 }
 
 /**

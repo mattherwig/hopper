@@ -6,7 +6,7 @@
 //
 // Selecting asks Notes' AppleScript to `show` the one note with that name: ~0.25s, and it brings back a hidden or
 // closed main window. Names can repeat ("New Note"); then the menu item is pressed by position, which Notes only
-// allows while it's frontmost with a window (~1s after it comes forward). See ADR-034.
+// allows while it's frontmost with a window (~1s after it comes forward). See ADR-035.
 
 import { quote } from "../applescript";
 import { TabGoneError, type App, type MenuItem, type Platform, type Tab, type TabSource } from "../model";
