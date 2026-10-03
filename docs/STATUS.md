@@ -2,6 +2,11 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-10-01 — Apple Notes in Search (ADR-034, branch `claude/apple-notes-tabs-5c9864`)
+
+- Notes has no tabs; its View → Recent Notes menu (up to 10, most recent first) is listed instead. New generic `Platform.menuItems` / `pressMenuItem` (Swift `Menus.swift`); `sources/notes.ts` jumps by AppleScript `show` (unique name) or by pressing the menu item (repeated names like "New Note").
+- Verified: 156 unit tests (5 new), lint, `swift build`; live against Notes from a standalone helper build: menu read (~50ms warm), pressing two different "New Note" items by position (Notes in the background: ~0.5s), AppleScript `show` of a name cut with "…" (~0.25s), also with Notes hidden and with its window closed. Not yet run from Search in Raycast (dev build).
+
 ## 2026-09-29 — Recently Closed jumps to the open tab (ADR-033, branch `claude/bookmark-reopening-behavior-f1d837`)
 
 - Owner's bug: bookmark → close tab → open from bookmark → pick its Recently Closed entry opened a duplicate. Reopen never looked for an open tab, Search picks from its cached list while reading, and Recently Closed matched URLs exactly.

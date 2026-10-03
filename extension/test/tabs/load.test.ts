@@ -9,7 +9,7 @@ import { app, fakePlatform } from "../fake-platform.ts";
 const chrome = app("com.google.Chrome", "Google Chrome");
 const safari = app("com.apple.Safari", "Safari");
 const finder = app("com.apple.finder", "Finder");
-const notes = app("com.apple.Notes", "Notes");
+const textEdit = app("com.apple.TextEdit", "TextEdit");
 
 test("apps without a source fall back to windows", () => {
   assert.equal(sourceFor(chrome).id, "chromium");
@@ -34,11 +34,11 @@ test("loads every app, batching windows into one call; a failing app doesn't hid
       }));
     },
   });
-  const result = await loadTabs([finder, chrome, safari, notes], platform);
+  const result = await loadTabs([finder, chrome, safari, textEdit], platform);
   assert.equal(windowCalls, 1);
   assert.deepEqual(
     result.tabs.map((t) => t.app.name),
-    ["Finder", "Google Chrome", "Notes"],
+    ["Finder", "Google Chrome", "TextEdit"],
   );
   assert.deepEqual(result.failures, [
     { app: safari, message: "Raycast isn't allowed to control this app (Automation)" },
