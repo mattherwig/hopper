@@ -8,6 +8,12 @@ export interface JsonFields {
   fields: Record<string, unknown>;
 }
 
+/** A Chromium IndexedDB blob's picked fields (Platform.readIndexedDbBlobs). */
+export interface BlobFields extends JsonFields {
+  /** Last modified (ms): an app replaces its blob on every write, so the newest is current. */
+  modified: number;
+}
+
 export interface App {
   bundleId: string;
   name: string;
@@ -54,6 +60,12 @@ export interface Platform {
    * JSON object are left out.
    */
   readJsonFields(dir: string, name: RegExp, depth: number, fields: readonly string[]): Promise<JsonFields[]>;
+  /**
+   * The top-level `fields` of each value an Electron app keeps in an IndexedDB blob folder (`….indexeddb.blob`), one
+   * file at a time, decoded (Snappy + V8; platform/indexeddb.ts, ADR-034). Files over `maxBytes` are skipped and
+   * reported, as are files that don't decode. [] if `dir` is missing.
+   */
+  readIndexedDbBlobs(dir: string, fields: readonly string[], maxBytes: number): Promise<BlobFields[]>;
   /** Names of the entries in `dir`, [] if it's missing. */
   listDir(dir: string): Promise<string[]>;
   /** Open a URL or file path with `appPath` (an .app path), or with its registered app if omitted. */

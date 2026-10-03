@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-10-01 — Slack channels and DMs in Search (ADR-034, issue #66, branch `worktree-slack-source`)
+
+- Spike: Slack's channels, DMs, workspaces, and unread counts are in its persisted Redux store (IndexedDB blob per workspace: Snappy + V8 wire format 16, decoded with Node's `v8.deserialize` after patching the version byte). No message history in it, and not the sidebar's order. Slack writes it only on network loss or window unload, so it can be hours or days stale: the list is usable, unread badges are not.
+- Built: `Platform.readIndexedDbBlobs` (+ PURE `platform/indexeddb.ts`) and `tabs/sources/slack.ts`: member channels, open DMs, and group DMs per workspace, opened by `slack://channel` deep link, the open conversation marked from the window title. No badges.
+- Verified: 161 unit tests (10 new), lint, build; deep links live to channels and DMs in both workspaces (0.3–0.9 s, one window); the source on this Mac's real files through a Node harness: 14 places from 2 workspaces, ~45 ms, open DM marked active, no reports. Not verified: Search in Raycast with Slack listed (dev build, heap), App Store build paths, a large workspace.
+
 ## 2026-09-29 — Recently Closed jumps to the open tab (ADR-033, branch `claude/bookmark-reopening-behavior-f1d837`)
 
 - Owner's bug: bookmark → close tab → open from bookmark → pick its Recently Closed entry opened a duplicate. Reopen never looked for an open tab, Search picks from its cached list while reading, and Recently Closed matched URLs exactly.

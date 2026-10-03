@@ -64,7 +64,8 @@ extension/                                    the Raycast extension; everything 
     sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
                                               herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-023);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020); obsidian (workspace.json + tab headers by DOM class; ADR-027);
-                                              claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
+                                              claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017);
+                                              slack (channels + DMs from Slack's persisted Redux state in IndexedDB + slack:// deep link; ADR-034)
   src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-022)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
     registry.ts                               the agent sources — add new agent products here
@@ -77,6 +78,7 @@ extension/                                    the Raycast extension; everything 
   src/lib/platform/                           macOS / Raycast glue shared by every level
     model.ts                                  PURE: the Platform interface (OS capabilities) and App; fake in test/fake-platform.ts
     sqlite.ts                                 PURE: when querySqlite reads a WAL database as immutable (no app holds it open; ADR-031)
+    indexeddb.ts                              PURE: Chromium IndexedDB blob file → V8 bytes (Snappy, Blink header, wire 16 read as 15) for readIndexedDbBlobs (ADR-034)
     report.ts                                 reportError() → captureException to the Developer Hub, labeled; showFailure() = toast + report (ADR-029)
     os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
@@ -105,7 +107,7 @@ site/index.html                               landing page at https://addhopper.
 - Command `name`s in `extension/package.json` (`back`, `forward`, `toggle`, `history`, `tabs`, `app-tabs`, `agents`, `next-agent`) are permanent once published: users' hotkeys bind to them.
 - Incognito / private browser windows never reach the tab list (ADR-018): filter them in the source, not the UI.
 - Adding, renaming, or changing a user-facing command or action: update `extension/README.md` (Commands, Setup, How it works; the Store shows it), `extension/CHANGELOG.md`, the `extension/package.json` `description`, and the Layout table here, all in the same commit.
-- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, `platform/model.ts`, and `platform/sqlite.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-022).
+- Keep PURE modules (`apps/navigation.ts`, `apps/history.ts`, everything in `tabs/`, `agents/`, `projects/`, `platform/model.ts`, `platform/sqlite.ts`, and `platform/indexeddb.ts`) free of Raycast/Node imports so `npm test` works without Raycast. Tab and agent sources reach the OS only through `Platform` (ADR-013, ADR-022).
 - Agent sources read agents' own state read-only: never install hooks, write their config, or call anything that starts, resumes, loads, or sends input to a session (ADR-022).
 - `site/index.html` repeats the README's Commands, How it works, Tabs table, and Setup: changing commands, hotkeys, or behavior, update it in the same commit.
 - Activate apps through `activateApp()`: Accessibility `AXFrontmost` via the Swift helper, falling back to Raycast `open(app.path)` (ADR-021; `open()` alone sends a reopen event that can show the wrong window). Never `NSRunningApplication.activate` (silently ignored on macOS 14+ from background; ADR-002).

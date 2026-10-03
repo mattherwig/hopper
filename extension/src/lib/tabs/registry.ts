@@ -11,6 +11,7 @@ import { muse } from "./sources/muse";
 import { notion } from "./sources/notion";
 import { obsidian } from "./sources/obsidian";
 import { safari } from "./sources/safari";
+import { slack } from "./sources/slack";
 import { terminal } from "./sources/terminal";
 import { windows } from "./sources/windows";
 
@@ -25,6 +26,7 @@ export const SOURCES: readonly TabSource[] = [
   muse,
   notion,
   obsidian,
+  slack,
 ];
 
 /** Sources of places inside other apps (TabSource.discover), read alongside every list. */

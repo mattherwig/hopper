@@ -13,6 +13,7 @@ export type {
   App,
   AppWindows,
   AXWindow,
+  BlobFields,
   Platform,
   SidebarQuery,
   SidebarRow,

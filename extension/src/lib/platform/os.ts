@@ -6,6 +6,7 @@ import { createConnection } from "node:net";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { promisify } from "node:util";
+import { deserialize } from "node:v8";
 import {
   accessibilityTrusted,
   appWindows,
@@ -17,7 +18,8 @@ import {
   sidebarRows,
   webPages,
 } from "swift:../../../swift";
-import type { AppWindows, GitRepo, JsonFields, Platform, SidebarRow } from "./model";
+import { v8Payload } from "./indexeddb";
+import type { AppWindows, BlobFields, GitRepo, JsonFields, Platform, SidebarRow } from "./model";
 import { reportError } from "./report";
 import { immutableUri, isCantOpen } from "./sqlite";
 import { readJson, writeJson } from "./storage";
@@ -94,6 +96,31 @@ export const macosPlatform: Platform = {
         files.push({ path, fields: Object.fromEntries(fields.filter((f) => f in data).map((f) => [f, data[f]])) });
     }
     return files;
+  },
+  readIndexedDbBlobs: async (dir, fields, maxBytes) => {
+    const values: BlobFields[] = [];
+    // One file at a time, like readJsonFields: each decodes to the app's whole state, of which few fields are kept.
+    for (const path of await findFiles(dir, /^[0-9a-f]+$/, 2)) {
+      // Gone since listed: the app replaced it (it writes a new file and deletes the old one).
+      const info = await stat(path).catch(() => undefined);
+      if (!info) continue;
+      if (info.size > maxBytes) {
+        reportError(new Error(`IndexedDB blob of ${info.size} bytes, over ${maxBytes}`), "files: indexeddb size");
+        continue;
+      }
+      const bytes = await readFile(path).catch(orElse(undefined, "files: read"));
+      if (!bytes) continue;
+      try {
+        const data: unknown = deserialize(v8Payload(bytes));
+        if (!data || typeof data !== "object") continue;
+        const object = data as Record<string, unknown>;
+        const picked = Object.fromEntries(fields.filter((f) => f in object).map((f) => [f, object[f]]));
+        values.push({ path, modified: info.mtimeMs, fields: picked });
+      } catch (error) {
+        reportError(error, "files: indexeddb");
+      }
+    }
+    return values;
   },
   listDir: (dir) => readdir(dir).catch(orElse([], "files: list")),
   openUrl: (url, appPath) => open(url, appPath),
