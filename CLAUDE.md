@@ -47,7 +47,7 @@ extension/                                    the Raycast extension; everything 
   src/history.tsx                             view command: List of running apps by recency
   src/tabs.tsx, src/app-tabs.tsx              Search / Search Current App (names `tabs` / `app-tabs`, ADR-023), thin; render SearchList
   src/agents.tsx, src/next-agent.ts           Agents (view, thin; renders AgentList) and Next Agent (no-view: jump to the longest-waiting agent)
-  src/components/                             shared UI: search-list.tsx (Search: tabs and agents, grouped by app), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast)
+  src/components/                             shared UI: search-list.tsx (Search: tabs and agents, grouped by app), agent-list.tsx (the agent List), switch-action.tsx (switch, then close Raycast), copy-link-action.tsx (Copy Link, ⌘L)
   src/lib/apps/                               app level (Back/Forward/Toggle/History)
     navigation.ts                             PURE back/forward state machine — all logic lives here, unit-tested
     history.ts                                PURE filters on the app list (exclude, remove), unit-tested
@@ -64,8 +64,9 @@ extension/                                    the Raycast extension; everything 
     sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
                                               herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-023);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020); obsidian (workspace.json + tab headers by DOM class; ADR-027);
+                                              notes (Apple Notes: Recent Notes menu by AXIdentifier, shown by AppleScript; ADR-035);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017);
-                                              slack (channels + DMs from Slack's persisted Redux state in IndexedDB + slack:// deep link; ADR-034)
+                                              slack (channels + DMs from Slack's persisted Redux state in IndexedDB + slack:// deep link; ADR-036)
   src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-022)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
     registry.ts                               the agent sources — add new agent products here
@@ -78,7 +79,7 @@ extension/                                    the Raycast extension; everything 
   src/lib/platform/                           macOS / Raycast glue shared by every level
     model.ts                                  PURE: the Platform interface (OS capabilities) and App; fake in test/fake-platform.ts
     sqlite.ts                                 PURE: when querySqlite reads a WAL database as immutable (no app holds it open; ADR-031)
-    indexeddb.ts                              PURE: Chromium IndexedDB blob file → V8 bytes (Snappy, Blink header, wire 16 read as 15) for readIndexedDbBlobs (ADR-034)
+    indexeddb.ts                              PURE: Chromium IndexedDB blob file → V8 bytes (Snappy, Blink header, wire 16 read as 15) for readIndexedDbBlobs (ADR-036)
     report.ts                                 reportError() → captureException to the Developer Hub, labeled; showFailure() = toast + report (ADR-029)
     os.ts                                     macosPlatform: AppleScript, Swift Accessibility + process calls, files, sockets, git files
     storage.ts                                LocalStorage JSON read/write; unreadable values fall back to defaults
@@ -86,7 +87,7 @@ extension/                                    the Raycast extension; everything 
     processes.ts                              PURE: process-tree helpers (app of a process, herdr client)
     agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Search
   swift/Sources/HopperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift, Activate.swift (app level);
-                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level); Processes.swift (agent level)
+                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift, Menus.swift (tab level); Processes.swift (agent level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
   media/demo.gif                              README demo, shown on the Store page (skill: demo-gif)

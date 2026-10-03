@@ -191,4 +191,7 @@ export const notion: TabSource<Ref> = {
     const link = tab.ref.url && tabLink(tab.ref.url);
     return link ? { kind: "url", target: link } : undefined;
   },
+  // The page's notion.so address, what Notion's own Copy Link gives: it opens in Notion or a browser, for anyone
+  // the page is shared with.
+  link: (tab) => tab.ref.url,
 };

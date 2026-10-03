@@ -8,6 +8,7 @@ import { ghostty } from "./sources/ghostty";
 import { herdr } from "./sources/herdr";
 import { iterm } from "./sources/iterm";
 import { muse } from "./sources/muse";
+import { notes } from "./sources/notes";
 import { notion } from "./sources/notion";
 import { obsidian } from "./sources/obsidian";
 import { safari } from "./sources/safari";
@@ -24,6 +25,7 @@ export const SOURCES: readonly TabSource[] = [
   terminal,
   claude,
   muse,
+  notes,
   notion,
   obsidian,
   slack,

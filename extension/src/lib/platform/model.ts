@@ -44,6 +44,17 @@ export interface Platform {
   pressWebElement(bundleId: string, query: WebElementQuery, label: string, occurrence: number): Promise<boolean>;
   /** Title and URL of each web page open in the app, through Accessibility (Notion: one per tab). */
   webPages(bundleId: string): Promise<WebPage[]>;
+  /**
+   * Items of the first menu in the app's menu bar holding an item whose identifier (its action selector, e.g.
+   * "showRecentNote:") is one of `identifiers`, those items only, in menu order. [] if not found.
+   */
+  menuItems(bundleId: string, identifiers: string[]): Promise<MenuItem[]>;
+  /**
+   * Press the item with `identifier` at `index` among them while it has `title`, else the first titled `title`; a
+   * disabled one after bringing the app to the front (up to 2s). False if not found, the app has no window, or it
+   * stays disabled.
+   */
+  pressMenuItem(bundleId: string, identifier: string, title: string, index: number): Promise<boolean>;
   /** JSON value saved under `key` (namespaced by the caller), or `fallback`. */
   loadJson<T>(key: string, fallback: T): Promise<T>;
   saveJson(key: string, value: unknown): Promise<void>;
@@ -62,7 +73,7 @@ export interface Platform {
   readJsonFields(dir: string, name: RegExp, depth: number, fields: readonly string[]): Promise<JsonFields[]>;
   /**
    * The top-level `fields` of each value an Electron app keeps in an IndexedDB blob folder (`….indexeddb.blob`), one
-   * file at a time, decoded (Snappy + V8; platform/indexeddb.ts, ADR-034). Files over `maxBytes` are skipped and
+   * file at a time, decoded (Snappy + V8; platform/indexeddb.ts, ADR-036). Files over `maxBytes` are skipped and
    * reported, as are files that don't decode. [] if `dir` is missing.
    */
   readIndexedDbBlobs(dir: string, fields: readonly string[], maxBytes: number): Promise<BlobFields[]>;
@@ -163,6 +174,13 @@ export interface WebPage {
   /** Document title, e.g. "Trip ideas - Claude". */
   title: string;
   url: string;
+}
+
+export interface MenuItem {
+  identifier: string;
+  title: string;
+  /** Apps often enable items only while frontmost (Notes' recent notes). */
+  enabled: boolean;
 }
 
 export interface SidebarRow {

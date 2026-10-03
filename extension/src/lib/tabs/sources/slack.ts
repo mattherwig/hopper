@@ -1,4 +1,4 @@
-// Slack desktop: the channels and DMs of every signed-in workspace (ADR-034). Slack keeps each workspace's state
+// Slack desktop: the channels and DMs of every signed-in workspace (ADR-036). Slack keeps each workspace's state
 // (Redux) in IndexedDB, as a blob file it rewrites when its window closes or the network drops: a new file, the old
 // one deleted. So the newest blob per workspace is current as of then; channels joined since are missing until the
 // next write. Only places are read (workspaces, channels, DMs, and DM members' names), never messages, and no

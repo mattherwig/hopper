@@ -1,4 +1,4 @@
-// PURE: unwraps a value Chromium stored in an IndexedDB blob file (an Electron app's own state, e.g. Slack's; ADR-034)
+// PURE: unwraps a value Chromium stored in an IndexedDB blob file (an Electron app's own state, e.g. Slack's; ADR-036)
 // down to V8's serialization of it, which os.ts reads with Node's v8.deserialize. No Raycast/Node imports.
 //
 // A blob file is: Chromium's wrapper (`FF 11 02`: the value is Snappy-compressed; `FF 11` with anything else is

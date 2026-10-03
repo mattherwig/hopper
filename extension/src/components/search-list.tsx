@@ -15,6 +15,7 @@ import {
   type Bookmark,
 } from "../lib/tabs/bookmarks";
 import {
+  entryLink,
   forgetClosed,
   jumpOrOpen,
   openTabFor,
@@ -23,13 +24,14 @@ import {
   type ClosedTab,
   type Reopenable,
 } from "../lib/tabs/history";
-import { loadTabs, selectTab } from "../lib/tabs/load";
+import { linkFor, loadTabs, selectTab } from "../lib/tabs/load";
 import type { App, Tab, TabKind } from "../lib/tabs/model";
 import { adjacentSection, searchTabs } from "../lib/tabs/search";
 import type { ListedAgent } from "../lib/agents/load";
 import { STATUS_TITLE } from "../lib/agents/status";
 import { loadAllAgents } from "../lib/platform/agents";
 import { AgentItem, STATUS_COLOR } from "./agent-list";
+import { CopyLinkAction } from "./copy-link-action";
 import { SwitchAction } from "./switch-action";
 
 export type Scope = "all" | "current";
@@ -285,7 +287,7 @@ function TabItem({ id, tab, agent, children }: { id: string; tab: Tab; agent?: L
               await activateApp(tab.app);
             }}
           />
-          {tab.url && <Action.CopyToClipboard title="Copy URL" content={tab.url} />}
+          <CopyLinkAction link={linkFor(tab)} />
           <Action.CopyToClipboard title="Copy Title" content={tab.title} shortcut={Keyboard.Shortcut.Common.Copy} />
           {children}
         </ActionPanel>
@@ -328,7 +330,7 @@ function ClosedItem({
             failureTitle={`Could not reopen ${entry.title}`}
             onSwitch={() => reopenClosed(entry, tabs, macosPlatform, activateApp)}
           />
-          {entry.url && <Action.CopyToClipboard title="Copy URL" content={entry.url} />}
+          <CopyLinkAction link={entryLink(entry)} />
           <Action
             title="Remove from Recently Closed"
             icon={Icon.XMarkCircle}
@@ -381,7 +383,7 @@ function BookmarkItem({
             failureTitle={`Could not open ${bookmark.title}`}
             onSwitch={() => jumpOrOpen(bookmark, tabs, macosPlatform, activateApp)}
           />
-          {bookmark.url && <Action.CopyToClipboard title="Copy URL" content={bookmark.url} />}
+          <CopyLinkAction link={entryLink(bookmark)} />
           <Action.Push
             title="Rename Bookmark"
             icon={Icon.Pencil}

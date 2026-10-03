@@ -12,14 +12,16 @@ import {
   appWindows,
   focusWindow,
   labelWithSuffix,
+  menuItems,
   openSidebar,
+  pressMenu,
   pressWebElement,
   processes,
   sidebarRows,
   webPages,
 } from "swift:../../../swift";
 import { v8Payload } from "./indexeddb";
-import type { AppWindows, BlobFields, GitRepo, JsonFields, Platform, SidebarRow } from "./model";
+import type { AppWindows, BlobFields, GitRepo, JsonFields, MenuItem, Platform, SidebarRow } from "./model";
 import { reportError } from "./report";
 import { immutableUri, isCantOpen } from "./sqlite";
 import { readJson, writeJson } from "./storage";
@@ -73,6 +75,8 @@ export const macosPlatform: Platform = {
       occurrence,
     ),
   webPages: (bundleId) => webPages(bundleId),
+  menuItems: async (bundleId, identifiers) => (await menuItems(bundleId, identifiers)) as MenuItem[],
+  pressMenuItem: (bundleId, identifier, title, index) => pressMenu(bundleId, identifier, title, index),
   loadJson: (key, fallback) => readJson(key, fallback),
   saveJson: (key, value) => writeJson(key, value),
   homeDir: () => homedir(),
