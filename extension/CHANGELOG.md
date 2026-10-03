@@ -19,6 +19,7 @@
 - Recently Closed jumps to the tab already showing an entry too, instead of opening it a second time; a page that comes back with or without a trailing slash no longer counts as closed.
 - Copy Link (`⌘L`) in Search: a link to share for a web page, Notion page, bookmark, or Recently Closed entry. Replaces Copy URL.
 - Apple Notes in Search: the notes in its Recent Notes menu (up to 10, most recent first); picking one shows it in Notes.
+- Slack channels and DMs in Search, from every signed-in workspace; picking one opens it in Slack.
 - Search no longer runs out of memory ("Command Out of Memory") with many Claude Code sessions: only the few fields it needs are read from the Claude app's session files.
 
 ## [Tabs] - {PR_MERGE_DATE}
