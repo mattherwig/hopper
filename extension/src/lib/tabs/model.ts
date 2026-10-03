@@ -13,6 +13,7 @@ export type {
   App,
   AppWindows,
   AXWindow,
+  MenuItem,
   Platform,
   SidebarQuery,
   SidebarRow,

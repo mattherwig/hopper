@@ -64,6 +64,7 @@ extension/                                    the Raycast extension; everything 
     sources/                                  one file per app family: chromium, safari, cmux, ghostty, iterm, terminal (AppleScript; terminals report panes by tty, Ghostty by folder);
                                               herdr (discovered: workspaces/tabs under the terminal running herdr; owns the herdr protocol; ADR-023);
                                               windows (Accessibility fallback); sidebar.ts + muse (Accessibility sidebar; ADR-017); notion (ADR-016, ADR-020); obsidian (workspace.json + tab headers by DOM class; ADR-027);
+                                              notes (Apple Notes: Recent Notes menu by AXIdentifier, shown by AppleScript; ADR-035);
                                               claude (session files + claude:// deep link; Chat/Cowork via sidebar + ids learned from the page URL; ADR-014, ADR-017)
   src/lib/agents/                             agent level (Agents, Next Agent, status in Search) — PURE (ADR-022)
     model.ts                                  Agent, AgentStatus, Host, Location, AgentSource; how agents relate to places
@@ -84,7 +85,7 @@ extension/                                    the Raycast extension; everything 
     processes.ts                              PURE: process-tree helpers (app of a process, herdr client)
     agents.ts                                 loadAllAgents(): the agent level on macOS, shared by Agents, Next Agent, Search
   swift/Sources/HopperNative/                 native helper, plain Swift except Exports.swift (@raycast): RecentApps.swift, Activate.swift (app level);
-                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift (tab level); Processes.swift (agent level)
+                                              AX.swift (Accessibility helpers), Windows.swift, Sidebar.swift, Menus.swift (tab level); Processes.swift (agent level)
   assets/extension-icon.png                   Store icon, 512x512
   metadata/                                   Store screenshots, 2000x1250 (skill: store-screenshots)
   media/demo.gif                              README demo, shown on the Store page (skill: demo-gif)

@@ -2,6 +2,11 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-10-01 — Apple Notes in Search (ADR-035, branch `claude/apple-notes-tabs-5c9864`)
+
+- Notes has no tabs; its View → Recent Notes menu (up to 10, most recent first) is listed instead. New generic `Platform.menuItems` / `pressMenuItem` (Swift `Menus.swift`); `sources/notes.ts` jumps by AppleScript `show` (unique name) or by pressing the menu item (repeated names like "New Note").
+- Verified: 160 unit tests after merging `main` (5 new), lint, build; live against Notes from a standalone helper build: menu read (~50ms warm), pressing two different "New Note" items by position (Notes in the background: ~0.5s), AppleScript `show` of a name cut with "…" (~0.25s), also with Notes hidden and with its window closed. Owner tried it from Search in Raycast (dev build): looks good.
+
 ## 2026-10-01 — Copy Link (⌘L) (ADR-034, branch `claude/linkable-item-copy-command-1c918d`)
 
 - Owner: ⌘L is for sharing externally, so only web links others can open. `TabSource.link` + `linkFor` (default `Tab.url`, filtered to http(s)); Notion implements it (notion.so page URL); bookmarks / Recently Closed store `link`. Shared `CopyLinkAction` replaces Copy URL. Deep links (claude://, obsidian://, cursor://, codex://, file://) were built first and dropped.

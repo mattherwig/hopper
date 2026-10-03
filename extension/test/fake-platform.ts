@@ -36,6 +36,8 @@ export function fakePlatform(
     openUrl: overrides.openUrl ?? unexpected("openUrl"),
     pressWebElement: overrides.pressWebElement ?? unexpected("pressWebElement"),
     webPages: overrides.webPages ?? (async () => []),
+    menuItems: overrides.menuItems ?? (async () => []),
+    pressMenuItem: overrides.pressMenuItem ?? unexpected("pressMenuItem"),
     querySqlite: overrides.querySqlite ?? (async () => []),
     listDir: overrides.listDir ?? (async () => []),
     processes: overrides.processes ?? (async () => []),

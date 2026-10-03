@@ -64,3 +64,12 @@ import RaycastSwiftMacros
 @raycast func webPages(bundleId: String) -> [WebPage] {
   readWebPages(bundleId: bundleId)
 }
+
+/// Items of an app's menu, found by identifier (Notes' recent notes).
+@raycast func menuItems(bundleId: String, identifiers: [String]) -> [MenuItem] {
+  readMenuItems(bundleId: bundleId, identifiers: identifiers)
+}
+
+@raycast func pressMenu(bundleId: String, identifier: String, title: String, index: Int) -> Bool {
+  pressMenuItem(bundleId: bundleId, identifier: identifier, title: title, index: index)
+}
