@@ -9,7 +9,7 @@ Everything here is outward-facing: **confirm with the owner before running publi
 
 ## How publishing works
 
-- `npm run publish` (run in `extension/`) copies **every file on disk** in `extension/` into a fork of `raycast/extensions` (branch `ext/hopper`) and opens or updates a PR. Not a git export, and there is no ignore file: only `.git`, `.github`, `node_modules`, `raycast-env.d.ts`, `.direnv`, `.raycast-swift-build`, `.swiftpm`, `compiled_raycast_*` are skipped. That's why dev material lives at the repo root (ADR-012).
+- `npm run publish` (run in `extension/`) copies **every file on disk** in `extension/` into a fork of `raycast/extensions` (branch `ext/hopper-app-tab-agent-switcher`) and opens or updates a PR. Not a git export, and there is no ignore file: only `.git`, `.github`, `node_modules`, `raycast-env.d.ts`, `.direnv`, `.raycast-swift-build`, `.swiftpm`, `compiled_raycast_*` are skipped. That's why dev material lives at the repo root (ADR-012).
 - Merge = published. Later updates: run publish again; it updates the open PR or opens a new one.
 
 ## 1. Before publishing

@@ -13,7 +13,7 @@ Produces `extension/metadata/hopper-1.png` … `hopper-5.png`, the images on the
 | `hopper-2.png` | Agents, grouped by status. Live sessions on this Mac; review for personal titles before keeping it. |
 | `hopper-3.png` | History list: Current tag, "n back" labels, built-in apps only |
 | `hopper-4.png` | Search for "macos": the staged page in Recently Closed |
-| `hopper-5.png` | Root search for "hopper": all commands, the second row selected (Raycast shows only the selected row's hotkey; its ranking follows usage) |
+| `hopper-5.png` | Search Current App over the staged Safari window: public pages (your own Safari windows show too; review). Not root search: Store review rejects screenshots outside the extension. Only this one: `store_media.py screenshot-5` |
 
 ## Before running
 
@@ -38,7 +38,7 @@ What it does (`scripts/media/store_media.py`):
 ## After running: review every image (required)
 
 Read each PNG and check:
-- Search (`hopper-1.png`) is the owner's real list, empty query; they accepted that. Recently Closed shows the staged macOS page (`hopper-4.png`). History shows built-in apps (`hopper-3.png`). The list first shows its cached copy, so the script waits before capturing. Agents (`hopper-2.png`) is live: if session titles or paths are personal, don't keep that frame. `hopper-5.png` lists matching files from `~/Projects/hopper` below the commands; the owner accepted that.
+- Search (`hopper-1.png`) is the owner's real list, empty query; they accepted that. Recently Closed shows the staged macOS page (`hopper-4.png`). History shows built-in apps (`hopper-3.png`). The list first shows its cached copy, so the script waits before capturing. Agents (`hopper-2.png`) is live: if session titles or paths are personal, don't keep that frame. `hopper-5.png` shows only Safari tabs: check none are personal.
 - Chess shows in Recent in `hopper-3.png`. If Chess stays excluded from an older run: open History, find it in Excluded, Include in History.
 - Sizes: `sips -g pixelWidth -g pixelHeight extension/metadata/*.png` → 2000×1250.
 - **Raycast CI's image check passes** (it failed the first submission). Their CI requires ~12.5% padding on every side (8–17%), top/bottom and left/right within 4%, and the same background on every image. Run their checker locally:
