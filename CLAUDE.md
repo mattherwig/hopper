@@ -1,7 +1,7 @@
 # CLAUDE.md — Hopper (Raycast extension)
 
 Browser-style Back / Forward for macOS apps, tab search across apps, and jumping to AI agents wherever they run; shipped as a Raycast Store extension.
-Store slug `hopper`, title "Hopper".
+Store slug `hopper-app-tab-agent-switcher`, title "Hopper - App, Tab & Agent Switcher"; commands show "Hopper" as their subtitle (ADR-037).
 
 ## Start here
 
@@ -128,7 +128,7 @@ site/index.html                               landing page at https://addhopper.
 With `npm run dev` running (in `extension/`), trigger commands via deeplink and inspect frontmost app:
 
 ```bash
-open -g "raycast://extensions/matt_herwig/hopper/back"
+open -g "raycast://extensions/matt_herwig/hopper-app-tab-agent-switcher/back"
 osascript -l JavaScript -e 'ObjC.import("AppKit"); $.NSWorkspace.sharedWorkspace.frontmostApplication.bundleIdentifier.js'
 ```
 

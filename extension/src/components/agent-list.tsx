@@ -33,10 +33,12 @@ export function AgentList() {
     keepPreviousData: true,
     onError: (error) => showFailure(error, "Could not read agents"),
   });
+  // The next read starts only after this one ends: a slow app (AppleScript can take seconds) must not pile up reads.
   useEffect(() => {
-    const timer = setInterval(revalidate, REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [revalidate]);
+    if (isLoading) return;
+    const timer = setTimeout(revalidate, REFRESH_MS);
+    return () => clearTimeout(timer);
+  }, [isLoading, revalidate]);
   const [project, setProject] = useState(ALL);
   const agents = data?.agents ?? [];
   const projects = [...new Set(agents.flatMap((a) => (a.project ? [a.project.name] : [])))].sort();

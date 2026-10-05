@@ -8,7 +8,7 @@ for command in CommandLine.arguments.dropFirst() {
   let initial = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
   let task = Process()
   task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-  task.arguments = ["-g", "raycast://extensions/matt_herwig/hopper/\(command)"]
+  task.arguments = ["-g", "raycast://extensions/matt_herwig/hopper-app-tab-agent-switcher/\(command)"]
   let t0 = Date()
   FileHandle.standardError.write("T0 \(Int(t0.timeIntervalSince1970 * 1000))\n".data(using: .utf8)!)
   try! task.run()

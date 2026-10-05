@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-10-05 — Store review fixes (raycast/extensions#31648, ADR-037)
+
+- Raycast's human review (0xdhrv): title is now "Hopper - App, Tab & Agent Switcher", slug `hopper-app-tab-agent-switcher` (ADR-037); `hopper-5.png` is Search Current App over Safari instead of Raycast's root search (`store_media.py screenshot-5`, opened from root search to skip the deeplink prompt); Agents refreshes 4 s after a read ends instead of every 4 s (reads could pile up); CHANGELOG is one Initial Version entry. Optional items (rename `tabs`/`app-tabs`, "Needs input" label, `harpoon` keyword, shorter description) skipped by the owner.
+- Verified: 170 unit tests, lint, Raycast's image check (5/5). Not verified: Store PR re-published under the new folder.
+- Next: re-publish (`publish-store` skill; drop `extensions/hopper` from the PR), reply to the review, press Ready for review. Rebind dev hotkeys (new extension to Raycast).
+
 ## 2026-10-01 — Slack channels and DMs in Search (ADR-036, issue #66, branch `worktree-slack-source`)
 
 - Spike: Slack's channels, DMs, workspaces, and unread counts are in its persisted Redux store (IndexedDB blob per workspace: Snappy + V8 wire format 16, decoded with Node's `v8.deserialize` after patching the version byte). No message history in it, and not the sidebar's order. Slack writes it only on network loss or window unload, so it can be hours or days stale: the list is usable, unread badges are not.

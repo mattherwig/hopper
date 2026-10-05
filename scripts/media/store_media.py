@@ -2,6 +2,7 @@
 """Generate Raycast Store media for Hopper by driving Raycast on this Mac.
 
   python3 scripts/media/store_media.py screenshots   -> extension/metadata/hopper-1.png ... (2000x1250)
+  python3 scripts/media/store_media.py screenshot-5  -> extension/metadata/hopper-5.png only
   python3 scripts/media/store_media.py gif           -> extension/media/demo.gif
 
 Needs: `npm run dev` running (in extension/), Accessibility + Screen Recording permission for the calling app,
@@ -21,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]  # repo root
 EXT = ROOT / "extension"  # the Raycast extension (what ships to the Store)
 HERE = Path(__file__).resolve().parent
-DEEPLINK = "raycast://extensions/matt_herwig/hopper/"
+DEEPLINK = "raycast://extensions/matt_herwig/hopper-app-tab-agent-switcher/"
 TMP = Path(tempfile.mkdtemp(prefix="hopper-media-"))
 atexit.register(shutil.rmtree, TMP, ignore_errors=True)
 
@@ -58,7 +59,7 @@ SAFARI_TABS = [
 # Apps whose process name differs from the app name.
 PROCESS = {"Ghostty": "ghostty"}
 
-# Keys shown in the GIF overlay: the owner's own bindings (Raycast Settings → Extensions → Hopper).
+# Keys shown in the GIF overlay: the owner's own bindings (Raycast Settings → Extensions → Hopper - App, Tab & Agent Switcher).
 # Commands are actually triggered by deeplink, since Raycast ignores synthetic hotkeys.
 HOTKEYS = {
     "back": ["⌃", "⌘", "["],
@@ -323,21 +324,39 @@ def screenshots() -> None:
         capture(out / "hopper-3.png")
         close_raycast()
 
-    # 5. Root search for "hopper": every command, the second row selected to show its hotkey (Raycast ranks by use).
-    # Raycast ignores a synthetic ⌘Space, but Escape from a command's view pops to root search. Matching files from
-    # the user's disk show below the commands; review them before committing.
+        # 5. Search Current App: the staged Safari window's public pages.
+        capture_current_app(out)
+
+
+def capture_current_app(out: Path) -> None:
+    """Search Current App over Safari: only that app's tabs (the staged public pages, plus the owner's own Safari
+    windows: review them). Not root search: Store screenshots show only the extension (Store review)."""
+    close_raycast()
+    subprocess.run(["open", "-a", "Safari"], check=True)
+    time.sleep(1)
+    # From root search, not by deeplink: a first deeplink to a command stops on Raycast's "Request to run" prompt.
+    # Raycast ignores a synthetic ⌘Space, but Escape from a command's view pops to root search.
     deeplink("history")
     time.sleep(1.5)
     escape()
     time.sleep(0.6)
     if raycast_window() is None:
         raise RuntimeError("root search did not open")
-    keys('keystroke "hopper"')
-    time.sleep(1.5)
-    keys("key code 125")  # Raycast shows the hotkey of the selected row only
-    time.sleep(0.6)
+    keys('keystroke "Search Current App"')
+    time.sleep(1.2)
+    keys("key code 36")
+    time.sleep(4)  # the list first shows its cached copy, then refreshes
+    if raycast_window() is None:
+        raise RuntimeError("Search Current App did not open")
     capture(out / "hopper-5.png")
     close_raycast()
+
+
+def current_app_screenshot() -> None:
+    """Only hopper-5.png."""
+    out = EXT / "metadata"
+    with DemoApps(include_ghostty=False, note_name="Raycast.txt", preview_name="Raycast.png"):
+        capture_current_app(out)
 
 
 def gif() -> None:
@@ -651,4 +670,4 @@ def gif() -> None:
 
 
 if __name__ == "__main__":
-    {"screenshots": screenshots, "gif": gif}.get(sys.argv[1] if len(sys.argv) > 1 else "", lambda: sys.exit(__doc__))()
+    {"screenshots": screenshots, "screenshot-5": current_app_screenshot, "gif": gif}.get(sys.argv[1] if len(sys.argv) > 1 else "", lambda: sys.exit(__doc__))()

@@ -19,7 +19,7 @@ Cmd+Tab only knows "most recent" and reshuffles every time you switch, so gettin
 
 ## Setup
 
-Hopper is meant to be used with hotkeys. Raycast extensions can't set hotkeys themselves, so record them in Raycast Settings → Extensions → Hopper. Recommended:
+Hopper is meant to be used with hotkeys. Raycast extensions can't set hotkeys themselves, so record them in Raycast Settings → Extensions → Hopper - App, Tab & Agent Switcher. Recommended:
 
 | Command        | Hotkey                   |
 | -------------- | ------------------------ |
