@@ -2,6 +2,12 @@
 
 _Narrative snapshot. Update at the end of every session that changes state. Actionable work lives in GitHub Issues (see CLAUDE.md → Tasks), not here._
 
+## 2026-10-05 — Store PR bot review, round 6 (raycast/extensions#31648)
+
+- Store PR updated in place (folder moved to `extensions/hopper-app-tab-agent-switcher` on branch `ext/hopper`, not via `npm run publish`, which would open a new PR under the new slug).
+- Greptile + Cursor Bugbot on that push, 7 findings. Fixed: Slack reads whichever build's folder was written last (a stale install no longer wins); Snappy's declared length capped before allocating; Notes' menu press by title only when unambiguous; Chromium closed tabs recorded without Accessibility (`readsWithoutAccessibility`); Codex rollout tails read one at a time. Not issues: AppleScript quoting (`\"` is valid AppleScript, `""` a syntax error, checked with osascript); Next Agent saves its pick before jumping on purpose (saved after, a failing agent would be picked every time).
+- Verified: 172 unit tests, lint, `swift build`. Next: re-push to the Store PR, reply to the bots and the reviewer.
+
 ## 2026-10-05 — Store review fixes (raycast/extensions#31648, ADR-037)
 
 - Raycast's human review (0xdhrv): title is now "Hopper - App, Tab & Agent Switcher", slug `hopper-app-tab-agent-switcher` (ADR-037); `hopper-5.png` is Search Current App over Safari instead of Raycast's root search (`store_media.py screenshot-5`, opened from root search to skip the deeplink prompt); Agents refreshes 4 s after a read ends instead of every 4 s (reads could pile up); CHANGELOG is one Initial Version entry. Optional items (rename `tabs`/`app-tabs`, "Needs input" label, `harpoon` keyword, shorter description) skipped by the owner.
